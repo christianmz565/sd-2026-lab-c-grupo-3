@@ -1,0 +1,331 @@
+\documentclass[a4paper]{article}
+
+% ============================================================================
+% PACKAGES
+% ============================================================================
+\usepackage[top=2.54cm, bottom=2.54cm, left=1.9cm, right=1.9cm, includehead, headheight=4cm, headsep=0.5cm, voffset=-1.29cm]{geometry}
+\usepackage{graphicx}
+\usepackage{lato}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fontspec}
+\usepackage{fancyhdr}
+\usepackage{tabularray}
+\usepackage[most]{tcolorbox}
+\usepackage{xcolor}
+\usepackage{lipsum}
+\usepackage[export]{adjustbox}
+\usepackage{minted}
+\usepackage{url}
+\usepackage{soul}
+
+\UseTblrLibrary{varwidth}
+\setmainfont{Lato}
+\setmonofont{Roboto Mono}
+
+% ============================================================================
+% DOCUMENT CONSTANTS
+% ============================================================================
+\newcommand{\CourseName}{Sistemas Operativos}
+\newcommand{\LabTitle}{Threads en Java}
+\newcommand{\LabNumber}{10}
+\newcommand{\Year}{2025}
+\newcommand{\SemCode}{B}
+\newcommand{\PresentationDate}{19/11/2025}
+\newcommand{\PresentationHour}{12:59:00}
+\newcommand{\MemberList}{%
+  \begin{itemize}[nosep, label=--]
+    \item Mestas Zegarra Christian Raul
+  \end{itemize}%
+}
+\newcommand{\InstructorName}{Mg. Roxana Evelyn Limache Calatayud}
+
+% ============================================================================
+% LAYOUT CONSTANTS
+% ============================================================================
+\newcommand{\tableRowMinHeight}{16pt}
+\newcommand{\tableHeaderMinHeight}{10pt}
+\newcommand{\tableRowSep}{3pt}
+\newcommand{\tableCellPadding}{3pt}
+\newcommand{\tableBorderWidth}{0.5pt}
+\newcommand{\enumerateFirstMargin}{1.5em}
+\newcommand{\enumerateNestedMargin}{2.5em}
+\newcommand{\betweenSectionsSpace}{\vspace{1.5\baselineskip}}
+
+% ============================================================================
+% COLOR PALETTE
+% ============================================================================
+\definecolor{bordercolor}{HTML}{808080}
+\definecolor{headerred}{HTML}{c8310e}
+\definecolor{codebg}{HTML}{F1F3F4}
+\definecolor{linkblue}{HTML}{1155CC}
+
+% ============================================================================
+% TEXTTT CONFIGURATION
+% ============================================================================
+\renewcommand{\texttt}[1]{{\color{linkblue}\fontsize{8.5pt}{12pt}\selectfont\fontspec{Lato}\mbox{#1}}}
+
+% ============================================================================
+% MINTED CONFIGURATION
+% ============================================================================
+\setminted{
+  fontsize=\fontsize{7pt}{9pt},
+  fontfamily=tt,
+  breaklines=true,
+  breakanywhere=true,
+  autogobble=true,
+  style=vs,
+  bgcolor=codebg,
+  frame=none,
+  bgcolorpadding=8pt,
+  tabsize=2,
+}
+
+% ============================================================================
+% FONT STYLES
+% ============================================================================
+\newcommand{\headerBigFont}{\fontsize{7.5pt}{11pt}\selectfont\bfseries}
+\newcommand{\headerSmallFont}{\fontsize{7pt}{10pt}\selectfont\mdseries}
+\newcommand{\headerSmallFontBold}{\fontsize{7pt}{10pt}\selectfont\bfseries}
+\newcommand{\mainTitleFont}{\fontsize{13pt}{16pt}\selectfont\bfseries}
+\newcommand{\tableTitleFont}{\fontsize{11pt}{13pt}\selectfont\bfseries}
+\newcommand{\tableContentsFont}{\fontsize{8.5pt}{12pt}\selectfont\mdseries}
+\newcommand{\tableContentsFontBold}{\fontsize{8.5pt}{12pt}\selectfont\bfseries}
+
+% ============================================================================
+% TCOLORBOX STYLES
+% ============================================================================
+\tcbset{
+  tabletcolorbox/.style={
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=black,
+    boxrule=\tableBorderWidth,
+    arc=0pt,
+    outer arc=0pt,
+    left=\tableCellPadding,
+    right=\tableCellPadding,
+    top=\tableCellPadding,
+    bottom=\tableCellPadding,
+    boxsep=0pt,
+    toptitle=\tableCellPadding,
+    bottomtitle=\tableCellPadding,
+    title={\vbox to \tableHeaderMinHeight{\vfil\centering\tableTitleFont #1\vfil}},
+    colbacktitle=headerred,
+    coltitle=white,
+    fontupper=\tableContentsFont,
+    segmentation style={solid, black, line width=\tableBorderWidth},
+    before upper={\parindent=0pt},
+    skin first=enhanced,
+    skin middle=enhanced,
+    skin last=enhanced,
+  }
+}
+
+% ============================================================================
+% HEADER CONFIGURATION
+% ============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{%
+  \begin{tblr}{
+    colspec={|X[1,c,m]|X[2,c,m]|X[1,c,m]|},
+    hlines={\tableBorderWidth, solid, bordercolor},
+    vlines={\tableBorderWidth, solid, bordercolor},
+  }
+    \headerBigFont\includegraphics[width=\linewidth, valign=c]{epis.png} &
+    {\headerBigFont
+      UNIVERSIDAD NACIONAL DE SAN AGUSTÍN \\
+      FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS \\ 
+      ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMAS} &
+    \headerBigFont\includegraphics[width=\linewidth, valign=c]{abet.png} \\
+    \SetCell[c=3]{c}{\headerSmallFont\textbf{Formato:} Guía de Práctica de Laboratorio / Talleres / Centros de Simulación} \\
+    \headerSmallFontBold Aprobación: 2022/03/01 &
+    \headerSmallFontBold Código: GUIA-PRLE-001 &
+    \headerSmallFontBold\hfill Página: \thepage \\
+  \end{tblr}%
+}
+\renewcommand{\headrulewidth}{0pt}
+
+% ============================================================================
+% DOCUMENT CONTENT
+% ============================================================================
+\begin{document}
+
+% Document title
+\begin{center}
+  \mainTitleFont INFORME DE LABORATORIO
+\end{center}
+
+% Basic information table
+\noindent
+\begin{tblr}{
+  width=\textwidth,
+  colspec={|X[l,m]|X[l,m]|X[l,m]|X[l,m]|X[l,m]|X[l,m]|},
+  rows={ht=\tableRowMinHeight},
+  row{1}={ht=\tableHeaderMinHeight},
+  rowsep=\tableRowSep,
+  stretch=0,
+  hlines,
+  vlines,
+}
+  \SetCell[c=6]{c, bg=headerred, font=\tableTitleFont, fg=white}{INFORMACIÓN BÁSICA} \\
+  \tableContentsFontBold ASIGNATURA: & 
+    \SetCell[c=5]{l}{\tableContentsFont\CourseName} \\
+  \tableContentsFontBold TÍTULO DE LA PRÁCTICA: & 
+    \SetCell[c=5]{l}{\tableContentsFont\LabTitle} \\
+  \tableContentsFontBold NÚMERO DE PRÁCTICA: & \tableContentsFont\LabNumber & 
+    \tableContentsFontBold AÑO LECTIVO: & \tableContentsFont\Year & 
+    \tableContentsFontBold NRO. SEMESTRE: & \tableContentsFont\SemCode \\
+  \tableContentsFontBold FECHA DE PRESENTACIÓN: & \tableContentsFont\PresentationDate & 
+    \tableContentsFontBold HORA DE PRESENTACIÓN: & 
+    \SetCell[c=3]{l}{\tableContentsFont\PresentationHour} \\
+  \SetCell[c=4]{l}{\tableContentsFontBold INTEGRANTE (s): \\
+    \tableContentsFont\MemberList} & & & & 
+    \tableContentsFontBold NOTA (0-20): & 
+    \tableContentsFont Nota colocada por el docente \\
+  \SetCell[c=6]{l}{\tableContentsFontBold DOCENTE: \\
+    \tableContentsFont\InstructorName} \\
+\end{tblr}
+
+\betweenSectionsSpace
+
+% Results and tests section
+\noindent
+\begin{tcolorbox}[tabletcolorbox={RESULTADOS Y PRUEBAS}]
+  \vspace{\tableCellPadding}
+  \tableContentsFontBold
+  \begin{enumerate}[nosep, leftmargin=\enumerateFirstMargin, series=results] 
+    \item PRUEBA DE EJERCICIOS RESUELTOS:
+  \end{enumerate}
+  
+  \begin{enumerate}[nosep, leftmargin=\enumerateNestedMargin, series=solved]
+     \tableContentsFontBold \item Ejercicio 1: \\
+      \tableContentsFont \inputminted{java}{solved/ThreadEjemplo.java}
+      El programa usa threads extendiendo la clase Thread donde cada thread ejecuta un bucle imprimiendo números del 0 al 9 junto con su nombre, al crear dos threads Pepe y Juan ambos se ejecutan intercalando sus salidas \\
+      \includegraphics[width=\linewidth]{img/ejercicio1.png}
+
+     \tableContentsFontBold \item Ejercicio 2: \\
+      \tableContentsFont \inputminted{java}{solved/ThreadEjemplo2.java}
+      El programa usa threads usando la interfaz Runnable en lugar de extender Thread, esto permite que la clase implemente otras interfaces a la vez, se crean dos instancias de Thread pasando el objeto Runnable y un nombre, ambos threads ejecutan 5 iteraciones imprimiendo sus índices y nombres \\
+      \includegraphics[width=\linewidth]{img/ejercicio2.png}
+
+     \tableContentsFontBold \item Ejercicio 3: \\
+      \tableContentsFont \inputminted{java}{solved/MostrarCeroUnoHilo.java}
+      El programa crea dos threads que imprimen caracteres diferentes, HiloMostrarCero imprime 0- mil veces y HiloMostrarUno imprime 1- mil veces, ambos threads se ejecutan en paralelo causando que las salidas se intercalen casi al azar debido a la planificación del sistema operativo \\
+      \includegraphics[width=\linewidth]{img/ejercicio3.png}
+
+     \tableContentsFontBold \item Ejercicio 4: \\
+      \tableContentsFont \inputminted{java}{solved/MostrarCeroUnoHilo2.java}
+      Este ejercicio es similar al anterior mostrando la alternativa Runnable donde las clases HiloMostrarCero y HiloMostrarUno implementan Runnable y crean sus propios threads en el constructor llamando a start inmediatamente, así solo se necesita crear los objetos sin llamar a start explícitamente \\
+      \includegraphics[width=\linewidth]{img/ejercicio4.png}
+
+     \tableContentsFontBold \item Ejercicio 5: \\
+      \tableContentsFont \inputminted{java}{solved/java1002.java}
+      El programa muestra control de threads al tener dos threads que ejecutan un bucle que imprime información del thread cada 200ms, el main thread duerme por un segundo y luego llama al método detener en ambos threads que cambia la bandera ejecutar a false deteniendo el bucle \\
+      \includegraphics[width=\linewidth]{img/ejercicio5.png}
+
+     \tableContentsFontBold \item Ejercicio 6: \\
+      \tableContentsFont \inputminted{java}{solved/java1003.java}
+      Este ejercicio mejora el anterior usando la palabra clave volatile que garantiza que los cambios hechos por un thread sean visibles inmediatamente a otros threads evitando problemas de caché del CPU, además añade un mensaje final que imprime cuando cada thread termina usando getName para mostrar qué thread acabó su ejecución \\
+      \includegraphics[width=\linewidth]{img/ejercicio6.png}
+
+     \tableContentsFontBold \item Ejercicio 7: \\
+      \tableContentsFont \inputminted{java}{solved/MultiHola.java}
+      El programa usa Math.random para generar espacios aleatorios entre 0 y 2000 milisegundos para cada thread, la clase TestTh extiende Thread y recibe un nombre y delay en el constructor, el método run duerme por el delay dado usando sleep antes de imprimir el mensaje \\
+      \includegraphics[width=\linewidth]{img/ejercicio7.png}
+
+     \tableContentsFontBold \item Ejercicio 8: \\
+      \tableContentsFont \inputminted{java}{solved/MultiHola2.java}
+      Este ejercicio es similar al anterior pero crea siete threads en lugar de dos, cada thread recibe un nombre único desde Thread 1 hasta Thread 7 y un delay aleatorio independiente, todos los threads se crean primero y luego se inician con start, al tener más threads el orden de finalización es más variado \\
+      \includegraphics[width=\linewidth]{img/ejercicio8.png}
+
+     \tableContentsFontBold \item Ejercicio 9: \\
+      \tableContentsFont \inputminted{java}{solved/MethodTest.java}
+      El programa muestra sincronización entre threads usando join, wait y notify donde FirstThread duerme 10 segundos y SecondThread espera en un bloque synchronized usando wait, el main thread espera a que FirstThread termine con join y luego despierta a SecondThread usando notify, similarmente a C++, asi se puede coordinar la ejecución de threads \\
+      \includegraphics[width=\linewidth]{img/ejercicio9.png}
+
+     \tableContentsFontBold \item Ejercicio 10: \\
+      \tableContentsFont \inputminted{java}{solved/SimpleThread.java}
+      El programa crea varios threads usando un bucle for donde cada thread mantiene su propio contador desde 5 hasta 0, usa la variable estática threadCount para asignar números únicos a cada thread incrementándola en el constructor, y en run cada thread ejecuta un bucle que reduce countDown y retorna cuando llega a 0 \\
+      \includegraphics[width=\linewidth]{img/ejercicio10.png}
+  \end{enumerate}
+  
+  \tcbline
+  
+  \tableContentsFontBold
+  \begin{enumerate}[nosep, leftmargin=\enumerateFirstMargin, resume=results] 
+    \item SOLUCIÓN DE EJERCICIOS:
+  \end{enumerate}
+  
+  \begin{enumerate}[nosep, leftmargin=\enumerateNestedMargin, series=solved]
+     \tableContentsFontBold \item Ejercicio 1: Complete la siguiente clase creando los threads (Tarea) correspondientes \\
+      \tableContentsFont La clase Tarea implementa Runnable con un constructor que recibe el nombre del thread y en el método run ejecuta un bucle que imprime el nombre y un índice de 0 a 4, así se pueden crear varios threads pasando instancias de Tarea al constructor de Thread
+      \inputminted{java}{solved/Principal.java}
+      \includegraphics[width=\linewidth]{img/solucion1.png}
+
+     \tableContentsFontBold \item Ejercicio 2: Modifique el ejercicio 08 para que los threads sean creados usando un arreglo \\
+      \tableContentsFont Los únicos cambios que se tienen que hacer son crear un array de TestTh de tamaño 7 y usar un bucle for para crear cada thread con su nombre y delay aleatorio, luego otro bucle recorre el array llamando a start en cada thread
+      \inputminted{java}{solved/MultiHola2Array.java}
+      \includegraphics[width=\linewidth]{img/solucion2.png}
+
+     \tableContentsFontBold \item Ejercicio 3: Cree un programa que permita crear dos semáforos (mostrar rojo, amarillo y verde) usando dos threads \\
+      \tableContentsFont La clase Semaforo extiende Thread y mantiene un array de colores ROJO, AMARILLO y VERDE, en run se usan dos bucles for para iterar por los colores varias veces imprimiendo el nombre del semáforo y el color actual con una pausa de un segundo entre cada color
+      \inputminted{java}{solved/Semaforos.java}
+      \includegraphics[width=\linewidth]{img/solucion3.png}
+  \end{enumerate}
+  
+  \tcbline
+  
+  \tableContentsFontBold
+  \begin{enumerate}[nosep, leftmargin=\enumerateFirstMargin, resume=results]
+    \item CUESTIONARIO:
+      \begin{enumerate}[nosep, leftmargin=\enumerateNestedMargin, series=questions]
+        \tableContentsFontBold \item ¿Existen Thread en otros lenguajes de programación? \\
+          \tableContentsFont Los threads existen en prácticamente todos los lenguajes de programación modernos, Python con threading, C++ con std::thread, C con POSIX threads (pthreads), JavaScript con worker threads, Go con goroutines, Rust con std::thread, etc.
+        \tableContentsFontBold \item ¿Cuántos estados existen en el ciclo de vida de un Thread? \\
+          \tableContentsFont Un thread pasa por estados similares a los de un proceso durante su ciclo de vida, NEW cuando el thread es creado pero no iniciado, RUNNABLE cuando está listo para ejecutarse o ejecutándose activamente, BLOCKED cuando espera adquirir algún lock, WAITING cuando espera a otro thread, TIMED\_WAITING cuando espera por un tiempo específico y TERMINATED cuando ha terminado su ejecución
+      \end{enumerate}
+  \end{enumerate}
+\end{tcolorbox}
+
+\betweenSectionsSpace
+
+% Conclusions and recommendations section
+\noindent
+\begin{tcolorbox}[tabletcolorbox={CONCLUSIONES Y RECOMENDACIONES}]
+  \vspace{\tableCellPadding}
+  \tableContentsFontBold
+  \begin{enumerate}[nosep, leftmargin=\enumerateFirstMargin, series=conclusions]
+    \item CONCLUSIONES: \\
+      \tableContentsFont Java tiene dos formas de crear threads ya sea con Thread o con Runnable, donde Runnable es generalmente preferida por ser más flexible permitiendo que la clase herede de otras clases mientras mantiene la capacidad de ejecutarse en threads.
+      
+      \tableContentsFont La sincronización es muy importante para evitar problemas de concurrencia y se puede lograr mediante synchronized, wait, notify y join, estos mecanismos permiten coordinar la ejecución de múltiples threads controlando el acceso a recursos compartidos y creando dependencias entre threads.
+  \end{enumerate}
+  
+  \tcbline
+  
+  \tableContentsFontBold
+  \begin{enumerate}[nosep, leftmargin=\enumerateFirstMargin, resume=conclusions]
+    \item RECOMENDACIONES: \\
+      \tableContentsFont Se deben usar banderas volatile o AtomicBoolean para controlar el ciclo de vida de threads en lugar de usar métodos deprecados como stop, las banderas volatile garantizan que los cambios sean visibles inmediatamente entre threads, así el código es un poco más seguro y predecible.
+      
+      \tableContentsFont Cuando se trabaja con varios threads se debe usar estructuras de datos para gestionarlos en crear variables individuales, esto hace el código más mantenible, escalable y permite adaptar fácilmente el programa para crear diferentes cantidades de threads.
+  \end{enumerate}
+\end{tcolorbox}
+
+\betweenSectionsSpace
+
+% References section
+\noindent
+\begin{tcolorbox}[tabletcolorbox={REFERENCIAS Y BIBLIOGRAFÍA}]
+  \vspace{\tableCellPadding}
+  \tableContentsFont [1] Ivancea. 30 01 2017 C++ Threads (Hilos): online, Available: \\
+  \texttt{https://code0x66.blogspot.com/2017/01/c-threads-hilos.html}
+  
+  \tableContentsFont [2] W. Tyler, Taojunsen, K Sharkey, M. B., M. Jones, G. Hogenson and S. Cai, 16 06 2023 Clase Thread: online, Available: \\
+  \texttt{https://learn.microsoft.com/es-es/cpp/standard-library/thread-class?view=msvc-170}
+\end{tcolorbox}
+
+\end{document}

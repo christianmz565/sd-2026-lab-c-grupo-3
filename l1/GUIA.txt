@@ -1,0 +1,98 @@
+vas a hacer la resolucion del siguiente laboratorio sobre "Los Hilos (Threads)" en el archivo "LAB 01.typ", siguiendo la estructura de la versión previa de la guía de laboratorio "SO - LAB 10 - MESTAS,CHRISTIAN", solo usa esta guia de forma REFERENCIAL
+
+instrucciones:
+ejercicio 1. la guia de laboratorio menciona el siguiente caso de estudio:
+
+"""
+Caso Estudio: simular el proceso de cobro de un supermercado
+Unos clientes van con un carro lleno de productos y una cajera les cobra los productos, pasándolos
+uno a uno por el escáner de la caja registradora.
+En este caso la cajera debe de procesar la compra cliente a cliente, es decir que primero le cobra al
+cliente 1, luego al cliente 2 y así sucesivamente.
+Para ello vamos a definir una clase "Cajera" y una clase "Cliente" el cual tendrá un "array de enteros"
+que representaran los productos que ha comprado y el tiempo que la cajera tardará en pasar el
+producto por el escáner; es decir, que si tenemos un array con [1,3,5] significará que el cliente ha
+comprado 3 productos y que la cajera tardara en procesar el producto 1 '1 segundo', el producto 2
+'3 segundos' y el producto 3 en '5 segundos', con lo cual tardara en cobrar al cliente toda su compra
+'9 segundos'.
+Código en Anexo 1:
+Explicado este ejemplo vamos a ver cómo hemos definido estas clases:
+• Clase "Cajera.java"
+• Clase "Cliente.java"
+• Clase "Main.java":
+Como vemos se procesa primero la compra del cliente 1 y después la compra del cliente 2
+tardando en procesar ambas compras un tiempo de 26 segundos.
+¿Y si en vez de procesar primero un cliente y después otro, procesásemos los dos a la vez?,
+¿Cuánto tardaría el programa en ejecutarse?. Pues bien si en vez de haber solo una Cajera (es
+decir un solo hilo), hubiese dos Cajeras (es decir dos hilos o threads) podríamos procesar los dos
+clientes a la vez y tardar menos tiempo en ejecutarse el programa.
+Para ello debemos de modificar la clase "Cajera.java" y hacer que esta clase herede de la clase
+Thread para heredar y sobre-escribir algunos de sus métodos. Primero vamos a ver como
+codificamos esta nueva clase "CajeraThread.java" y después explicamos sus características.
+Lo primero que vemos y que ya hemos comentado es que la clase "CajeraThread" debe de
+heredar de la clase Thread: "extendsThread".
+Otra cosa importante que vemos es que hemos sobre-escrito el método "run()" (de ahi la
+etiqueta @Override) . Este método es imprescindibles sobre-escribirlo (ya que es un método que
+está en la clase Runnable y la clase Thread Implementa esa Interface) porque en él se va a
+codificar la funcionalidad que se ha de ejecutar en un hilo; es decir, que lo que se programe en
+el método "run()" se va a ejecutar de forma secuencial en un hilo.
+En esta clase "CajeraThread" se pueden sobre-escribir más métodos para que hagan acciones
+sobre el hilo o thread como, por ejemplo, parar el thread, ponerlo en reposos, etc
+• Clase CajeraThread.java
+A continuación vamos a ver como programamos el método Main para que procese a los clientes de forma
+paralela y ver como se tarda menos en procesar todo. El método Main esta en la clase "MainThread.java"
+que tiene el siguiente contenido:
+• Clase "MainThread.java"
+Ahora vamos a ver cuál sería el resultado de esta ejecución y vamos a comprobar como
+efectivamente el programa se ejecuta de forma paralela y tarda solo 15 segundos en terminar
+su ejecución.
+Otra forma de hacer lo mismo, pero sin heredar de la clase "Thread" es implementar la Interface
+"Runnable". En este caso no dispondremos ni podremos sobre-escribir los métodos de la clase
+Thread ya que no la vamos a utilizar y solo vamos a tener que sobre-escribir el método "run()".
+En este caso solo será necesario implementar el método "run()" para que los procesos
+implementados en ese método se ejecuten en un hilo diferente. Vamos a ver un ejemplo de
+cómo utilizando objetos de las clases "Cliente.java" y "Cajera.java" podemos implementar la
+multitarea en la misma clase donde se llama al método Main de la aplicación. A continuación,
+vemos la codificación en la clase:
+• Clase "MainRunnable.java"
+El concepto de multitarea o multiprocesamiento es bastante sencillo de entender ya que solo
+consiste en hacer varias cosas a la vez sin que se vea alterado el resultado final. Como ya se ha
+dicho en la entrada no todo se puede paralelizar y en muchas ocasiones suele ser complicado
+encontrar la manera de paralelizar procesos dentro de una aplicación sin que esta afecte al
+resultado de la misma, por tanto, aunque el concepto sea fácil de entender el aplicarlo a un caso
+práctico puede ser complicado para que el resultado de la aplicación no se vea afectado.
+"""
+
+En base a esto, los contenidos del anexo 1 fueron transcritos a src/e1/, el trabajo consiste en compilar y ejecutar el codigo implementado. En el informe, se debe documentar iterativamente: 1) cada pieza de código con comentarios útiles insertados en su código fuente, 2) explicación verbosa de cada script/archivo, 3) ejecución respectiva haciendo uso de capturas, y 4) el análisis explícito midiendo las diferencias en tiempos, apoyándose del uso del comando nativo `time` dentro de la captura para respaldar la reducción temporal. Se provee capture.sh (script de bash que enmascara los comandos y captura el output y los tiempos a svg usando ansi y freeze) jdk21, typst y tinymist.
+
+ejercicio 2.
+a. Implementar, ejecutar y probar el código del anexo 2 (transcrito en src/e2/), de manera adecuada (Añadir comentarios explicativos SOLO a secciones complejas que ameriten explicación y limpiar comentarios redundantes).
+b. Evaluar resultados obtenidos con explicación iterativa y capturas.
+
+cuestionario.
+hay que responder estas preguntas, un parrafo por respuesta, siguiendo las mismas reglas que la redaccion de la primera parte
+a. ¿Por qué es importante el estudio de hilos y multihilos en un sistema distribuido?
+b. Describe ¿Cómo están compuestos los hilos? y ¿Cuál es la diferencia entre hilos y procesos?
+c. Realice un cuadro comparativo de ventajas y desventajas del uso de hilos. El cuadro debe usar el color #808080 para la cabecera, no usar colores rojos.
+
+conclusiones y recomendaciones.
+redacta dos conclusiones y dos recomendaciones, de igual manera, un parrafo por conclusion/recomendacion, sobre la temática pura de la practica de laboratorio actual (hilos y control de concurrencia), evitando hablar de herramientas utilizadas.
+
+referencias.
+copia estas en el mismo formato que la version de latex
+[1] Tanenbaum, A.S. (2008). Sistemas distribuidos: principios y paradigmas. México. Pearson Educación.
+[2] Ceballos, F. J. (2006). Java 2, Curso de programación. México: Alfaomega, RaMa.
+[3] Deitel, H. M.,& Deitel, P. J.(2004). Cómo programar en Java. México: Pearson ducación.
+[4] García Tomás, J., Ferrando, S., & Piattini, M. (2001). Redes para procesos distribuidos. México: AlfaomegaRa-Ma.
+[5] Orfali, R.,& Harkey, D. (1998). Client/Server Programmingwith Java and CORBA. USA:Wiley
+[6] programación multihilohttps://oscarmaestre.github.io/servicios/textos/tema2.html
+[7] Threads en Java https://lc.fie.umich.mx/~rochoa/Materias/PROGRAMACION/PROGRAMACION_2/HILOS.pdf
+[8] https://biblus.us.es/bibing/proyectos/abreproy/11320/fichero/Capitulos%252F13.pdf
+
+OTRAS REGLAS Y FORMATO TYPST:
+- En typst, utiliza elementos de encabezado (ej. `= TITULO`, `== Subtitulo`) con la configuración `#show heading: set text(weight: "bold")` en vez de usar viñetas enumeradas para las secciones principales (SOLUCIÓN, CUESTIONARIO, CONCLUSIONES).
+- si un programa requiere entrada por stdin, modifica el codigo fuente para que este simplemente use valores prefijados, toma la captura y luego regresa el codigo a su estado original, para facilitar la toma de la captura en el informe
+- capture.sh escribira el archivo lastcmd.log, con el ansi crudo, SIEMPRE REVISA QUE LAS EJECUCIONES SEAN LAS ESPERADAS
+- trata de manera logica otros casos como bucles infinitos, etc evitando que estos ocurran o que realizen demasiadas impresiones, siempre prefiere modificar el codigo fuente, tomar la captura y luego regresar el codigo a su estado original
+- las capturas deben contener tanto la compilacion como la ejecucion del programa
+- evita el uso de mas de un punto (.) en el parrafo, evita el uso de adjetivos donde no es necesario y no repitas las mismas secciones en todas las explicaciones siempre prefiriendo hacer esto de forma mas implicita
