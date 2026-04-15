@@ -1,7 +1,5 @@
 sync:
-  sd-lab-c:
-    alpha: "./"
-    beta: "vscode@dev.mistercricro8.top:28009:/home/vscode/sd-2026-lab-c-grupo-3"
+  defaults:
     mode: "two-way-resolved"
 
     permissions:
