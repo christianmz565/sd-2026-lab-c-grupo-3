@@ -17,8 +17,8 @@ public class Productor extends Thread {
       // Solicita ingresar el número en el espacio compartido
       cubbyhole.put(i);
       System.out.println("Productor #" + this.numero + "pone:" + i);
-      
-      // Introduce un retraso pseudoaleatorio que puede causar 
+
+      // Introduce un retraso pseudoaleatorio que puede causar
       // cambios en la intercalación de mensajes al ejecutar.
       try {
         sleep((int) (Math.random() * 100));

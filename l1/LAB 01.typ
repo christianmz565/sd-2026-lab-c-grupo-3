@@ -220,8 +220,11 @@
   width: 100%,
   inset: 1em,
   radius: 8pt,
+  spacing: 0.65em,
+  clip: false,
 )[
   #set text(size: 7pt)
+  #set par(justify: false)
   #raw(read(file), lang: lang)
 ]
 
@@ -249,7 +252,6 @@
   ),
   tableContents[
     #show heading: set text(weight: "bold")
-    #set heading(numbering: "1.")
     #set par(justify: true)
 
     = SOLUCIÓN DE EJERCICIOS PROPUESTOS
@@ -276,7 +278,7 @@
 
     Otra alternativa para lograr el comportamiento concurrente sin utilizar herencia múltiple en Java es la interfaz `Runnable`. En la clase `MainRunnable`, se implementa el método `run()` invocando directamente a la clase `Cajera` original, y se envuelve en nuevos hilos (`Thread`) pasando este `Runnable`.
     #codeBlock("src/e1/MainRunnable.java", lang: "java")
-    El efecto resultante en el sistema es exactamente el mismo en orden y tiempo ($15\\text{s}$) que la versión que extiende de `Thread`, demostrando que separar la tarea en una interfaz `Runnable` es una forma eficaz y modular de organizar flujos paralelos sin comprometer el diseño de clases existente.
+    El efecto resultante en el sistema es exactamente el mismo en orden y tiempo ($15"s"$) que la versión que extiende de `Thread`, demostrando que separar la tarea en una interfaz `Runnable` es una forma eficaz y modular de organizar flujos paralelos sin comprometer el diseño de clases existente.
     #image("img/lab01/e1_runnable_time.png", width: 100%)
 
     == Ejercicio 2: Problema del Productor y Consumidor
@@ -308,13 +310,13 @@
     #set enum(numbering: "1.")
     #set par(justify: true)
 
-    + ¿Por qué es importante el estudio de hilos y multihilos en un sistema distribuido? \
+    + *¿Por qué es importante el estudio de hilos y multihilos en un sistema distribuido?* \
       El estudio de hilos en sistemas distribuidos permite aprovechar mejor CPU y red al ejecutar tareas concurrentes por nodo, lo que reduce latencia de respuesta y mejora el rendimiento global del servicio.
 
-    + Describe cómo están compuestos los hilos y cuál es la diferencia entre hilos y procesos \
+    + *Describe cómo están compuestos los hilos y cuál es la diferencia entre hilos y procesos.* \
       Un hilo está compuesto por contador de programa, pila, estado de ejecución y registros dentro de un proceso, mientras un proceso tiene espacio de memoria propio y recursos aislados, por lo que los hilos son más ligeros pero comparten memoria y requieren sincronización.
 
-    + Cuadro comparativo de ventajas y desventajas del uso de hilos \
+    + *Cuadro comparativo de ventajas y desventajas del uso de hilos* \
       #table(
         align: center + horizon,
         stroke: tableBorderWidth + black,
@@ -345,7 +347,6 @@
   ),
   tableContents[
     #show heading: set text(weight: "bold")
-    #set heading(numbering: "1.")
     #set par(justify: true)
 
     = CONCLUSIONES
