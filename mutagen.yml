@@ -1,0 +1,15 @@
+sync:
+  sd-lab-c:
+    alpha: "./"
+    beta: "vscode@dev.mistercricro8.top:28009:/work"
+    mode: "two-way-resolved"
+
+    permissions:
+      defaultFileMode: 0644
+      defaultDirectoryMode: 0755
+
+    ignore:
+      vcs: true
+      paths:
+        - ".direnv"
+        - "out"
