@@ -60,6 +60,9 @@
   font: "Lato",
 )
 
+#set image(width: 90%)
+#show image: set align(center)
+
 #let fontBuild(content, weight, size, alignTo, color) = [
   #set text(size: size, weight: weight, fill: color)
   #if alignTo != none [
@@ -242,13 +245,16 @@
 #show heading.where(level: 2): set text(size: 9pt)
 
 #grid(
-  align: left + horizon,
+  align: left + top,
   stroke: black + 1pt,
   inset: 0.5em,
   columns: 1fr,
-  grid.cell(
-    fill: tbHeaderBgColor,
-    tableTitle(weight: "bold", alignTo: center, color: white)[RESULTADOS Y PRUEBAS],
+  grid.header(
+    repeat: false,
+    grid.cell(
+      fill: tbHeaderBgColor,
+      tableTitle(weight: "bold", alignTo: center, color: white)[RESULTADOS Y PRUEBAS],
+    )
   ),
   tableContents[
     #show heading: set text(weight: "bold")
@@ -258,42 +264,42 @@
 
     == Ejercicio 1: Simulación del proceso de cobro en un supermercado
 
-    El primer caso práctico aborda la simulación de un supermercado, empezando con una versión de ejecución puramente secuencial. En esta fase, las clases `Cliente` y `Cajera` definen a las entidades. El cliente mantiene un arreglo con los tiempos de espera de sus productos, mientras que la cajera procesa esos tiempos de forma iterativa, simulando el retraso con la función `Thread.sleep()`.
+    El primer caso práctico aborda la simulación de un supermercado y comienza con una versión de ejecución puramente secuencial. En esta fase, las clases `Cliente` y `Cajera` representan las entidades del sistema. El cliente mantiene un arreglo con los tiempos de espera de sus productos, mientras que la cajera procesa esos tiempos de forma iterativa y simula el retraso con la función `Thread.sleep()`.
     #codeBlock("src/e1/Cliente.java", lang: "java")
     #codeBlock("src/e1/Cajera.java", lang: "java")
 
-    Luego, el programa principal `Main` ejecuta este proceso de manera lineal: se procesa al cliente 1 por completo, y cuando la primera cajera termina, se da paso al cliente 2. Esto implica que el tiempo total de ejecución es la suma del tiempo de cobro de todos los clientes.
+    Luego, el programa principal `Main` ejecuta este proceso de manera lineal: primero se procesa por completo al cliente 1 y, cuando la primera cajera termina, recién se da paso al cliente 2. Esto implica que el tiempo total de ejecución es la suma de los tiempos de cobro de todos los clientes.
     #codeBlock("src/e1/Main.java", lang: "java")
     A continuación, se muestra el resultado de compilar y ejecutar el programa secuencial midiendo su tiempo total con la utilidad `time` de la terminal:
-    #image("img/lab01/e1_main_time.png", width: 100%)
+    #image("img/lab01/e1_main_time.png")
 
-    El análisis del tiempo real reporta un aproximado de 26 segundos, lo cual se corresponde con la suma lineal de las demoras de todos los productos por procesar de ambos clientes ($15\\text{s} + 11\\text{s}$).
+    El análisis del tiempo real reporta un aproximado de 26 segundos, lo cual se corresponde con la suma lineal de las demoras de todos los productos por procesar de ambos clientes ($15 + 11 = 26$ segundos).
 
-    Para aprovechar la multitarea y realizar cobros paralelos, se introduce la clase `CajeraThread`, la cual hereda de la clase `Thread` de Java. En ella se sobreescribe el método `run()`, permitiendo que el procesamiento de la compra se realice en un hilo independiente, de modo que cada cajera procesa su cliente simultáneamente.
+    Para aprovechar la multitarea y realizar cobros paralelos, se introduce la clase `CajeraThread`, la cual hereda de la clase `Thread` de Java. En ella se sobreescribe el método `run()`, lo que permite que el procesamiento de la compra se realice en un hilo independiente. De este modo, cada cajera atiende a su cliente de forma simultánea.
     #codeBlock("src/e1/CajeraThread.java", lang: "java")
     El nuevo punto de entrada `MainThread` inicializa y lanza estos hilos empleando el método `start()`.
     #codeBlock("src/e1/MainThread.java", lang: "java")
-    La ejecución de esta versión mediante hilos evidencia que las tareas de las cajeras se intercalan. El reporte del comando `time` demuestra un tiempo de ejecución total en torno a los 15 segundos. Esto significa un ahorro de tiempo de casi 11 segundos (alrededor de 42% de ganancia de rendimiento) respecto a la versión secuencial. Al ejecutarse los procesos concurrentemente, la demora total del programa queda limitada únicamente al tiempo del cliente con la compra más larga.
-    #image("img/lab01/e1_thread_time.png", width: 100%)
+    La ejecución de esta versión mediante hilos evidencia que las tareas de las cajeras se intercalan. El reporte del comando `time` muestra un tiempo total de ejecución cercano a los 15 segundos. Esto representa un ahorro de casi 11 segundos (alrededor de 42% de mejora de rendimiento) respecto de la versión secuencial. Al ejecutarse los procesos de forma concurrente, la duración total del programa queda limitada por el cliente con la compra más larga.
+    #image("img/lab01/e1_thread_time.png")
 
-    Otra alternativa para lograr el comportamiento concurrente sin utilizar herencia múltiple en Java es la interfaz `Runnable`. En la clase `MainRunnable`, se implementa el método `run()` invocando directamente a la clase `Cajera` original, y se envuelve en nuevos hilos (`Thread`) pasando este `Runnable`.
+    Otra alternativa para lograr el comportamiento concurrente sin depender de la herencia de `Thread` es usar la interfaz `Runnable`. En la clase `MainRunnable`, se implementa el método `run()` invocando directamente a la clase `Cajera` original y se encapsula esta tarea en nuevos hilos (`Thread`) pasando dicho `Runnable`.
     #codeBlock("src/e1/MainRunnable.java", lang: "java")
-    El efecto resultante en el sistema es exactamente el mismo en orden y tiempo ($15"s"$) que la versión que extiende de `Thread`, demostrando que separar la tarea en una interfaz `Runnable` es una forma eficaz y modular de organizar flujos paralelos sin comprometer el diseño de clases existente.
-    #image("img/lab01/e1_runnable_time.png", width: 100%)
+    El efecto resultante en el sistema es exactamente el mismo en comportamiento y tiempo (15 segundos) que en la versión que extiende de `Thread`. Esto demuestra que separar la tarea en una interfaz `Runnable` es una forma eficaz y modular de organizar flujos paralelos sin comprometer el diseño de clases existente.
+    #image("img/lab01/e1_runnable_time.png")
 
     == Ejercicio 2: Problema del Productor y Consumidor
 
-    El segundo ejercicio analiza un escenario de interacción controlada de hilos mediante el problema clásico del Productor y el Consumidor. Se utiliza un objeto compartido `CubbyHole` que almacena un entero. Esta clase gestiona el acceso concurrente empleando los monitores propios de Java (`synchronized`) y comunicación condicional (`wait()` y `notifyAll()`) para evitar que el Productor sobreescriba datos o que el Consumidor lea el mismo dato dos veces.
+    El segundo ejercicio analiza un escenario de interacción controlada de hilos mediante el problema clásico del Productor y el Consumidor. Se utiliza un objeto compartido `CubbyHole` que almacena un entero. Esta clase gestiona el acceso concurrente empleando los monitores propios de Java (`synchronized`) y la comunicación condicional (`wait()` y `notifyAll()`) para evitar que el productor sobreescriba datos o que el consumidor lea el mismo dato dos veces.
     #codeBlock("src/e2/CubbyHole.java", lang: "java")
 
-    Las clases `Productor` y `Consumidor` extienden de `Thread` y acceden iterativamente a este objeto para poner y obtener valores de 0 a 9. En particular, el hilo Productor intercala un pequeño retraso pseudoaleatorio entre operaciones.
+    Las clases `Productor` y `Consumidor` extienden de `Thread` y acceden iterativamente a este objeto para insertar y obtener valores de 0 a 9. En particular, el hilo productor intercala un pequeño retraso pseudoaleatorio entre operaciones.
     #codeBlock("src/e2/Productor.java", lang: "java")
     #codeBlock("src/e2/Consumidor.java", lang: "java")
 
     El programa `Demo` orquesta la ejecución conjunta, iniciando ambos hilos simultáneamente.
     #codeBlock("src/e2/Demo.java", lang: "java")
-    En la salida del programa se aprecia claramente la coordinación exitosa: el Productor deposita un número y el Consumidor lo recoge sin errores de inconsistencia, ni condiciones de carrera, garantizando un flujo constante pese a la concurrencia.
-    #image("img/lab01/e2_demo_time.png", width: 100%)
+    En la salida del programa se aprecia claramente la coordinación exitosa: el productor deposita un número y el consumidor lo recoge sin errores de inconsistencia ni condiciones de carrera, garantizando un flujo constante pese a la concurrencia.
+    #image("img/lab01/e2_demo_time.png")
   ]
 )
 
@@ -302,19 +308,22 @@
   stroke: black + 1pt,
   inset: 0.5em,
   columns: 1fr,
-  grid.cell(
-    fill: tbHeaderBgColor,
-    tableTitle(weight: "bold", alignTo: center, color: white)[CUESTIONARIO],
+  grid.header(
+    repeat: false,
+    grid.cell(
+      fill: tbHeaderBgColor,
+      tableTitle(weight: "bold", alignTo: center, color: white)[CUESTIONARIO],
+    )
   ),
   tableContents[
     #set enum(numbering: "1.")
     #set par(justify: true)
 
     + *¿Por qué es importante el estudio de hilos y multihilos en un sistema distribuido?* \
-      El estudio de hilos en sistemas distribuidos permite aprovechar mejor CPU y red al ejecutar tareas concurrentes por nodo, lo que reduce latencia de respuesta y mejora el rendimiento global del servicio.
+      El estudio de hilos en sistemas distribuidos permite aprovechar mejor la CPU y la red al ejecutar tareas concurrentes por nodo, lo que reduce la latencia de respuesta y mejora el rendimiento global del servicio.
 
     + *Describe cómo están compuestos los hilos y cuál es la diferencia entre hilos y procesos.* \
-      Un hilo está compuesto por contador de programa, pila, estado de ejecución y registros dentro de un proceso, mientras un proceso tiene espacio de memoria propio y recursos aislados, por lo que los hilos son más ligeros pero comparten memoria y requieren sincronización.
+      Un hilo está compuesto por contador de programa, pila, estado de ejecución y registros dentro de un proceso, mientras que un proceso tiene espacio de memoria propio y recursos aislados. Por ello, los hilos son más ligeros, pero comparten memoria y requieren sincronización.
 
     + *Cuadro comparativo de ventajas y desventajas del uso de hilos* \
       #table(
@@ -341,9 +350,12 @@
   stroke: black + 1pt,
   inset: 0.5em,
   columns: 1fr,
-  grid.cell(
-    fill: tbHeaderBgColor,
-    tableTitle(weight: "bold", alignTo: center, color: white)[CONCLUSIONES Y RECOMENDACIONES],
+  grid.header(
+    repeat: false,
+    grid.cell(
+      fill: tbHeaderBgColor,
+      tableTitle(weight: "bold", alignTo: center, color: white)[CONCLUSIONES Y RECOMENDACIONES],
+    )
   ),
   tableContents[
     #show heading: set text(weight: "bold")
@@ -368,9 +380,12 @@
   stroke: black + 1pt,
   inset: 0.5em,
   columns: 1fr,
-  grid.cell(
-    fill: tbHeaderBgColor,
-    tableTitle(weight: "bold", alignTo: center, color: white)[REFERENCIAS Y BIBLIOGRAFÍA],
+  grid.header(
+    repeat: false,
+    grid.cell(
+      fill: tbHeaderBgColor,
+      tableTitle(weight: "bold", alignTo: center, color: white)[REFERENCIAS Y BIBLIOGRAFÍA],
+    )
   ),
   tableContents[
     [1] Tanenbaum, A.S. (2008). Sistemas distribuidos: principios y paradigmas. México. Pearson Educación.
