@@ -53,7 +53,7 @@
   )[
     #set text(size: it.at("text-size"))
     #set par(justify: false)
-    #raw(read(it.file), lang: it.lang)
+    #raw(read(it.file), lang: it.lang, block: true)
   ],
 )
 
@@ -64,7 +64,7 @@
   fields: (
     e.field("title", content, required: true),
     e.field("body", content, required: true),
-    e.field("align-mode", alignment, default: left + horizon),
+    e.field("align-mode", alignment, default: left + top),
     e.field("stroke", e.types.any, default: black + 1pt),
     e.field("inset", e.types.any, default: 0.5em),
     e.field("header-fill", e.types.option(e.types.paint), default: tb-header-bg-color),
@@ -226,6 +226,7 @@
     set list(indent: 1em, marker: "-")
     set enum(numbering: "1.")
     set image(width: 90%)
+    set figure(supplement: [Figura])
     show image: set align(center)
 
     set page(

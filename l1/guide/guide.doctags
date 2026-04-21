@@ -1,0 +1,257 @@
+<doctag><picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<section_header_level_1><loc_184><loc_78><loc_319><loc_87>GUÍA DE LABORATORIO</section_header_level_1>
+<section_header_level_1><loc_199><loc_96><loc_304><loc_105>(formato docente)</section_header_level_1>
+<otsl><loc_32><loc_111><loc_465><loc_252><ched>INFORMACIÓN BÁSICA<lcel><lcel><lcel><lcel><lcel><nl><fcel>ASIGNATURA:<fcel>SISTEMASDISTRIBUIDOS<lcel><lcel><lcel><lcel><nl><fcel>TÍTULO DE LA PRÁCTICA:<fcel>Los Hilos (Threads)<lcel><lcel><lcel><lcel><nl><fcel>NÚMERODE PRÁCTICA:<fcel>01<fcel>AÑOLECTIVO:<fcel>2026<fcel>NRO. SEMESTRE:<fcel>2026A<nl><fcel>TIPO DE<fcel>INDIVIDUAL<ecel><ecel><ecel><ecel><nl><fcel>PRÁCTICA:<fcel>GRUPAL<fcel>X<fcel>MÁXIMODE ESTUDIANTES<lcel><fcel>4<nl><fcel>FECHA INICIO:<fcel>13/04/2026<fcel>FECHA FIN:<fcel>17/04/2026<fcel>DURACIÓN:<fcel>2 horas<nl><fcel>RECURSOS A UTILIZAR: VSCode, Netbeans, Eclipse.<lcel><lcel><lcel><lcel><lcel><nl><fcel>DOCENTE(s): Mg.Maribel Molina Barriga<lcel><lcel><lcel><lcel><lcel><nl></otsl>
+<section_header_level_1><loc_170><loc_269><loc_330><loc_276>OBJETIVOS/TEMAS Y COMPETENCIAS</section_header_level_1>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<section_header_level_1><loc_38><loc_279><loc_91><loc_287>OBJETIVOS:</section_header_level_1>
+<unordered_list><list_item><loc_53><loc_288><loc_463><loc_304>Conocer  y  utilizar  efectivamente  los  componentes  de  hilos  para  aplicaciones  en  las  que  se requiera y de manera adecuada.</list_item>
+</unordered_list>
+<section_header_level_1><loc_38><loc_306><loc_73><loc_313>TEMAS:</section_header_level_1>
+<unordered_list><list_item><loc_53><loc_315><loc_128><loc_321>Hilos (Threads)</list_item>
+</unordered_list>
+<section_header_level_1><loc_38><loc_330><loc_108><loc_337>COMPETENCIAS</section_header_level_1>
+<section_header_level_1><loc_40><loc_380><loc_147><loc_387>I. MARCO CONCEPTUAL</section_header_level_1>
+<text><loc_55><loc_388><loc_312><loc_395>Un hilo (Thread) es un proceso en ejecución dentro de un programa</text>
+<text><loc_79><loc_397><loc_267><loc_403>Puede haber varios hilos en ejecución simultánea</text>
+<text><loc_79><loc_405><loc_325><loc_411>Los hilos implementan prioridad y mecanismos de sincronización</text>
+<text><loc_79><loc_413><loc_199><loc_419>La finalización depende del hilo</text>
+<text><loc_79><loc_421><loc_215><loc_427><loc_79><loc_429><loc_141><loc_435>Cualquier clase se puede hacer hilo extends Thread</text>
+<text><loc_78><loc_437><loc_164><loc_443>implements Runnable</text>
+<text><loc_114><loc_330><loc_462><loc_352>C.a Aplica de forma transformadora conocimientos de matemática, computación e  ingeniería como herramienta para evaluar, sintetizar y mostrar información como fundamento de sus ideas y perspectivas para la resolución de problemas.</text>
+<section_header_level_1><loc_198><loc_370><loc_302><loc_377>CONTENIDO DE LA GUÍA</section_header_level_1>
+<picture><loc_400><loc_23><loc_435><loc_48></picture>
+<text><loc_432><loc_60><loc_460><loc_67>Página: 1</text>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<text><loc_205><loc_77><loc_224><loc_84>java</text>
+<picture><loc_190><loc_87><loc_303><loc_182></picture>
+<text><loc_47><loc_196><loc_305><loc_202>Un proceso es una entidad que posee 2 características importantes:</text>
+<text><loc_47><loc_204><loc_452><loc_226>Recursos: Básicamente: un espacio de direcciones (programas, datos y pila y un PCB), archivos, memoria, etc. El SOP realiza la función de protección para evitar interferencias no deseadas entre procesos en relación con los recursos.</text>
+<text><loc_47><loc_228><loc_453><loc_243>Planificación/Ejecución: El proceso sigue una ruta de ejecución. Tiene un PC, un Estado de ejecución (Listo, bloqueado, ejecutándose, etc.) y una prioridad.</text>
+<text><loc_47><loc_252><loc_453><loc_274>Estas dos características son independientes y pueden ser tratadas como tales por los sistemas de operación. En  algunos sistemas de operación se le denomina a la unidad activa hilo (thread) y a la unidad propietaria de recursos  se le suele denominar proceso o tarea.</text>
+<section_header_level_1><loc_47><loc_284><loc_280><loc_290>EN UN ENTORNO MULTIHILO SE LE ASOCIA A LOS PROCESOS:</section_header_level_1>
+<unordered_list><list_item><loc_62><loc_300><loc_346><loc_307>Un espacio de direcciones virtuales que soporta la imagen del proceso.</list_item>
+<list_item><loc_62><loc_309><loc_366><loc_315>Acceso protegido a procesadores, otros procesos, archivos y recursos de E/S</list_item>
+<list_item><loc_62><loc_317><loc_254><loc_323>En un entorno multihilo se asocian a cada hilo:</list_item>
+<list_item><loc_62><loc_325><loc_171><loc_332>Un estado de ejecución.</list_item>
+<list_item><loc_62><loc_334><loc_416><loc_340>Un PC, un contexto (conjunto de registros) que se almacena cuando no está en ejecución.</list_item>
+<list_item><loc_62><loc_342><loc_112><loc_348>Una pila.</list_item>
+<list_item><loc_62><loc_350><loc_282><loc_357>Un espacio de almacenamiento para variables locales.</list_item>
+<list_item><loc_62><loc_359><loc_246><loc_365>Acceso a la memoria y recursos del proceso.</list_item>
+</unordered_list>
+<text><loc_47><loc_376><loc_462><loc_415>Para que la comunicación entre procesos sea posible es necesario usar las llamadas al sistema. Los threads comparten el mismo espacio de direcciones. Por lo tanto, el cambio de contexto entre un thread y otro que pertenecen al mismo proceso pudiera hacerse de forma totalmente independiente del sistema de operación. Los cambios de contexto de procesos son más costosos. Implican salvar el contexto del proceso, cambio de modo  (trap al sistema de operación, etc), otro cambio de modo, restaurar contexto del nuevo proceso.</text>
+<section_header_level_1><loc_47><loc_424><loc_171><loc_430>IMPLEMENTACIONES DE HILOS:</section_header_level_1>
+<text><loc_47><loc_442><loc_150><loc_448>Threads a nivel de usuario.</text>
+<text><loc_47><loc_451><loc_196><loc_466>Threads a nivel de kernel Enfoque combinado, procesos Livianos</text>
+<picture><loc_400><loc_23><loc_434><loc_48></picture>
+<text><loc_432><loc_60><loc_460><loc_67>Página: 2</text>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<picture><loc_400><loc_24><loc_434><loc_48></picture>
+<text><loc_432><loc_60><loc_460><loc_67>Página: 3</text>
+<text><loc_47><loc_77><loc_453><loc_100>Usando hilos, se puede permitir el uso de llamadas al sistema bloqueantes sin necesidad de 'bloquear' todo el  proceso. Esta propiedad vuelve a los hilos particularmente atractivos para su uso dentro de sistemas distribuidos.  Concentrémonos en la arquitectura Cliente Servidor.</text>
+<section_header_level_1><loc_47><loc_109><loc_135><loc_115>CLIENTES MULTIHILOS</section_header_level_1>
+<text><loc_47><loc_125><loc_304><loc_131>Sirven para esconder la latencia de comunicación a través de la red.</text>
+<section_header_level_1><loc_47><loc_141><loc_162><loc_147>Ejemplo 1 : Navegadores WEB</section_header_level_1>
+<text><loc_47><loc_157><loc_453><loc_187>En  muchos casos una página  WEB  consiste de un texto plano  con múltiples  figuras. Con frecuencia el navegador,  establece la conexión con el servidor, recupera y comienza a desplegar la página HTML (incluso se permite al usuario el desplazamiento dentro de la página) mientras el navegador continúa recuperando otros archivos que conforman la página.</text>
+<text><loc_47><loc_189><loc_453><loc_219>Desarrollar navegadores multihilos simplifica este hecho de forma considerable. Tan pronto como llega la página  principal se pueden activar hilos que se encarguen de recuperar las demás partes. Cada hilo establece su propia conexión con el servidor. Mientras tanto el usuario advierte el retardo en las imágenes, pero puede ir explorando  el documento.</text>
+<text><loc_47><loc_220><loc_396><loc_227>Si el servidor está saturado o es lento no se observarán mejoras notables en el rendimiento.</text>
+<section_header_level_1><loc_47><loc_237><loc_194><loc_243>Ejemplo 2: Servidores WEB Replicados</section_header_level_1>
+<text><loc_47><loc_253><loc_452><loc_267>En muchos casos los servidores se replican en distintas máquinas y cada servidor proporciona el mismo conjunto  de documentos WEB. Están localizados en el mismo sitio y se conocen por el mismo nombre.</text>
+<text><loc_47><loc_276><loc_453><loc_291>Cuando entra una petición para una página WEB es re-enviada a uno de los servidores (usando round-robin u otra  técnica de balanceo de carga).</text>
+<text><loc_47><loc_292><loc_452><loc_315>Cuando se usan clientes multihilos cada conexión puede ir a una réplica diferente del mismo servidor. En este caso  los  distintos archivos se  transmiten en paralelo  asegurando que la  página WEB  completa se despliega en un  tiempo más corto</text>
+<text><loc_47><loc_324><loc_452><loc_339>El  principal  uso de la  tecnología multihilos  está del  lado  del servidor. Básicamente buscan  mejorar el desempeño  (aún en servidores monoprocesador) y la forma cómo se estructura el servidor.</text>
+<text><loc_47><loc_348><loc_453><loc_371>Ejemplo: Por lo general un servidor de archivos espera una petición de entrada para una operación de archivo, posteriormente ejecuta la petición (operación bloqueante al disco) y luego envía la respuesta de regreso.</text>
+<text><loc_47><loc_372><loc_453><loc_387>Modelo Servidor/Trabajador: Las peticiones son enviadas por los clientes hasta el servidor. Después de examinar  la petición el hilo servidor elige un hilo trabajador sin utilizar y le encarga la petición.</text>
+<text><loc_42><loc_396><loc_459><loc_435>El hilo trabajador  realiza  la lectura, lo cual puede  provocar  que  se  suspenda  hasta  que los  datos  sean  recuperados. Si  el  hilo  se  suspende, el procesador, selecciona otro para  su ejecución. ¿Cómo se programa un servidor de archivos en la ausencia de hilos? El servidor recibe a peticiones, las examina y las trata de resolver antes de recibir la siguiente petición. Mientras espera por el disco el servidor está ocioso y no procesa otra petición. Se procesan menos peticiones por segundo (throughput).</text>
+<text><loc_42><loc_444><loc_462><loc_450>Con los hilos se gana un rendimiento considerable. Cada hilo se programa secuencialmente en forma tradicional.</text>
+<text><loc_42><loc_460><loc_462><loc_474>Supongamos que los hilos no están disponibles, pero los diseñadores del sistema consideran inaceptable el rendimiento debido al uso de un solo hilo y operaciones bloqueantes.</text>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<section_header_level_1><loc_37><loc_77><loc_268><loc_84>II. EJERCICIO/PROBLEMA RESUELTO POR EL DOCENTE</section_header_level_1>
+<section_header_level_1><loc_51><loc_94><loc_315><loc_102>Caso Estudio: simular el proceso de cobro de un supermercado</section_header_level_1>
+<text><loc_51><loc_103><loc_462><loc_119>Unos clientes van con un carro lleno de productos  y una cajera les cobra los productos,  pasándolos uno a uno por el escáner de la caja registradora.</text>
+<text><loc_51><loc_121><loc_462><loc_137>En este caso la cajera debe de procesar la compra cliente a cliente, es decir que primero le cobra al cliente 1, luego al cliente 2 y así sucesivamente.</text>
+<text><loc_51><loc_138><loc_462><loc_189>Para ello vamos a definir una clase "Cajera" y una clase "Cliente" el cual tendrá un "array de enteros" que  representaran los  productos  que  ha comprado  y  el tiempo  que  la cajera tardará en  pasar el producto  por  el escáner; es decir, que  si tenemos  un  array con [1,3,5] significará que el cliente ha comprado 3 productos  y que la cajera tardara en procesar el producto  1 '1 segundo', el producto 2 '3 segundos' y el producto  3 en '5 segundos', con lo cual tardara en cobrar al cliente toda su compra '9 segundos'.</text>
+<text><loc_51><loc_190><loc_132><loc_197>Código en Anexo 1:</text>
+<text><loc_51><loc_199><loc_343><loc_206>Explicado este ejemplo vamos a ver cómo hemos definido estas clases:</text>
+<unordered_list><list_item><loc_71><loc_208><loc_169><loc_215>Clase "Cajera.java"</list_item>
+<list_item><loc_71><loc_217><loc_172><loc_224>Clase "Cliente.java"</list_item>
+<list_item><loc_71><loc_225><loc_166><loc_232>Clase "Main.java":</list_item>
+</unordered_list>
+<text><loc_67><loc_234><loc_462><loc_250>Como vemos  se procesa  primero la  compra del  cliente  1  y  después  la compra  del  cliente  2 tardando en procesar ambas compras un tiempo de 26 segundos.</text>
+<text><loc_67><loc_260><loc_462><loc_293>¿Y  si en  vez  de  procesar  primero  un  cliente  y  después  otro,  procesásemos  los  dos  a la  vez?, ¿Cuánto  tardaría el programa en ejecutarse?. Pues bien si en vez de haber solo una Cajera (es decir un solo hilo), hubiese dos Cajeras (es decir dos hilos o threads) podríamos procesar los dos clientes a la vez y tardar menos tiempo en ejecutarse el programa.</text>
+<text><loc_67><loc_295><loc_462><loc_320>Para ello debemos de modificar la clase "Cajera.java" y hacer que  esta clase herede de la clase Thread  para  heredar  y  sobre-escribir  algunos  de  sus  métodos.  Primero  vamos  a  ver  como codificamos esta nueva clase "CajeraThread.java" y después explicamos sus características.</text>
+<text><loc_67><loc_330><loc_462><loc_345>Lo  primero  que  vemos  y  que  ya  hemos  comentado  es  que  la clase  "CajeraThread" debe  de heredar de la clase Thread: "extendsThread".</text>
+<text><loc_67><loc_356><loc_462><loc_398>Otra  cosa  importante  que  vemos  es  que  hemos  sobre-escrito  el  método    "run()"  (de  ahi  la etiqueta @Override) . Este método es imprescindibles sobre-escribirlo (ya que es un método que está  en  la clase Runnable  y  la clase Thread  Implementa  esa  Interface)  porque  en  él se  va a codificar la funcionalidad que se ha de ejecutar en un hilo; es decir, que lo que se programe en el método "run()" se va a ejecutar de forma secuencial en un hilo.</text>
+<text><loc_67><loc_408><loc_462><loc_424>En esta clase "CajeraThread" se pueden  sobre-escribir más métodos  para que hagan acciones sobre el hilo o thread como, por ejemplo, parar el thread, ponerlo en reposos, etc</text>
+<unordered_list><list_item><loc_71><loc_426><loc_190><loc_433>Clase CajeraThread.java</list_item>
+</unordered_list>
+<text><loc_67><loc_442><loc_462><loc_464>A continuación vamos a ver como programamos el método Main para que procese a los clientes de forma paralela y ver como se tarda menos en procesar todo. El método Main esta en la clase "MainThread.java" que tiene el siguiente contenido:</text>
+<unordered_list><list_item><loc_71><loc_466><loc_194><loc_473>Clase "MainThread.java"</list_item>
+</unordered_list>
+<picture><loc_400><loc_24><loc_434><loc_48></picture>
+<text><loc_432><loc_60><loc_460><loc_67>Página: 4</text>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<picture><loc_400><loc_24><loc_435><loc_48></picture>
+<text><loc_432><loc_60><loc_460><loc_67>Página: 5</text>
+<text><loc_71><loc_86><loc_462><loc_111>Ahora  vamos  a  ver  cuál  sería  el  resultado  de  esta  ejecución  y  vamos  a  comprobar  como efectivamente el programa se ejecuta de forma paralela y tarda solo 15 segundos  en terminar su ejecución.</text>
+<text><loc_71><loc_121><loc_462><loc_189>Otra forma de hacer lo mismo, pero sin heredar de la clase "Thread" es implementar la Interface "Runnable".  En este caso no dispondremos  ni podremos sobre-escribir los métodos  de la clase Thread ya que no la vamos a utilizar y solo vamos a tener que sobre-escribir el método "run()". En  este  caso  solo  será  necesario  implementar  el  método  "run()"  para  que  los  procesos implementados en ese método  se ejecuten en  un  hilo diferente. Vamos a ver un ejemplo de cómo utilizando  objetos  de  las clases "Cliente.java" y  "Cajera.java" podemos  implementar la multitarea en la misma clase donde  se llama al método Main de la aplicación. A continuación, vemos la codificación en la clase:</text>
+<section_header_level_1><loc_71><loc_199><loc_205><loc_206>· Clase "MainRunnable.java"</section_header_level_1>
+<text><loc_67><loc_217><loc_462><loc_267>El concepto  de multitarea o multiprocesamiento  es bastante  sencillo de entender  ya que solo consiste en hacer varias cosas a la vez sin que se vea alterado el resultado final. Como ya se ha dicho en  la entrada no  todo  se puede  paralelizar y en muchas ocasiones  suele ser complicado encontrar  la manera de  paralelizar procesos  dentro  de  una  aplicación sin  que  esta  afecte  al resultado de la misma, por tanto, aunque el concepto sea fácil de entender el aplicarlo a un caso práctico puede ser complicado para que el resultado de la aplicación no se vea afectado.</text>
+<section_header_level_1><loc_35><loc_278><loc_217><loc_285>III. EJERCICIOS/PROBLEMAS PROPUESTOS</section_header_level_1>
+<ordered_list><list_item><loc_68><loc_286><loc_385><loc_293>Implementar, ejecutar y probar el código de los anexos 2, de manera adecuada.</list_item>
+<list_item><loc_68><loc_294><loc_198><loc_301>Evaluar resultados obtenidos.</list_item>
+<list_item><loc_68><loc_302><loc_305><loc_309>Escriba un reporte sobre las tareas realizadas y resultados.</list_item>
+<list_item><loc_68><loc_310><loc_175><loc_317>Escriba sus conclusiones</list_item>
+</ordered_list>
+<section_header_level_1><loc_52><loc_331><loc_201><loc_338>Caso Estudio: Productor - Consumidor</section_header_level_1>
+<text><loc_52><loc_345><loc_450><loc_376>El productor genera un entero entre 0 y 9 (inclusive), lo almacena en un objeto " CubbyHole ", e imprime el número generado. Para hacer más interesante el problema de la  sincronización, el productor duerme durante un tiempo  aleatorio  entre  0  y  100  milisegundos  antes  de  repetir  el ciclo  de generación de números.</text>
+<code><loc_52><loc_380><loc_361><loc_476><_unknown_>class Productor extends Thread { private CubbyHole cubbyhole; private int numero; public Productor(CubbyHole c, int numero) { cubbyhole = c; this.numero = numero; } public void run() { for (int i = 0; i < 10; i++) { cubbyhole.put(i); System.out.println("Productor  #"+this.numero+" pone: " +i); try {</code>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<code><loc_68><loc_77><loc_341><loc_123><_unknown_>sleep((int)(Math.random() * 100)); } catch (InterruptedException e) { } } } }</code>
+<text><loc_52><loc_127><loc_460><loc_142>El consumidor, por su parte, está 'hambriento', consume todos los enteros de CubbyHole (exactamente el  mismo objeto en que el productor puso los enteros en primer lugar) tan pronto como estén disponibles.</text>
+<code><loc_52><loc_147><loc_453><loc_270><_unknown_>class Consumidor extends Thread { private CubbyHole cubbyhole; private int numero; public Consumidor(CubbyHole c, int numero) { cubbyhole = c; this.numero = numero; } public void run() { int value = 0; for (int i = 0; i < 10; i++) { value = cubbyhole.get(); System.out.println("Consumidor #"+this.numero+" obtiene: "+value); } } }</code>
+<text><loc_67><loc_275><loc_466><loc_322>En este ejemplo, el Productor y el Consumidor comparten datos a  través de un objeto CubbyHole común. Observará que ninguno de los dos hace ningún tipo  de esfuerzo para  asegurarse de que el consumidor obtiene cada valor producido una y sólo una vez. La sincronización entre estos dos hilos realmente ocurre a un nivel inferior, dentro de los métodos get() y put() del objeto CubbyHole . Sin  embargo, asumamos por un momento que estos dos hilos no  están sincronizados y veamos los problemas potenciales que podría provocar esta situación.</text>
+<text><loc_52><loc_329><loc_450><loc_351>Un problema sería el que se daría cuando el Productor fuera más rápido que el Consumidor y generara dos números antes de que el Consumidor tuviera una posibilidad de consumir el primer número. Así el Consumidor se saltaría un número. Parte de la salida se podría parecer a esto.</text>
+<code><loc_68><loc_360><loc_207><loc_395><_unknown_>Consumidor #1 obtiene: 3 Productor #1 pone: 4 Productor #1 pone: 5 Consumidor #1 obtiene: 5 . . .</code>
+<text><loc_52><loc_403><loc_450><loc_425>Otro problema podría aparecer si el consumidor fuera más rápido que el productor y consumiera el mismo valor dos o más veces. En esta situación el Consumidor imprimirá el mismo valor dos veces y podría producir una salida como esta.</text>
+<text><loc_90><loc_430><loc_124><loc_435>. . .</text>
+<code><loc_68><loc_438><loc_207><loc_465><_unknown_>Productor #1 pone: 4 Consumidor #1 obtiene: 4 Consumidor #1 obtiene: 4 Productor #1 pone: 5</code>
+<text><loc_90><loc_467><loc_124><loc_472>. . .</text>
+<picture><loc_400><loc_23><loc_435><loc_48></picture>
+<text><loc_432><loc_60><loc_460><loc_67>Página: 6</text>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<picture><loc_400><loc_24><loc_434><loc_48></picture>
+<text><loc_432><loc_60><loc_460><loc_67>Página: 7</text>
+<text><loc_52><loc_83><loc_450><loc_113>De  cualquier forma, el  resultado es erróneo. Se quiere que el  consumidor obtenga cada  entero producido por el productor y sólo una vez. Los problemas como los descritos anteriorme nte, se llaman 'condiciones de carrera'. Se alcanzan cuando varios hilos ejecutados asíncronamente intentan acceder a un mismo objeto al mismo tiempo y obtienen resultados erróneos.</text>
+<text><loc_52><loc_120><loc_451><loc_159>Para prevenir estas condiciones en nuestro ejemplo Productor/Consumidor, el almacenamiento de un nuevo entero en CubbyHole por el Productor debe estar sincronizado con la recuperación del entero por parte del Consumidor. El Consumidor debe consumir cada entero exactamente una vez. El programa productor-consumidor  utiliza dos mecanismos  diferentes  para sincronizar los hilos  Productor  y Consumidor; los monitores, y los métodos notify() y wait .</text>
+<section_header_level_1><loc_47><loc_176><loc_247><loc_183>Caso Estudio del productor-consumidor modificado</section_header_level_1>
+<text><loc_52><loc_192><loc_451><loc_215>En el ejemplo anterior del productor- consumidor tiene dos métodos de sincronización: put(), que cambia el valor de CubbyHole , y get() , para recuperar el valor actual. Este sería el código fuente del objeto CubbyHole utilizando las técnicas de sincronización nuevas:</text>
+<code><loc_68><loc_224><loc_329><loc_428><_unknown_>class  CubbyHole  { private int contents; private boolean available = false; public synchronized int get() { while (available == false) { try { wait(); } catch (InterruptedException e) { } } available = false; notify(); return contents; } public synchronized void put(int value) { while (available == true) { try { wait(); } catch (InterruptedException e) { } } contents = value; available = true; notify(); } }</code>
+<text><loc_52><loc_433><loc_450><loc_448>La variable contents tiene el valor actual de CubbyHole y available indica si se puede recuperar o no el valor. Cuando available es verdadero, el productor aún no ha acabado de producir.</text>
+<text><loc_52><loc_455><loc_450><loc_478>CubbyHole tiene dos métodos de sincronización, y Java proporciona un solo monitor para cada ejemplar de CubbyHole (incluyendo el compartido por el Productor y el Consumidor). Siempre que el control entra en un método sincronizado, el hilo que ha llamado al método adquiere el monitor del objeto</text>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<picture><loc_400><loc_23><loc_435><loc_48></picture>
+<text><loc_432><loc_60><loc_460><loc_67>Página: 8</text>
+<text><loc_52><loc_77><loc_450><loc_91>al  cual pertenece el método. Otros hilos no pueden llamar a un método sincronizado del mismo objeto mientras el monitor no sea liberado.</text>
+<text><loc_51><loc_98><loc_450><loc_137>Nota: Java permite re-adquirir un monitor. En este caso se trata de los llamados monitores re-entrantes. Cuando el Productor invoca el método put() de CubbyHole , adquiere el monitor del objeto CubbyHole y por lo tanto el Consumidor no podrá llamar a get() de CubbyHole y se quedará bloquedo (existe un método, wait(), que libera temporalmente el monitor). De igual forma sucede cuando el Consumidor invoca get().</text>
+<code><loc_68><loc_142><loc_398><loc_325><_unknown_>public synchronized void put(int value) { // El productor adquiere el monitor while (available == true) { try { wait(); } catch (InterruptedException e) { } } contents = value; available = true; notify();// lo notifica al Productor // El productor libera el monitor } public synchronized int get() { // El consumidor adquier el monitor while (available == false) { try { wait();  //  espera  que  el  Productor  invoque  a notify () } catch (InterruptedException e) { } } available = false; notify(); return contents; // el Consumidor libera el monitor }</code>
+<section_header_level_1><loc_34><loc_343><loc_118><loc_350>IV. CUESTIONARIO</section_header_level_1>
+<ordered_list><list_item><loc_68><loc_351><loc_392><loc_358>¿Por qué es importante el estudio de hilos y multihilos en un sistema distribuido?</list_item>
+<list_item><loc_68><loc_359><loc_430><loc_365>Describe ¿Cómo están compuestos los hilos? y ¿Cuál es la diferencia entre hilos y procesos?</list_item>
+<list_item><loc_68><loc_367><loc_360><loc_373>Realice un cuadro comparativo de ventajas y desventajas del uso de hilos</list_item>
+</ordered_list>
+<section_header_level_1><loc_37><loc_383><loc_258><loc_390>V. REFERENCIAS Y BIBLIOGRÁFIA RECOMENDADAS:</section_header_level_1>
+<ordered_list><list_item><loc_42><loc_392><loc_433><loc_398>Tanenbaum, A.S. (2008). Sistemas distribuidos: principios y paradigmas. México. Pearson Educación.</list_item>
+<list_item><loc_42><loc_400><loc_359><loc_406>Ceballos, F. J. (2006). Java 2, Curso de programación. México: Alfaomega, RaMa.</list_item>
+<list_item><loc_42><loc_408><loc_387><loc_414>Deitel, H. M., & Deitel, P. J. (2004). Cómo programar en Java. México: Pearson ducación.</list_item>
+<list_item><loc_42><loc_416><loc_410><loc_422>García Tomás, J., Ferrando, S., & Piattini, M. (2001). Redes para procesos distribuidos. México:</list_item>
+</ordered_list>
+<text><loc_42><loc_424><loc_114><loc_430>Alfaomega  Ra-Ma.</text>
+<ordered_list><list_item><loc_42><loc_432><loc_401><loc_438>Orfali, R., & Harkey, D. (1998). Client/Server Programming with Java and CORBA. USA: Wiley</list_item>
+<list_item><loc_42><loc_440><loc_375><loc_446>programación multihilohttps://oscarmaestre.github.io/servicios/textos/tema2.html</list_item>
+<list_item><loc_42><loc_448><loc_117><loc_454>Threads en Java</list_item>
+</ordered_list>
+<text><loc_42><loc_456><loc_391><loc_462>https://lc.fie.umich.mx/~rochoa/Materias/PROGRAMACION/PROGRAMACION_2/HILOS.pdf</text>
+<ordered_list><list_item><loc_42><loc_464><loc_382><loc_470>https://biblus.us.es/bibing/proyectos/abreproy/11320/fichero/Capitulos%252F13.pdf</list_item>
+</ordered_list>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<section_header_level_1><loc_153><loc_79><loc_347><loc_86>TÉCNICAS E INSTRUMENTOS DE EVALUACIÓN</section_header_level_1>
+<section_header_level_1><loc_38><loc_90><loc_87><loc_97>TÉCNICAS:</section_header_level_1>
+<text><loc_38><loc_97><loc_168><loc_112>Problemas /Ejercicios propuestos / Preguntas formuladas /</text>
+<text><loc_38><loc_114><loc_115><loc_120>Resolución de casos</text>
+<section_header_level_1><loc_38><loc_122><loc_156><loc_129>CRITERIOS DE EVALUACIÓN</section_header_level_1>
+<unordered_list><list_item><loc_57><loc_131><loc_221><loc_138>Identifica el proceso de hilos (Threads)</list_item>
+<list_item><loc_57><loc_139><loc_280><loc_146>Utiliza las clases miembro de hilos de la biblioteca Java</list_item>
+</unordered_list>
+<section_header_level_1><loc_45><loc_234><loc_92><loc_243>Anexo 1:</section_header_level_1>
+<section_header_level_1><loc_45><loc_249><loc_102><loc_254>public class cajera {</section_header_level_1>
+<code><loc_75><loc_261><loc_414><loc_457><_unknown_>private String nombre; public cajera() { } public cajera(String nombre) { this.nombre = nombre; } public String getNombre() { return nombre; } public void setNombre(String nombre) { this.nombre = nombre; } public void procesarCompra(Cliente cliente, long timeStamp) { System.out.println("La cajera " + this.nombre + " COMIENZA A PROCESAR LA COMPRA DEL CLIENTE " + cliente.getNombre() + " EN EL TIEMPO: " + (System.currentTimeMillis() - timeStamp) / 1000 + "seg"); for (int i = 0; i < cliente.getCarroCompra().length; i++) { this.esperarXsegundos(cliente.getCarroCompra()[i]); System.out.println("Procesado el producto " + (i + 1) + " ->Tiempo: " + (System.currentTimeMillis() - timeStamp) / 1000 + "seg"); } System.out.println("La cajera " + this.nombre + " HA TERMINADO DE PROCESAR " + cliente.getNombre() + " EN EL TIEMPO: " + (System.currentTimeMillis() - timeStamp) / 1000 + "seg");</code>
+<section_header_level_1><loc_175><loc_90><loc_251><loc_97>INSTRUMENTOS:</section_header_level_1>
+<text><loc_175><loc_97><loc_232><loc_104>Lista de cotejo</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<picture><loc_400><loc_23><loc_435><loc_48></picture>
+<text><loc_432><loc_60><loc_460><loc_67>Página: 9</text>
+<page_footer><loc_75><loc_464><loc_78><loc_469>}</page_footer>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<code><loc_45><loc_76><loc_384><loc_464><_unknown_>private void esperarXsegundos(int segundos) { try { Thread.sleep(segundos * 1000); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); } } } public class CajeraThread extends Thread { private String nombre; private Cliente cliente; private long initialTime; public CajeraThread() { } public CajeraThread(String nombre, Cliente cliente, long initialTime) { this.nombre = nombre; this.cliente = cliente; this.initialTime = initialTime; } public String getNombre() { return nombre; } public void setNombre(String nombre) { this.nombre = nombre; } public long getInitialTime() { return initialTime; } public void setInitialTime(long initialTime) { this.initialTime = initialTime; } public Cliente getCliente() { return cliente; } public void setCliente(Cliente cliente) { this.cliente = cliente; } @Override public void run() { System.out.println("La cajera " + this.nombre + " COMIENZA A PROCESAR LA COMPRA DEL CLIENTE " + this.cliente.getNombre() + " EN EL TIEMPO: " + (System.currentTimeMillis() - this.initialTime) / 1000 + "seg"); for (int i = 0; i < this.cliente.getCarroCompra().length; i++) { // Se procesa el pedido en X segundos this.esperarXsegundos(cliente.getCarroCompra()[i]); System.out.println("Procesado el producto " + (i + 1) + " del cliente " + this.cliente.getNombre() + "->Tiempo: " + (System.currentTimeMillis() - this.initialTime) / 1000 + "seg");</code>
+<picture><loc_400><loc_23><loc_435><loc_48></picture>
+<text><loc_428><loc_60><loc_460><loc_67>Página: 10</text>
+<page_footer><loc_105><loc_465><loc_108><loc_470>}</page_footer>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<code><loc_45><loc_76><loc_376><loc_476><_unknown_>System.out.println("La cajera " + this.nombre + " HA TERMINADO DE PROCESAR " + this.cliente.getNombre() + " EN EL TIEMPO: " + (System.currentTimeMillis() - this.initialTime) / 1000 + "seg"); } private void esperarXsegundos(int segundos) { try { Thread.sleep(segundos * 1000); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); } } } public class Cliente  { private String nombre; private int[] carroCompra; public Cliente() { } public Cliente(String nombre, int[] carroCompra) { this.nombre = nombre; this.carroCompra = carroCompra; } public String getNombre() { return nombre; } public void setNombre(String nombre) { this.nombre = nombre; } public int[] getCarroCompra() { return carroCompra; } public void setCarroCompra(int[] carroCompra) { this.carroCompra = carroCompra; } } public class Main { public static void main(String[] args) { Cliente cliente1 = new Cliente("Cliente 1", new int[] { 2, 2, 1, 5, 2, 3 }); Cliente cliente2 = new Cliente("Cliente 2", new int[] { 1, 3, 5, 1, 1 }); cajera cajera1 = new cajera("Cajera 1"); cajera cajera2 = new cajera("Cajera 2"); // Tiempo inicial de referencia long initialTime = System.currentTimeMillis(); cajera1.procesarCompra(cliente1, initialTime); cajera2.procesarCompra(cliente2, initialTime); } } public class MainRunnable implements Runnable{ private Cliente cliente; private cajera cajera;</code>
+<picture><loc_400><loc_23><loc_435><loc_48></picture>
+<text><loc_428><loc_61><loc_450><loc_66>Página:</text>
+<text><loc_450><loc_60><loc_460><loc_67>11</text>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<code><loc_45><loc_76><loc_313><loc_365><_unknown_>private long initialTime; public MainRunnable (Cliente cliente, cajera cajera, long initialTime){ this.cajera = cajera; this.cliente = cliente; this.initialTime = initialTime; } public static void main(String[] args) { Cliente cliente1 = new Cliente("Cliente 1", new int[] { 2, 2, 1, 5, 2, 3 }); Cliente cliente2 = new Cliente("Cliente 2", new int[] { 1, 3, 5, 1, 1 }); cajera cajera1 = new cajera("Cajera 1"); cajera cajera2 = new cajera("Cajera 2"); // Tiempo inicial de referencia long initialTime = System.currentTimeMillis(); Runnable proceso1 = new MainRunnable(cliente1, cajera1, initialTime); Runnable proceso2 = new MainRunnable(cliente2, cajera2, initialTime); new Thread(proceso1).start(); new Thread(proceso2).start(); } @Override public void run() { this.cajera.procesarCompra(this.cliente, this.initialTime); } } public class MainThread { public static void main(String[] args) { Cliente cliente1 = new Cliente("Cliente 1", new int[] { 2, 2, 1, 5, 2, 3 }); Cliente cliente2 = new Cliente("Cliente 2", new int[] { 1, 3, 5, 1, 1 }); //Tiempo inicial de referencia long initialTime = System.currentTimeMillis(); CajeraThread cajera1 = new CajeraThread("Cajera 1", cliente1, initialTime); CajeraThread cajera2 = new CajeraThread("Cajera 2", cliente2, initialTime); cajera1.start(); cajera2.start(); } }</code>
+<section_header_level_1><loc_45><loc_380><loc_92><loc_389>Anexo 2:</section_header_level_1>
+<code><loc_45><loc_396><loc_266><loc_476><_unknown_>public class Consumidor extends Thread { private CubbyHole cubbyhole; private int numero; public Consumidor(CubbyHole c, int numero) { cubbyhole = c; this.numero = numero; } public void run() { int value = 0; for (int i = 0; i < 10; i++) { value = cubbyhole.get(); System.out.println("Consumidor #"+this.numero+" obtiene:"+value); } }</code>
+<picture><loc_400><loc_23><loc_434><loc_48></picture>
+<text><loc_428><loc_60><loc_460><loc_67>Página: 12</text>
+<page_break>
+<picture><loc_45><loc_26><loc_147><loc_44></picture>
+<section_header_level_1><loc_180><loc_27><loc_359><loc_46>UNIVERSIDAD NACIONAL DE SAN AGUSTIN FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA</section_header_level_1>
+<text><loc_143><loc_53><loc_351><loc_58>Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación</text>
+<text><loc_235><loc_61><loc_304><loc_66>Código: GUIA-PRLD-001</text>
+<text><loc_63><loc_61><loc_136><loc_66>Aprobación:  2022/03/01</text>
+<code><loc_45><loc_76><loc_248><loc_383><_unknown_>} public class CubbyHole{ private int contents; private boolean available = false; public synchronized int get() { while (available == false) { try { wait(); } catch (InterruptedException e) { } } available = false; notifyAll(); return contents; } public synchronized void put(int value) { while (available == true) { try { wait(); } catch (InterruptedException e) { } } contents = value; available = true; notifyAll(); } } public class Demo { public static void main(String[] args) { CubbyHole cub = new CubbyHole(); Consumidor cons = new Consumidor(cub,1); Productor prod = new Productor(cub,1); prod.start(); cons.start(); } } public class Productor extends Thread { private CubbyHole cubbyhole; private int numero; public Productor(CubbyHole c, int numero) { cubbyhole = c; this.numero = numero; } public void run() { for (int i = 0; i < 10; i++) {cubbyhole.put(i); System.out.println("Productor #" + this.numero + "pone:" + i); try { sleep((int)(Math.random() * 100)); } catch (InterruptedException e) { } } } }</code>
+<picture><loc_400><loc_23><loc_435><loc_48></picture>
+<text><loc_428><loc_60><loc_460><loc_67>Página: 13</text>
+</doctag>

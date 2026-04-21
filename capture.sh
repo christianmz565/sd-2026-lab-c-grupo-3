@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 if [ "$#" -lt 2 ]; then
-    echo "Usage: capture.sh <output-file> <command1> [command2] [...]"
-    echo "Example: ./capture.sh out 'eza -lah' 'cat sample.c'"
+    echo "Usage: capture.sh <output-file> <command> [ms:input] [...]"
     exit 1
 fi
 
 output_file="$1"
-commands=("${@:2}")
+shift
+args=("$@")
 
 esc=$'\e'
 reset="${esc}[0m"
@@ -17,21 +17,38 @@ flamingo="${esc}[38;5;217m"
 
 temp_output=$(mktemp)
 
-for command_name in "${commands[@]}"; do
+i=0
+while [ $i -lt ${#args[@]} ]; do
+    command_name="${args[$i]}"
+
     read -r -a words <<< "$command_name"
     first_word="${words[0]}"
     rest_words=("${words[@]:1}")
-
     colored_command="${blue}${first_word}${reset}"
-
-    if [ "${#rest_words[@]}" -gt 0 ]; then
-        joined_rest="${rest_words[*]}"
-        colored_command="${colored_command} ${flamingo}${joined_rest}${reset}"
-    fi
+    [ "${#rest_words[@]}" -gt 0 ] && colored_command="${colored_command} ${flamingo}${rest_words[*]}${reset}"
 
     printf "%s❯ %s\n" "$green" "$colored_command" >> "$temp_output"
 
-    eval "$command_name" >> "$temp_output" 2>&1
+    inputs=()
+    while [[ $i+1 -lt ${#args[@]} && "${args[$((i+1))]}" =~ ^[0-9]+: ]]; do
+        i=$((i+1))
+        inputs+=("${args[$i]}")
+    done
+
+    (
+        if [ ${#inputs[@]} -gt 0 ]; then
+            for item in "${inputs[@]}"; do
+                ms="${item%%:*}"
+                text="${item#*:}"
+                delay=$(awk "BEGIN {print $ms/1000}")
+                sleep "$delay"
+                echo "$text"
+            done
+        fi
+        sleep 0.1
+    ) | script -qec "$command_name" /dev/null | tr -d '\r' >> "$temp_output" 2>&1
+
+    i=$((i+1))
 done
 
 cat "$temp_output" | tee lastcmd.log | freeze \
@@ -42,6 +59,4 @@ cat "$temp_output" | tee lastcmd.log | freeze \
     --language ansi
 
 inkscape -w 2048 "$output_file.svg" -o "$output_file.png"
-
-rm "$output_file.svg"
-rm "$temp_output"
+rm "$output_file.svg" "$temp_output"
