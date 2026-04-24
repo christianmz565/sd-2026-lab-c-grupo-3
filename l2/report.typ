@@ -28,23 +28,17 @@
 
     #link("https://github.com/christianmz565/sd-2026-lab-c-grupo-3/main/l2")
 
-    = SOLUCIÓN DE EJERCICIOS PROPUESTOS
+    = SOLUCIÓN DE EJERCICIOS RESUELTOS
 
     == Lamport Clock
 
-    `LamportClock.java` cumple el rol de demostrador base del modelo de reloj lógico de Lamport y concentra en una sola clase el estado de reloj compartido, la lógica de incremento local, la regla de ajuste por recepción de eventos y el orquestador concurrente de hilos
+    El estado compartido del reloj y sus reglas de actualización se concentran en tres métodos clave: `tick()`, `update(...)` y `getTime()`. Este núcleo garantiza monotonicidad lógica y consistencia con sincronización por método.
 
-    El atributo `clock` representa el tiempo lógico común y su acceso se protege con sincronización de método para preservar consistencia cuando varios hilos invocan `tick()` y `update(int receivedTime)` de manera concurrente
+    #code-block("snippets/s1/LamportClock.java", snippet: "clock-rules", lang: "java")
 
-    El método `tick()` incrementa una unidad por evento local y devuelve el nuevo valor para etiquetar causalmente cada acción interna de hilo, mientras que `update()` implementa la regla `max(local, recibido) + 1` para mantener monotonicidad y asegurar que la recepción de un evento remoto siempre avance la línea temporal del proceso
+    Luego, el cierre de ejecución espera la finalización de todos los hilos con `join()` y finalmente reporta el tiempo lógico total.
 
-    El flujo de control inicia en `main(String[] args)` donde se crea una lista de hilos, se instancia un reloj compartido y se lanzan cinco tareas que ejecutan dos eventos por hilo con una pausa aleatoria intermedia para simular latencias de comunicación
-
-    Cada hilo imprime su evento de creación con tiempo Lamport, luego genera un segundo evento de recepción y finalmente solicita actualización del reloj según la marca recibida para reforzar el orden parcial entre eventos concurrentes
-
-    El ciclo final con `join()` garantiza que el hilo principal espere la terminación de todas las tareas antes de reportar `Final Lamport time`, con lo cual el valor final refleja la acumulación de incrementos y ajustes de todo el sistema
-
-    #code-block("src/s1/LamportClock.java", lang: "java")
+    #code-block("snippets/s1/LamportClock.java", snippet: "join-and-final-time", lang: "java")
 
     A continuación, se muestra el resultado de compilar y ejecutar el programa:
 
@@ -54,43 +48,35 @@
 
     == Cristian Algorithm
 
-    El archivo `src/e1/CristianAlgorithm.java` implementa un esquema cliente-servidor para sincronización física aproximada donde un servidor de tiempo responde lecturas y cada cliente estima el tiempo válido corrigiendo el retardo de red de ida y vuelta
+    El diseño cliente-servidor se basa en `TimeServer` como referencia temporal y `ClientNode` como entidad que mantiene un offset local ajustable.
 
-    La clase interna `TimeServer` encapsula la referencia temporal del servidor con un desplazamiento configurable `serverOffsetMillis` y expone `getCurrentTimeMillis()` como punto de consulta sincronizado para evitar lecturas inconsistentes
+    #code-block("snippets/e1/CristianAlgorithm.java", snippet: "server-and-client-model", lang: "java")
 
-    La clase `ClientNode` representa un nodo con reloj local desfasado y define estado esencial en `name`, `localOffsetMillis`, `server` y `random` para modelar identidad, deriva local, dependencia del servidor y variabilidad de latencia
+    La lógica central de sincronización estima el tiempo del servidor con corrección por latencia de ida y vuelta (`RTT/2`) y aplica el ajuste sobre el reloj local.
 
-    El método `localTimeMillis()` calcula tiempo local como sistema más desplazamiento y `adjustClock(long adjustmentMillis)` aplica corrección sobre el offset local para reflejar el ajuste en la escala del reloj del cliente
+    #code-block("snippets/e1/CristianAlgorithm.java", snippet: "synchronization-formula", lang: "java")
 
-    La decisión algorítmica clave reside en `synchronizeClock()` donde se registran `requestTime` y `responseTime`, se calcula `roundTripTime`, se estima `estimatedServerTime = serverTime + RTT/2` y se deriva el ajuste como diferencia entre esa estimación y el tiempo local actual
+    Finalmente, la corrida crea varios clientes con desfases iniciales distintos y ejecuta la sincronización en paralelo para observar convergencia.
 
-    La salida por cliente expone cuatro magnitudes técnicas `Antes`, `RTT`, `Ajuste` y `Después` para verificar que el algoritmo reduce dispersión entre nodos sin requerir reloj global compartido
-
-    El `main` define cuatro clientes con offsets iniciales heterogéneos `+1200`, `-900`, `+2000` y `-1500`, ejecuta cada sincronización en hilos independientes y usa `join()` para cerrar la corrida de forma determinista
-
-    #code-block("src/e1/CristianAlgorithm.java", lang: "java")
+    #code-block("snippets/e1/CristianAlgorithm.java", snippet: "parallel-launch", lang: "java")
 
     A continuación, se muestra el resultado de compilar y ejecutar el programa:
 
     #image("img/lab02/cristian_algorithm.png")
 
-    == Berkeley Algorithm
+    === Berkeley Algorithm
 
-    El archivo `src/e2/BerkeleyAlgorithm.java` implementa el modelo Berkeley donde un coordinador consulta relojes locales de un conjunto de nodos, calcula una desviación promedio y distribuye ajustes para alinear el grupo sin depender de una fuente UTC externa
+    El modelo separa responsabilidades entre nodos (`Node`) y coordinador (`Coordinator`), donde cada nodo conserva su offset y el coordinador orquesta la ronda de sincronización.
 
-    La clase `Node` encapsula nombre y desplazamiento local mediante `name` y `offsetMillis`, expone lectura de tiempo local y offset, y permite ajustes acumulativos con `adjustOffset(long adjustmentMillis)`
+    #code-block("snippets/e2/BerkeleyAlgorithm.java", snippet: "node-and-coordinator-model", lang: "java")
 
-    La clase `Coordinator` concentra la lógica de sondeo y reconciliación temporal con tres componentes de estado que son `master` como referencia de ronda, `nodes` como conjunto participante y `random` para latencia sintética de red
+    En la fase de cálculo, el coordinador observa diferencias respecto al maestro, obtiene el promedio y distribuye ajustes individuales para reducir dispersión temporal global.
 
-    El flujo de `synchronize()` inicia con impresión de estado inicial para inspeccionar offsets de partida, luego toma un `masterTime` base y calcula para cada nodo la diferencia observada `nodeTime - masterTime` tras una demora simulada
+    #code-block("snippets/e2/BerkeleyAlgorithm.java", snippet: "average-and-adjustment-round", lang: "java")
 
-    El algoritmo agrega todas las diferencias, obtiene `averageDifference`, y para cada nodo calcula `adjustment = averageDifference - nodeDiff` con el fin de mover cada reloj hacia la media del grupo y reducir dispersión global
+    La configuración del `main` define el conjunto de nodos iniciales y ejecuta una ronda completa del algoritmo.
 
-    El estado final impreso permite contrastar offsets antes y después y verificar que las magnitudes convergen a una banda corta alrededor del promedio calculado por el coordinador
-
-    El `main` define cinco nodos incluyendo maestro con offsets iniciales dispares `500`, `-1800`, `2200`, `900` y `-600`, instancia coordinador y ejecuta una ronda completa de sincronización
-
-    #code-block("src/e2/BerkeleyAlgorithm.java", lang: "java")
+    #code-block("snippets/e2/BerkeleyAlgorithm.java", snippet: "main-setup", lang: "java")
 
     A continuación, se muestra el resultado de compilar y ejecutar el programa:
 
@@ -170,5 +156,21 @@
     [4] García Tomás, J., Ferrando, S., & Piattini, M. (2001). Redes para procesos distribuidos. México: Alfaomega Ra-Ma.
 
     [5] Orfali, R., & Harkey, D. (1998). Client/Server Programming with Java and CORBA. USA: Wiley.
+  ]
+
+  #lab-section("ANEXOS")[
+    #set par(justify: true)
+
+    == Código completo: Lamport Clock
+
+    #code-block("src/s1/LamportClock.java", lang: "java")
+
+    == Código completo: Cristian Algorithm
+
+    #code-block("src/e1/CristianAlgorithm.java", lang: "java")
+
+    == Código completo: Berkeley Algorithm
+
+    #code-block("src/e2/BerkeleyAlgorithm.java", lang: "java")
   ]
 ]

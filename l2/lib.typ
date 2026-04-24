@@ -26,12 +26,42 @@
 #let tb-header-bg-color = rgb("#C8310E")
 #let code-bg-color = rgb("#F1F3F4")
 
+#let extract-named-snippet(source, file, snippet-name) = {
+  let lines = source.split("\n")
+  let start-marker = "// START-SNIPPET," + snippet-name
+  let end-marker = "// END-SNIPPET"
+  let result = lines.fold((false, false, ()), (acc, line) => {
+    let found-start = acc.at(0)
+    let found-end = acc.at(1)
+    let captured = acc.at(2)
+
+    if found-end {
+      acc
+    } else if not found-start and line.trim() == start-marker {
+      (true, false, ())
+    } else if found-start and line.trim() == end-marker {
+      (true, true, captured)
+    } else if found-start {
+      (true, false, captured + (line,))
+    } else {
+      acc
+    }
+  })
+
+  if result.at(0) and result.at(1) {
+    result.at(2).join("\n")
+  } else {
+    panic("Snippet '" + snippet-name + "' not found or not closed in file: " + file)
+  }
+}
+
 #let code-block = e.element.declare(
   "code-block",
   prefix: "@epis/lab-report-template,v3",
   doc: "Displays source code from a file in a formatted block.",
   fields: (
     e.field("file", str, required: true),
+    e.field("snippet", e.types.option(str), default: none),
     e.field("lang", str, default: "text"),
     e.field("fill", e.types.option(e.types.paint), default: code-bg-color),
     e.field("breakable", bool, default: true),
@@ -42,19 +72,29 @@
     e.field("clip", bool, default: false),
     e.field("text-size", e.types.any, default: 7pt),
   ),
-  display: it => block(
-    fill: it.fill,
-    breakable: it.breakable,
-    width: it.width,
-    inset: it.inset,
-    radius: it.radius,
-    spacing: it.spacing,
-    clip: it.clip,
-  )[
-    #set text(size: it.at("text-size"))
-    #set par(justify: false)
-    #raw(read(it.file), lang: it.lang, block: true)
-  ],
+  display: it => {
+    let source = read(it.file)
+    let snippet-name = it.at("snippet")
+    let code = if snippet-name == none {
+      source
+    } else {
+      extract-named-snippet(source, it.file, snippet-name)
+    }
+
+    block(
+      fill: it.fill,
+      breakable: it.breakable,
+      width: it.width,
+      inset: it.inset,
+      radius: it.radius,
+      spacing: it.spacing,
+      clip: it.clip,
+    )[
+      #set text(size: it.at("text-size"))
+      #set par(justify: false)
+      #raw(code, lang: it.lang, block: true)
+    ]
+  },
 )
 
 #let lab-section = e.element.declare(
