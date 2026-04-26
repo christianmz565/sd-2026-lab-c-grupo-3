@@ -36,6 +36,7 @@
             with pkgs;
             [
               tinymist
+              typstyle
               jdk21
               charm-freeze
               inkscape
