@@ -26,7 +26,7 @@
 
     = ENLACE A GITHUB
 
-    #link("https://github.com/christianmz565/sd-2026-lab-c-grupo-3/main/l2")
+    #link("https://github.com/christianmz565/sd-2026-lab-c-grupo-3/tree/main/l2")
 
     = SOLUCIÓN DE EJERCICIOS RESUELTOS
 
@@ -250,22 +250,6 @@
 
     [5] Orfali, R., & Harkey, D. (1998). Client/Server Programming with Java and
     CORBA. USA: Wiley.
-  ]
-
-  #lab-section("ANEXOS")[
-    #set par(justify: true)
-
-    == Código completo: Lamport Clock
-
-    #code-block("src/s1/LamportClock.java", lang: "java")
-
-    == Código completo: Cristian Algorithm
-
-    #code-block("src/e1/CristianAlgorithm.java", lang: "java")
-
-    == Código completo: Berkeley Algorithm
-
-    #code-block("src/e2/BerkeleyAlgorithm.java", lang: "java")
   ]
 
   #lab-section("ANEXOS")[
