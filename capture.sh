@@ -15,6 +15,11 @@ green="${esc}[38;5;114m"
 blue="${esc}[38;5;111m"
 flamingo="${esc}[38;5;217m"
 
+mkdir -p capture_logs
+
+image_name=$(basename "$output_file")
+log_file="capture_logs/${image_name}.log"
+
 temp_output=$(mktemp)
 
 i=0
@@ -51,7 +56,7 @@ while [ $i -lt ${#args[@]} ]; do
     i=$((i+1))
 done
 
-cat "$temp_output" | tee lastcmd.log | freeze \
+cat "$temp_output" | tee "$log_file" | freeze \
     --width 1000 \
     --theme catppuccin-mocha \
     --font.family "CaskaydiaMono Nerd Font" \
