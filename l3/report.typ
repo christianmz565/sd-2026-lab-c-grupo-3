@@ -40,7 +40,11 @@
 
     Posteriormente, el servidor transmite un mensaje de saludo personalizado utilizando el método `writeUTF(...)` y cierra la conexión actual con `close()` para liberar los recursos del socket.
 
-    #code-block("src/e1/Servidor.java", lang: "java")
+    #code-block(
+      "snippets/e1/Servidor.java",
+      snippet: "server-accept",
+      lang: "java",
+    )
 
     == Ejemplo de Sockets en Java: Programa Cliente
 
@@ -52,7 +56,11 @@
 
     Finalmente, el mensaje recibido se imprime en la consola estándar del sistema y la conexión se termina explícitamente llamando al método `close()` del socket.
 
-    #code-block("src/e1/Cliente.java", lang: "java")
+    #code-block(
+      "snippets/e1/Cliente.java",
+      snippet: "client-connect",
+      lang: "java",
+    )
 
     A continuación, se muestra el resultado de compilar y ejecutar el servidor y los clientes. 
 
@@ -72,7 +80,11 @@
 
     Al implementar la interfaz `Serializable`, los objetos de esta clase pueden ser transmitidos directamente a través de la red utilizando flujos de objetos, lo que evita la necesidad de realizar procesamiento y análisis manual de bytes en los extremos de la comunicación.
 
-    #code-block("src/e2/ChatMessage.java", lang: "java")
+    #code-block(
+      "snippets/e2/ChatMessage.java",
+      snippet: "chat-message",
+      lang: "java",
+    )
 
     == Sistema de Chat en Java: Programa Servidor
 
@@ -82,9 +94,19 @@
 
     Cada conexión nueva se delega a un hilo independiente mediante la clase interna `ClientThread`, lo que permite al servidor manejar múltiples clientes de forma concurrente sin bloquearse.
 
+    #code-block(
+      "snippets/e2/Server.java",
+      snippet: "server-start",
+      lang: "java",
+    )
+
     La comunicación se gestiona mediante métodos sincronizados como `broadcast(...)`, el cual itera sobre la lista de clientes activos y utiliza `ObjectOutputStream` para transmitir los mensajes serializados, soportando además el envío de mensajes privados mediante la sintaxis `@usuario`.
 
-    #code-block("src/e2/Server.java", lang: "java")
+    #code-block(
+      "snippets/e2/Server.java",
+      snippet: "server-broadcast",
+      lang: "java",
+    )
 
     == Sistema de Chat en Java: Programa Cliente
 
@@ -92,11 +114,27 @@
 
     Durante su inicialización, el cliente solicita un nombre de usuario y se conecta al servidor, configurando inmediatamente los flujos de objetos `ObjectInputStream` y `ObjectOutputStream`.
 
+    #code-block(
+      "snippets/e2/Client.java",
+      snippet: "client-start",
+      lang: "java",
+    )
+
     Para evitar bloquear la entrada del usuario mientras se esperan nuevos mensajes, el cliente lanza un hilo secundario `ListenFromServer` que lee continuamente del flujo de entrada y muestra los mensajes recibidos en pantalla.
+
+    #code-block(
+      "snippets/e2/Client.java",
+      snippet: "client-listener",
+      lang: "java",
+    )
 
     Al mismo tiempo, el hilo principal procesa comandos y cadenas de texto ingresadas en la consola, construyendo objetos `ChatMessage` y enviándolos al servidor para su distribución.
 
-    #code-block("src/e2/Client.java", lang: "java")
+    #code-block(
+      "snippets/e2/Client.java",
+      snippet: "client-main-loop",
+      lang: "java",
+    )
 
     A continuación, se muestra el resultado de compilar y ejecutar el sistema de chat propuesto. 
     
@@ -162,5 +200,29 @@
     [4] García Tomás, J., Ferrando, S., & Piattini, M. (2001). Redes para procesos distribuidos. México: Alfaomega Ra-Ma.
 
     [5] Orfali, R., & Harkey, D. (1998). Client/Server Programming with Java and CORBA. USA: Wiley
+  ]
+
+  #lab-section("ANEXOS")[
+    #set par(justify: true)
+
+    == Código completo: Programa Servidor (básico)
+
+    #code-block("src/e1/Servidor.java", lang: "java")
+
+    == Código completo: Programa Cliente (básico)
+
+    #code-block("src/e1/Cliente.java", lang: "java")
+
+    == Código completo: ChatMessage
+
+    #code-block("src/e2/ChatMessage.java", lang: "java")
+
+    == Código completo: Sistema de Chat - Servidor
+
+    #code-block("src/e2/Server.java", lang: "java")
+
+    == Código completo: Sistema de Chat - Cliente
+
+    #code-block("src/e2/Client.java", lang: "java")
   ]
 ]
