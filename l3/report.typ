@@ -62,7 +62,7 @@
       lang: "java",
     )
 
-    A continuación, se muestra el resultado de compilar y ejecutar el servidor y los clientes. 
+    A continuación, se muestra el resultado de compilar y ejecutar el servidor y los clientes.
 
     El servidor escucha el puerto y atiende secuencialmente a los clientes, los cuales imprimen el mensaje de saludo recibido.
 
@@ -136,8 +136,8 @@
       lang: "java",
     )
 
-    A continuación, se muestra el resultado de compilar y ejecutar el sistema de chat propuesto. 
-    
+    A continuación, se muestra el resultado de compilar y ejecutar el sistema de chat propuesto.
+
     El servidor administra las conexiones concurrentemente mientras que los clientes interactúan mediante comandos de sistema y mensajes públicos y privados.
 
     #image("img/lab03/e2_server.png")
@@ -145,6 +145,19 @@
     #image("img/lab03/e2_client_1.png")
 
     #image("img/lab03/e2_client_2.png")
+
+  ]
+
+  #lab-section("RESULTADOS")[
+    #set par(justify: true)
+
+    + Se pudo verificar que el sistema de chat implementado cumple con los requisitos funcionales establecidos, permitiendo la comunicación efectiva entre múltiples clientes a través de un servidor centralizado utilizando sockets TCP y objetos serializables en Java.
+
+    + Se observó que el uso de hilos para manejar clientes concurrentes es una estrategia efectiva pero puede presentar limitaciones de escalabilidad en escenarios con un gran número de usuarios.
+
+    + Dependiendo de la calidad de la conexión de red y la carga del servidor, se podrían experimentar retrasos o pérdidas de mensajes, lo que sugiere la necesidad de implementar mecanismos adicionales de control de flujo y recuperación en futuras iteraciones del sistema.
+
+    + La implementación realizada es una versión simplificada de un sistema de chat real que, aunque funcional, carece de características avanzadas como autenticación de usuarios, cifrado de mensajes o persistencia de conversaciones, las cuales podrían ser consideradas para mejorar la seguridad y la experiencia del usuario en aplicaciones distribuidas más complejas.
   ]
 
   #lab-section("CUESTIONARIO")[
@@ -188,6 +201,8 @@
     + Considerar la migración de la gestión de hilos a las abstracciones de concurrencia modernas de Java o utilizar el paquete NIO (Non-blocking I/O) para mejorar la escalabilidad frente a un alto volumen de clientes simultáneos.
 
     + Extender el sistema para incorporar validación de esquemas y cifrado de los objetos serializables en tránsito, previniendo posibles ataques de inyección y escuchas no autorizadas en redes públicas.
+
+    + Separar el código de la lógica de negocio del servidor y el cliente en capas distintas, facilitando la mantenibilidad y permitiendo la reutilización de componentes como el manejo de mensajes y la gestión de usuarios en futuras aplicaciones distribuidas.
   ]
 
   #lab-section("REFERENCIAS Y BIBLIOGRAFÍA")[
