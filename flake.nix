@@ -37,10 +37,14 @@
             [
               tinymist
               typstyle
-              jdk21
+              javaPackages.compiler.openjdk11-bootstrap
+              # jdk21
               charm-freeze
-              inkscape
+              imagemagick
               uv
+              zip
+              bun
+              nodejs
             ]
             ++ fonts;
 

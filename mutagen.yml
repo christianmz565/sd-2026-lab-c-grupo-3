@@ -11,3 +11,4 @@ sync:
       paths:
         - ".direnv"
         - "out"
+        - "node_modules"
