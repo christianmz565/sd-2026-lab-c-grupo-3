@@ -6,6 +6,7 @@
     flake-utils.url = "github:numtide/flake-utils";
 
     lab-report.url = "github:christianmz565/lab-report";
+    cam.url = "github:christianmz565/commit-author-manager";
   };
 
   outputs =
@@ -13,6 +14,7 @@
       nixpkgs,
       flake-utils,
       lab-report,
+      cam,
       ...
     }:
     flake-utils.lib.eachDefaultSystem (
@@ -53,6 +55,7 @@
             ++ fonts
             ++ [
               lab-report.packages.${system}.default
+              cam.packages.${system}.default
             ];
 
           buildInputs = [ pkgs.bashInteractive ];
