@@ -1,0 +1,18 @@
+{
+  "multiLab": true,
+  "capture": {
+    "tapeConfig": "config.tape"
+  },
+  "prepare": {
+    "input": {
+      "srcDir": "src",
+      "reportFile": "report.typ"
+    },
+    "output": {
+      "submissionDir": "submission",
+      "fileTemplate": "{output_type} {lab_number} - {course_name} - {members_abbr_list}",
+      "reportWord": "Informe",
+      "codeWord": "Código Fuente"
+    }
+  }
+}

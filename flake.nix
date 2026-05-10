@@ -4,10 +4,17 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+
+    lab-report.url = "github:christianmz565/lab-report";
   };
 
   outputs =
-    { nixpkgs, flake-utils, ... }:
+    {
+      nixpkgs,
+      flake-utils,
+      lab-report,
+      ...
+    }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -35,18 +42,18 @@
           packages =
             with pkgs;
             [
+              typst
               tinymist
               typstyle
               javaPackages.compiler.openjdk11-bootstrap
               # jdk21
-              charm-freeze
-              imagemagick
+              # vhs
               uv
-              zip
-              bun
-              nodejs
             ]
-            ++ fonts;
+            ++ fonts
+            ++ [
+              lab-report.packages.${system}.default
+            ];
 
           buildInputs = [ pkgs.bashInteractive ];
 
