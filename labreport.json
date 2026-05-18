@@ -1,5 +1,6 @@
 {
   "multiLab": true,
+  "sessions": ["l4", "l5"],
   "capture": {
     "tapeConfig": "config.tape"
   },

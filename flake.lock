@@ -79,11 +79,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1778357625,
-        "narHash": "sha256-XmjH5XevCf91W6tBgaHt+0IZHvSQ3ADNLFt5/EGCm9Q=",
+        "lastModified": 1778529598,
+        "narHash": "sha256-UhNOYm//Qnsv0omXXP+jQvS6Z6FtIL+2AUayoftq3Vo=",
         "owner": "christianmz565",
         "repo": "lab-report",
-        "rev": "63ee1aaf71ef1134d204c80df4d3c30659e753ce",
+        "rev": "a7f609da75ce29bd7207cc8d0065c87f46fc69ca",
         "type": "github"
       },
       "original": {
