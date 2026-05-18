@@ -1,34 +1,22 @@
-package com.lab05.ep1   ;
+package com.lab05.ep1;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class CalculatorServer {
 
-    public static void main(String[] args) {
+  public static void main(String[] args) {
+    try {
+      Calculator calculator = new Calculator();
 
-        try {
+      Registry registry = LocateRegistry.createRegistry(1099);
 
-            Calculator calculator =
-                    new Calculator();
+      registry.rebind("CalculatorService", calculator);
 
-            Registry registry =
-                    LocateRegistry.createRegistry(1099);
-
-            registry.rebind(
-                    "CalculatorService",
-                    calculator
-            );
-
-            System.out.println(
-                    "Servidor RPC iniciado"
-            );
-            while(true) {
-                //Esperando
-            }
-        } catch (Exception e) {
-
-            e.printStackTrace();
-        }
+      System.out.println("Servidor RPC iniciado");
+      while (true) {}
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+  }
 }

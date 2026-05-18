@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package converter;
+package src.main.proto.ep2.v1;
 
 option java_multiple_files = true;
-option java_package = "proto";
-service Converter {
+option java_package = "com.lab05.ep2.v1";
+service ConverterService {
   rpc convertCelsiusToFahrenheit(ConvertRequest) returns (ConvertResponse);
   rpc convertFahrenheitToCelsius(ConvertRequest) returns (ConvertResponse);
   rpc convertSolesToDollars(ConvertRequest) returns (ConvertResponse);

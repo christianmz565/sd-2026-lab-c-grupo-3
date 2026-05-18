@@ -1,0 +1,21 @@
+sep := if os_family() == "windows" { ";" } else { ":" }
+check_target := if os_family() == "windows" { "if not exist target just build" } else { "[ -d target ] || just build" }
+
+build: clean compile deps
+    @echo "✅ Build complete!"
+
+run main_class:
+    @{{check_target}}
+    java -cp "target/classes{{sep}}target/dependency/*" {{main_class}}
+
+[private]
+clean:
+    mvn clean
+
+[private]
+compile:
+    mvn compile
+
+[private]
+deps:
+    mvn dependency:copy-dependencies

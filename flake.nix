@@ -47,10 +47,13 @@
               typst
               tinymist
               typstyle
-              javaPackages.compiler.openjdk11-bootstrap
-              # jdk21
+              # javaPackages.compiler.openjdk11-bootstrap
+              jdk21
+              jdt-language-server
+              maven
               # vhs
               uv
+              just
             ]
             ++ fonts
             ++ [

@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package calculator;
+package src.main.proto.er1.v1;
 
 option java_multiple_files = true;
-option java_package = "proto";
-service Calculator {
+option java_package = "com.lab05.er1.v1";
+service CalculatorService {
   rpc Sum(SumRequest) returns (SumResponse);
 }
 message SumRequest {
