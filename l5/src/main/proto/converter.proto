@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package converter;
+
+option java_multiple_files = true;
+option java_package = "proto";
+service Converter {
+  rpc convertCelsiusToFahrenheit(ConvertRequest) returns (ConvertResponse);
+  rpc convertFahrenheitToCelsius(ConvertRequest) returns (ConvertResponse);
+  rpc convertSolesToDollars(ConvertRequest) returns (ConvertResponse);
+  rpc convertDollarsToSoles(ConvertRequest) returns (ConvertResponse);
+  rpc convertKmToMiles(ConvertRequest) returns (ConvertResponse);
+  rpc convertMilesToKm(ConvertRequest) returns (ConvertResponse);
+  rpc convertKgToLbs(ConvertRequest) returns (ConvertResponse);
+  rpc convertLbsToKg(ConvertRequest) returns (ConvertResponse);
+  rpc convertHoursToMinutes(ConvertRequest) returns (ConvertResponse);
+  rpc convertMinutesToHours(ConvertRequest) returns (ConvertResponse);
+}
+message ConvertRequest {
+  double input = 1;
+}
+message ConvertResponse {
+  double result = 30;
+}
