@@ -9,6 +9,7 @@ public class ConverterService
   extends ConverterServiceGrpc.ConverterServiceImplBase
 {
 
+  // START-SNIPPET,service-impl
   @Override
   public void convertCelsiusToFahrenheit(
     ConvertRequest req,
@@ -44,6 +45,7 @@ public class ConverterService
     );
     responseObserver.onCompleted();
   }
+  // END-SNIPPET
 
   @Override
   public void convertMilesToKm(

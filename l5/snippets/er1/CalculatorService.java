@@ -9,6 +9,7 @@ public class CalculatorService
   extends CalculatorServiceGrpc.CalculatorServiceImplBase
 {
 
+  // START-SNIPPET,service-impl
   @Override
   public void sum(SumRequest req, StreamObserver<SumResponse> responseObserver) {
     int result = req.getA() + req.getB();
@@ -16,4 +17,5 @@ public class CalculatorService
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
+  // END-SNIPPET
 }

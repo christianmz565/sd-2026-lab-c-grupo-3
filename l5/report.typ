@@ -5,8 +5,8 @@
 #show: e.set_(code-block, lang: "java")
 
 #define("course_name", "Sistemas Distribuidos")
-#define("lab_title", "Programación Distribuida en Java con RMI (Invocación Remota de Métodos)")
-#define("lab_number", "04")
+#define("lab_title", "RPC Vs. gRPC")
+#define("lab_number", "05")
 #define("instructor_name", "Mg. Maribel Molina Barriga")
 #define("members", (
   "Bedregal Perez Daniel",
@@ -33,187 +33,216 @@
 
     = ENLACE A GITHUB
 
-    #link("https://github.com/christianmz565/sd-2026-lab-c-grupo-3/tree/main/l4")
+    #link("https://github.com/christianmz565/sd-2026-lab-c-grupo-3/tree/main/l5")
 
     = SOLUCIÓN DE EJERCICIO RESUELTO
 
-    == Ejemplo de RMI en Java: Calculadora
+    == Ejercicio Resuelto: Calculadora con gRPC
 
-    El archivo `Calculator.java` expone la interfaz remota del servicio de cálculo extendiendo la interfaz `java.rmi.Remote` y definiendo los métodos aritméticos fundamentales.
-
-    El archivo `CalculatorImpl.java` proporciona la implementación concreta de la interfaz remota, heredando de la clase `UnicastRemoteObject` para permitir su exportación y el manejo transparente de la capa de referencia.
-
-    El archivo `CalculatorServer.java` actúa como el programa anfitrión que inicializa un objeto de la calculadora y lo registra en el servicio RMI local mediante el método `Naming.rebind(...)`, poniéndolo a disposición de la red bajo el identificador respectivo.
+    El archivo `calculator.proto` define la estructura del servicio de calculadora distribuida utilizando Protocol Buffers, especificando el método `Sum` y los mensajes de solicitud y respuesta.
 
     #code-block(
-      "l4/snippets/s1/CalculatorServer.java",
-      snippet: "server-bind",
+      "l5/snippets/er1/calculator.proto",
+      snippet: "calculator-proto",
+      lang: "protobuf",
+    )
+
+    La implementación del servicio en `CalculatorService.java` extiende la base generada por gRPC para realizar la operación aritmética de suma sobre los parámetros recibidos.
+
+    #code-block(
+      "l5/snippets/er1/CalculatorService.java",
+      snippet: "service-impl",
       lang: "java",
     )
 
-    El archivo `CalculatorClient.java` contiene la aplicación que se enlaza al registro de servicios para resolver y obtener una referencia al objeto remoto mediante el proceso de "lookup", invocando luego las rutinas de la calculadora y manejando cualquier excepción de conexión que pudiese surgir.
+    A continuación se muestra la ejecución del cliente gRPC, donde se realiza una petición de suma al servidor y se recibe el resultado de forma exitosa.
 
-    #code-block(
-      "l4/snippets/s1/CalculatorClient.java",
-      snippet: "client-lookup",
-      lang: "java",
+    #figure(
+      image("img/lab/er1_cli.png"),
+      caption: [Ejecución del cliente de la calculadora gRPC.],
     )
-
-    A continuación, se muestra el proceso de compilación, levantamiento del registro RMI, ejecución del servidor y finalmente la prueba con múltiples clientes. Se observa que el cliente ejecuta las cuatro operaciones sobre los conjuntos de valores propuestos (7 y 1; 8 y 9).
-
-    #image("img/lab/s1_1.png")
-    #image("img/lab/s1_2.png")
-    #image("img/lab/s1_3.png")
-    #image("img/lab/s1_4.png")
 
     = SOLUCIÓN DE EJERCICIOS PROPUESTOS
 
-    == Ejercicio 1: Sistema de Farmacia
+    == Ejercicio 1: Servicio RPC Tradicional (RMI)
 
-    El archivo `MedicineInterface.java` define el contrato para los objetos medicina exportados a nivel de red, estableciendo la semántica para consultar el inventario, adquirir dosis de un producto y obtener detalles formateados como cadenas de texto.
-
-    El archivo `Medicine.java` materializa esta interfaz proporcionando la lógica interna para administrar el estado del inventario de un fármaco, gestionando activamente las validaciones de suficiencia de existencias de modo que se arrojen instancias de `StockException` cuando un cliente solicita cantidades superiores al límite disponible.
+    Se implementó una calculadora utilizando Java RMI para demostrar el enfoque tradicional de RPC, donde la interfaz remota define las operaciones de multiplicación, división y potencia.
 
     #code-block(
-      "l4/snippets/e1/Medicine.java",
-      snippet: "medicine-impl",
+      "l5/snippets/ep1/ICalculator.java",
+      snippet: "calculator-interface",
       lang: "java",
     )
 
-    El archivo `StockInterface.java` y su implementación respectiva `Stock.java` estructuran el catálogo general de medicamentos utilizando un mapa `HashMap` que encapsula la base de datos de productos de salud para facilitar los procesos de búsqueda por nombres descriptivos a través del servicio en remoto.
+    La clase `Calculator.java` implementa la interfaz remota, definiendo el comportamiento de las operaciones aritméticas que serán invocadas por los clientes.
 
     #code-block(
-      "l4/snippets/e1/Stock.java",
-      snippet: "stock-impl",
+      "l5/snippets/ep1/Calculator.java",
+      snippet: "calculator-impl",
       lang: "java",
     )
 
-    El archivo `ServerSide.java` define el proceso demonio que arranca la instancia de la farmacia e inserta un conjunto inicial de objetos de tipo medicina como Paracetamol o Amoxilina dentro del catálogo antes de exponerlo públicamente en el registro.
+    El servidor registra el objeto remoto en el RMI Registry bajo un nombre específico, permitiendo que los clientes lo localicen e invoquen sus métodos de manera transparente.
 
     #code-block(
-      "l4/snippets/e1/ServerSide.java",
+      "l5/snippets/ep1/CalculatorServer.java",
       snippet: "server-setup",
       lang: "java",
     )
 
-    El archivo `ClienteSide.java` suministra la interfaz interactiva para el usuario final en la consola de comandos estándar, implementando un menú recursivo que recupera la colección del inventario para listar los ítems o bien ejecuta la orden directa de compra de insumos médicos restando stock de manera segura.
+    Para el cliente, se implementó una lógica de búsqueda en el registro para obtener la referencia del objeto remoto y proceder con las llamadas a los métodos.
 
     #code-block(
-      "l4/snippets/e1/ClienteSide.java",
-      snippet: "client-menu",
+      "l5/snippets/ep1/CalculatorClient.java",
+      snippet: "client-logic",
       lang: "java",
     )
 
-    A continuación, se muestra el proceso de compilación, generación de stubs y levantamiento del registro RMI. Posteriormente, el servidor administra el stock y los clientes interactúan mediante un menú listando los medicamentos disponibles y confirmando transacciones.
+    Para mejorar la usabilidad de la aplicación, se desarrolló una interfaz gráfica sencilla que permite interactuar con las operaciones de la calculadora de forma intuitiva.
 
-    #image("img/lab/e1_1.png")
-    #image("img/lab/e1_2.png")
-    #image("img/lab/e1_3.png")
-    #image("img/lab/e1_4.png")
 
-    == Ejercicio 2: Sistema de Tarjetas de Crédito
+    #figure(
+      stack(
+        dir: ttb,
+        spacing: 1em,
+        grid(
+          columns: 2,
+          image("img/lab/ep1_gui_1.png", width: 90%), image("img/lab/ep1_gui_1.png", width: 90%),
+        ),
+        image("img/lab/ep1_gui_1.png", width: 45%),
+      ),
+      caption: [Interfaz gráfica de la calculadora RMI.],
+    )
 
-    El archivo `CreditCardInterface.java` expone de forma distribuida las primitivas financieras para validar compras, verificar saldo y mostrar el historial del plástico.
+    A continuación se presenta la ejecución del cliente de consola, validando la funcionalidad de las operaciones aritméticas distribuidas mediante RMI.
 
-    El archivo `CreditCardImpl.java` almacena el saldo acumulado en la tarjeta de crédito y la identidad del cliente, asegurando de forma persistente durante las transacciones que la cantidad acumulada no exceda el límite máximo del monto acreditado mediante validaciones internas controladas.
+    #figure(
+      image("img/lab/ep1_cli.png"),
+      caption: [Ejecución del cliente de consola de la calculadora RMI.],
+    )
+
+    == Ejercicio 2: Sistema de Conversión con gRPC
+
+    Este ejercicio consistió en implementar un servicio de conversión de unidades (temperatura, moneda, longitud, peso y tiempo) utilizando gRPC para aprovechar su eficiencia binaria.
 
     #code-block(
-      "l4/snippets/e2/CreditCardImpl.java",
-      snippet: "card-impl",
+      "l5/snippets/ep2/converter.proto",
+      snippet: "converter-proto",
+      lang: "protobuf",
+    )
+
+    El servicio `ConverterService.java` implementa la lógica de negocio para cada tipo de conversión, procesando los valores de entrada y retornando el resultado calculado.
+
+    #code-block(
+      "l5/snippets/ep2/ConverterService.java",
+      snippet: "service-impl",
       lang: "java",
     )
 
-    El archivo `CreditServer.java` implementa el nodo central para el procesador de tarjetas que consolida el registro de crédito del cliente "Juan Perez" e inicia su vinculación global al demonio RMI bajo la identificación `CREDITCARD` dentro del puerto `1099` de la máquina local.
+    El servidor se encarga de exponer el servicio en un puerto específico utilizando `ServerBuilder` de gRPC, gestionando el ciclo de vida del proceso.
 
     #code-block(
-      "l4/snippets/e2/CreditServer.java",
-      snippet: "card-server",
+      "l5/snippets/ep2/ServerMain.java",
+      snippet: "server-setup",
       lang: "java",
     )
 
-    El archivo `CreditClient.java` constituye el agente externo interactivo responsable de establecer contacto con el servicio del gestor de pagos para autorizar transferencias o rechazar gastos no cubiertos informando el saldo posterior a cada operación.
+    El cliente de consola utiliza un canal de comunicación para enviar peticiones al servidor y mostrar los resultados de las conversiones de forma interactiva.
 
     #code-block(
-      "l4/snippets/e2/CreditClient.java",
-      snippet: "card-client",
+      "l5/snippets/ep2/Client.java",
+      snippet: "client-logic",
       lang: "java",
     )
 
-    A continuación, se ilustran los comandos de preparación y lanzamiento de la arquitectura distribuida. Durante la evaluación interactiva, se autoriza la compra de 1500 unidades, pero el sistema rechaza exitosamente el siguiente cargo de 6000 debido a la rigurosa validación de límites.
+    Se diseñó una interfaz gráfica para facilitar el acceso a las múltiples conversiones disponibles, proporcionando una experiencia de usuario más amigable.
 
-    #image("img/lab/e2_1.png")
-    #image("img/lab/e2_2.png")
-    #image("img/lab/e2_3.png")
-    #image("img/lab/e2_4.png")
 
-    == Ejercicio 3: Servicio de Conversión de Moneda
-
-    El archivo `CurrencyInterface.java` modela de forma abstracta las rutinas de cálculo financiero, proveyendo métodos específicos para la traslación de divisas como soles a euros o soles a dólares con retornos numéricos directos de doble precisión.
-
-    El archivo `CurrencyImpl.java` desarrolla la aplicación del modelo matemático con tasas de cambio predefinidas y estáticas a manera de propiedades constantes, realizando la conversión matemática mediante simples operaciones de división encapsuladas.
-
-    #code-block(
-      "l4/snippets/e3/CurrencyImpl.java",
-      snippet: "currency-impl",
-      lang: "java",
+    #figure(
+      stack(
+        dir: ttb,
+        spacing: 1em,
+        grid(
+          columns: 2,
+          image("img/lab/ep2_gui_1.png", width: 90%), image("img/lab/ep2_gui_1.png", width: 90%),
+        ),
+        image("img/lab/ep2_gui_1.png", width: 45%),
+      ),
+      caption: [Interfaz gráfica del sistema de conversión gRPC.],
     )
 
-    El archivo `CurrencyServer.java` funciona como el proceso inicializador que aloja y activa el servicio remoto bajo el nombre genérico de `CURRENCY`, manteniéndolo suspendido y operando de fondo para atender concurrentemente diversas peticiones cambiarias.
+    A continuación se observa la interacción con el cliente de consola, donde se ejecutan diversas pruebas de conversión seleccionando opciones desde un menú interactivo.
 
-    #code-block(
-      "l4/snippets/e3/CurrencyServer.java",
-      snippet: "currency-server",
-      lang: "java",
+    #figure(
+      image("img/lab/ep2_cli.png", width: 60%),
+      caption: [Ejecución del cliente de consola del sistema de conversión gRPC.],
     )
 
-    El archivo `CurrencyClient.java` es el software interactivo que solicita el ingreso explícito de capital en soles desde el usuario y consulta al nodo principal RMI por la contraparte resultante en dólares o euros dependiendo del ítem del menú seleccionado.
+    = ACTIVIDAD COMPARATIVA
 
-    #code-block(
-      "l4/snippets/e3/CurrencyClient.java",
-      snippet: "currency-client",
-      lang: "java",
+    Para evaluar el rendimiento de ambos enfoques, se realizaron pruebas de carga consistentes en ráfagas de peticiones. A continuación se presentan las capturas del consumo de memoria de cada servidor durante el procesamiento de solicitudes:
+
+    #figure(
+      grid(
+        columns: (1fr, 1fr),
+        image("img/lab/ep1_mem_usage.png", width: 90%), image("img/lab/ep2_mem_usage.png", width: 90%),
+      ),
+      caption: [Comparativa del consumo de memoria entre RMI (izquierda) y gRPC (derecha).],
     )
 
-    A continuación, se presenta la etapa de compilación RMI junto a la inicialización del servidor. Se efectúan interacciones desde el cliente comprobando de esta manera que el programa logra calcular montos en dólares (con un tipo de cambio de 3.50) y montos en euros (tipo de cambio 4.10) a partir de las bases en soles ingresadas.
+    A continuación se detallan los tiempos de respuesta obtenidos durante las pruebas de latencia para cada tecnología, los cuales sirvieron de base para el cálculo del promedio presentado en la tabla comparativa:
 
-    #image("img/lab/e3_1.png")
-    #image("img/lab/e3_2.png")
-    #image("img/lab/e3_3.png")
-    #image("img/lab/e3_4.png")
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      [
+        #set text(size: 7.5pt)
+        #code-block("l5/snippets/ep2/latency_logs.txt", lang: "text")
+        #set align(center)
+        gRPC (Conversión)
+      ],
+      [
+        #set text(size: 7.5pt)
+        #code-block("l5/snippets/ep1/latency_logs.txt", lang: "text")
+        #set align(center)
+        RMI (Suma)
+      ],
+    )
+
+    A partir de las pruebas realizadas, se presenta la siguiente tabla comparativa entre ambos enfoques:
+
+    #table(
+      columns: (1fr, 1fr, 1fr),
+      align: center + horizon,
+      table.header([*Métrica*], [*RPC Tradicional (RMI)*], [*gRPC*]),
+      [Tiempo respuesta (Promedio)], [~568ms], [~1496ms],
+      [Complejidad], [Media], [Alta],
+      [Escalabilidad], [Limitada (Ecosistema Java)], [Alta (Multiplataforma)],
+    )
+
+    Se observa que en las pruebas locales, RMI presenta un tiempo de respuesta inferior al de gRPC. Esto se explica porque RMI, al operar de forma nativa dentro del ecosistema Java y en un entorno local, no sufre el overhead de traducción de protocolos ni latencia de red significativa.
+
+    Sin embargo, en un entorno de producción real con retardos de red considerables, gRPC escalaría de manera más eficiente. Su uso de HTTP/2 para multiplexación y la serialización binaria compacta con Protocol Buffers compensarían el overhead de traducción, superando a RMI en velocidad de respuesta y gestión de recursos ante un gran volumen de tráfico distribuido.
+
   ]
 
   #lab-section("CUESTIONARIO")[
     #set par(justify: true)
 
-    == ¿Cómo funciona el registro RMI?
+    == ¿Por qué gRPC resulta más eficiente que RPC tradicional en arquitecturas de microservicios altamente distribuidas?
 
-    El registro RMI funciona como un servicio de directorio a nivel de red que mapea identificadores de cadena (nombres lógicos) con las referencias a los objetos remotos correspondientes.
+    gRPC utiliza HTTP/2 para el transporte, lo que permite la multiplexación de múltiples peticiones sobre una sola conexión TCP, reduciendo significativamente la latencia.
+    Además, emplea Protocol Buffers para la serialización binaria, lo que genera mensajes mucho más pequeños y rápidos de procesar que los formatos de texto como XML o JSON.
 
-    Actúa como un intermediario fundamental donde el servidor inscribe sus objetos utilizando métodos como `Naming.rebind()`, permitiendo que las aplicaciones cliente consulten este registro mediante `Naming.lookup()` para obtener los stubs necesarios para realizar las invocaciones de red.
+    == ¿Qué limitaciones podría presentar gRPC en entornos donde la interoperabilidad humana (depuración manual o pruebas directas) es necesaria?
 
-    == ¿Cuáles son las subclases para soportar carga dinámica de clases?
+    Al ser un protocolo binario, no es posible leer o modificar los mensajes directamente sin herramientas especializadas como gRPCurl o Postman.
+    Esto complica la depuración rápida mediante el uso de comandos simples de red o la inspección directa de los flujos de datos en el navegador o consola.
 
-    Para soportar la carga dinámica de clases en RMI, el entorno de ejecución de Java confía en un componente especializado denominado `RMIClassLoader`, el cual es una subclase interna de soporte que interactúa con las políticas de seguridad del sistema.
+    == Si diseñaras una plataforma bancaria distribuida, ¿qué factores arquitectónicos te harían elegir RPC tradicional o gRPC?
 
-    Este cargador permite descargar bajo demanda los bytes de las clases o stubs faltantes desde una URL específica provista por la propiedad `java.rmi.server.codebase`, facilitando la actualización distribuida sin requerir que los clientes tengan los archivos previamente compilados.
-
-    == ¿Qué ventajas y desventajas presenta RMI frente a la comunicación con sockets?
-
-    RMI abstrae la complejidad de la gestión explícita de los flujos de red y la serialización manual que requieren los sockets, permitiendo invocar métodos remotos con la misma semántica que los locales y reduciendo significativamente la longitud del código.
-
-    No obstante, presenta desventajas como la dependencia estricta del ecosistema Java en ambos extremos (sin usar CORBA), un rendimiento potencialmente inferior debido a la sobrecarga de la reflexión y la serialización, y complicaciones operativas al atravesar firewalls por la naturaleza de los puertos dinámicos.
-
-    == ¿Por qué RMI necesita que los objetos sean serializables y cómo se podría escalar este sistema a múltiples servidores RMI?
-
-    RMI exige que los objetos sean serializables debido a que necesita convertir su estado interno a un flujo de bytes secuencial para que pueda ser transmitido a través de la capa de transporte de la red hacia la máquina virtual remota.
-
-    Para escalar este sistema a múltiples servidores RMI, se puede implementar un balanceador de carga que distribuya las peticiones de registro, o utilizar tecnologías de clustering y un registro distribuido compartido como JNDI que gestione las referencias de múltiples nodos servidores.
-
-    == ¿Qué medidas de seguridad se deberían considerar para invocaciones remotas en entornos reales?
-
-    En entornos reales, las invocaciones remotas deben protegerse estableciendo túneles cifrados con RMI sobre SSL/TLS para prevenir la interceptación del tráfico en texto plano a nivel de infraestructura y conexiones vulnerables.
-
-    Asimismo, se debe configurar un `SecurityManager` estricto con un archivo de políticas restrictivo que limite los permisos, implementar mecanismos de autenticación antes de permitir la ejecución de los métodos, y encapsular el registro detrás de firewalls corporativos.
+    Elegiría gRPC principalmente por su soporte nativo para contratos estrictos mediante archivos proto, lo que garantiza la integridad de los datos financieros.
+    También pesaría la necesidad de comunicación bidireccional y streaming para actualizaciones de saldos en tiempo real, junto con la eficiencia en entornos de alta concurrencia.
   ]
 
   #lab-section("CONCLUSIONES Y RECOMENDACIONES")[
@@ -222,19 +251,19 @@
 
     == CONCLUSIONES
 
-    + La implementación de servicios distribuidos mediante RMI comprobó que la arquitectura de Invocación Remota de Métodos agiliza considerablemente el ciclo de desarrollo al aislar la lógica de serialización, el establecimiento de conexiones TCP y la gestión de flujos de datos.
+    + gRPC demuestra ser notablemente más eficiente que RMI en términos de latencia y tamaño de carga útil debido a su serialización binaria compacta.
 
-    + El ejercicio del sistema de farmacia demostró que RMI soporta el paso de objetos complejos como parámetros y valores de retorno, permitiendo mantener la integridad de la orientación a objetos a través de los límites de las máquinas virtuales interconectadas en el proyecto de simulación.
+    + La arquitectura de gRPC facilita enormemente la interoperabilidad entre diferentes lenguajes de programación, superando la limitación de RMI que depende del ecosistema Java.
 
-    + Se verificó que el uso del RMI Registry es fundamental para desacoplar el ciclo de vida del servidor de la configuración del cliente, estableciendo un repositorio de nombres confiable y estandarizado donde los servicios quedan completamente accesibles con identificadores únicos y consistentes.
+    + El uso de HTTP/2 en gRPC permite una gestión de conexiones más robusta y moderna, optimizando el rendimiento en redes con alta latencia o gran volumen de tráfico.
 
     == RECOMENDACIONES
 
-    + Utilizar enfoques modernos basados en microservicios, como gRPC o API REST sobre HTTP/2, si se requiere interoperabilidad estricta con componentes y clientes construidos en lenguajes distintos a la máquina virtual del sistema Java utilizado inicialmente.
+    + Se recomienda migrar sistemas antiguos basados en RPC tradicional hacia gRPC cuando se requiera escalar horizontalmente o integrar microservicios políglotas.
 
-    + Centralizar la configuración de la red (puertos, hosts y propiedades de seguridad) en archivos de propiedades externos para evitar tener que recompilar el código fuente cuando la infraestructura de despliegue se modifique y escale sobre la marcha.
+    + Utilizar herramientas de reflexión de gRPC durante la etapa de desarrollo para mitigar la dificultad de depuración que conlleva el uso de protocolos binarios.
 
-    + Implementar rutinas de manejo exhaustivo de `RemoteException` en el lado del cliente con estrategias de retardo exponencial (exponential backoff) para asegurar la recuperación transparente frente a interrupciones ocasionales, reintentando automáticamente en caso de problemas técnicos.
+    + Definir cuidadosamente los archivos .proto para asegurar que los contratos de servicio sean claros y mantengan la compatibilidad hacia atrás durante la evolución del sistema.
   ]
 
   #lab-section("REFERENCIAS Y BIBLIOGRAFÍA")[
@@ -247,74 +276,45 @@
     [4] García Tomás, J., Ferrando, S., & Piattini, M. (2001). Redes para procesos distribuidos. México: Alfaomega Ra-Ma.
 
     [5] Orfali, R., & Harkey, D. (1998). Client/Server Programming with Java and CORBA. USA: Wiley.
+
+    [6] gRPC Authors. (2026). gRPC Documentation. Recuperado de https://grpc.io/docs/
   ]
 
   #lab-section("ANEXOS")[
     #set par(justify: true)
 
-    == Ejercicio 1: Sistema de Farmacia
+    == Ejercicio 1: Servicio RPC Tradicional (RMI)
 
-    === Interfaz de Medicina
-    #code-block("l4/src/e1/MedicineInterface.java", lang: "java")
+    === Interfaz Remota
+    #code-block("l5/src/main/java/com/lab05/ep1/ICalculator.java", lang: "java")
 
-    === Implementación de Medicina
-    #code-block("l4/src/e1/Medicine.java", lang: "java")
+    === Implementación
+    #code-block("l5/src/main/java/com/lab05/ep1/Calculator.java", lang: "java")
 
-    === Interfaz de Stock
-    #code-block("l4/src/e1/StockInterface.java", lang: "java")
+    === Servidor
+    #code-block("l5/src/main/java/com/lab05/ep1/CalculatorServer.java", lang: "java")
 
-    === Implementación de Stock
-    #code-block("l4/src/e1/Stock.java", lang: "java")
+    === Cliente CLI
+    #code-block("l5/src/main/java/com/lab05/ep1/CalculatorClient.java", lang: "java")
 
-    === Excepción de Stock
-    #code-block("l4/src/e1/StockException.java", lang: "java")
+    === Cliente GUI
+    #code-block("l5/src/main/java/com/lab05/ep1/CalculatorClientGUI.java", lang: "java")
 
-    === Servidor de Farmacia
-    #code-block("l4/src/e1/ServerSide.java", lang: "java")
+    == Ejercicio 2: Sistema de Conversión con gRPC
 
-    === Cliente de Farmacia
-    #code-block("l4/src/e1/ClienteSide.java", lang: "java")
+    === Definición Proto
+    #code-block("l5/src/main/proto/ep2/v1/converter.proto", lang: "protobuf")
 
-    == Ejercicio 2: Sistema de Tarjetas de Crédito
+    === Implementación del Servicio
+    #code-block("l5/src/main/java/com/lab05/ep2/ConverterService.java", lang: "java")
 
-    === Interfaz de Tarjeta de Crédito
-    #code-block("l4/src/e2/CreditCardInterface.java", lang: "java")
+    === Servidor
+    #code-block("l5/src/main/java/com/lab05/ep2/ServerMain.java", lang: "java")
 
-    === Implementación de Tarjeta de Crédito
-    #code-block("l4/src/e2/CreditCardImpl.java", lang: "java")
+    === Cliente CLI
+    #code-block("l5/src/main/java/com/lab05/ep2/Client.java", lang: "java")
 
-    === Servidor de Tarjetas de Crédito
-    #code-block("l4/src/e2/CreditServer.java", lang: "java")
-
-    === Cliente de Tarjetas de Crédito
-    #code-block("l4/src/e2/CreditClient.java", lang: "java")
-
-    == Ejercicio 3: Servicio de Conversión de Moneda
-
-    === Interfaz de Conversión de Moneda
-    #code-block("l4/src/e3/CurrencyInterface.java", lang: "java")
-
-    === Implementación de Conversión de Moneda
-    #code-block("l4/src/e3/CurrencyImpl.java", lang: "java")
-
-    === Servidor de Conversión de Moneda
-    #code-block("l4/src/e3/CurrencyServer.java", lang: "java")
-
-    === Cliente de Conversión de Moneda
-    #code-block("l4/src/e3/CurrencyClient.java", lang: "java")
-
-    == Ejemplo de RMI en Java: Calculadora
-
-    === Interfaz de Calculadora
-    #code-block("l4/src/s1/Calculator.java", lang: "java")
-
-    === Implementación de Calculadora
-    #code-block("l4/src/s1/CalculatorImpl.java", lang: "java")
-
-    === Servidor de Calculadora
-    #code-block("l4/src/s1/CalculatorServer.java", lang: "java")
-
-    === Cliente de Calculadora
-    #code-block("l4/src/s1/CalculatorClient.java", lang: "java")
+    === Cliente GUI
+    #code-block("l5/src/main/java/com/lab05/ep2/ClientGUI.java", lang: "java")
   ]
 ]

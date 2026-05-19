@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package src.main.proto.ep2.v1;
 
+// START-SNIPPET,converter-proto
 service ConverterService {
   rpc ConvertCelsiusToFahrenheit(ConvertRequest) returns (ConvertResponse);
   rpc ConvertFahrenheitToCelsius(ConvertRequest) returns (ConvertResponse);
@@ -22,3 +23,4 @@ message ConvertRequest {
 message ConvertResponse {
   double result = 1;
 }
+// END-SNIPPET

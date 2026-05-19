@@ -4,6 +4,7 @@ package src.main.proto.er1.v1;
 
 option java_multiple_files = true;
 option java_package = "com.lab05.er1.v1";
+// START-SNIPPET,calculator-proto
 service CalculatorService {
   rpc Sum (SumRequest) returns (SumResponse);
 }
@@ -16,3 +17,4 @@ message SumRequest {
 message SumResponse {
   int32 result = 1;
 }
+// END-SNIPPET
