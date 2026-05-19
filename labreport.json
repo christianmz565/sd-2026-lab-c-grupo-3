@@ -1,8 +1,25 @@
 {
   "multiLab": true,
-  "sessions": ["l4", "l5"],
+  "sessions": [
+    "l4",
+    "l5"
+  ],
   "capture": {
-    "tapeConfig": "config.tape"
+    "freezeFlags": [
+      "--font.family",
+      "CaskaydiaMono Nerd Font",
+      "--width",
+      "1000",
+      "--theme",
+      "catppuccin-mocha"
+    ],
+    "prompt": "❯ ",
+    "colors": {
+      "args": "38;5;217",
+      "command": "38;5;111",
+      "prompt": "38;5;114",
+      "reset": "0"
+    }
   },
   "prepare": {
     "input": {

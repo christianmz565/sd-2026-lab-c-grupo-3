@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
 
-    lab-report.url = "github:christianmz565/lab-report";
+    lab-report.url = "github:christianmz565/lab-report/dev";
     cam.url = "github:christianmz565/commit-author-manager";
   };
 
@@ -44,14 +44,12 @@
           packages =
             with pkgs;
             [
-              typst
               tinymist
               typstyle
               # javaPackages.compiler.openjdk11-bootstrap
               jdk21
               jdt-language-server
               maven
-              # vhs
               uv
               just
             ]

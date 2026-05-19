@@ -5,7 +5,9 @@ import com.lab05.ep2.v1.ConvertResponse;
 import com.lab05.ep2.v1.ConverterServiceGrpc;
 import io.grpc.stub.StreamObserver;
 
-public class ConverterService extends ConverterServiceGrpc.ConverterServiceImplBase {
+public class ConverterService
+  extends ConverterServiceGrpc.ConverterServiceImplBase
+{
 
   @Override
   public void convertCelsiusToFahrenheit(
