@@ -27,7 +27,6 @@ public class BookApiController {
     @Autowired
     public BookApiController(BookRepository bookRepository) {
         this.bookRepository = bookRepository;
-        // Ensure upload directory exists
         try {
             if (!Files.exists(rootPath)) {
                 Files.createDirectories(rootPath);
@@ -55,6 +54,7 @@ public class BookApiController {
             @RequestParam("author") String author,
             @RequestParam("isbn") String isbn,
             @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "imageUrl", required = false) String imageUrl,
             @RequestParam(value = "image", required = false) MultipartFile image) {
 
         if (title == null || title.trim().isEmpty()) {
@@ -90,10 +90,80 @@ public class BookApiController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Could not upload the image: " + e.getMessage());
             }
+        } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+            book.setImageUrl(imageUrl.trim());
         }
 
         Book savedBook = bookRepository.save(book);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedBook);
+    }
+
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> updateBook(
+            @PathVariable Long id,
+            @RequestParam("title") String title,
+            @RequestParam("author") String author,
+            @RequestParam("isbn") String isbn,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "imageUrl", required = false) String imageUrl,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
+
+        Optional<Book> bookOptional = bookRepository.findById(id);
+        if (bookOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Book book = bookOptional.get();
+
+        if (title == null || title.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Title is required");
+        }
+        if (author == null || author.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Author is required");
+        }
+        if (isbn == null || isbn.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("ISBN is required");
+        }
+
+        // Check if ISBN is taken by another book
+        Optional<Book> existingIsbn = bookRepository.findByIsbn(isbn.trim());
+        if (existingIsbn.isPresent() && !existingIsbn.get().getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Book with this ISBN is already registered");
+        }
+
+        book.setTitle(title.trim());
+        book.setAuthor(author.trim());
+        book.setIsbn(isbn.trim());
+        book.setDescription(description != null ? description.trim() : null);
+
+        if (image != null && !image.isEmpty()) {
+            // Case A: New file uploaded. Remove old disk image if there was one.
+            deleteLocalImage(book.getImageUrl());
+            try {
+                String originalFilename = image.getOriginalFilename();
+                String cleanFilename = originalFilename != null ? originalFilename.replaceAll("[^a-zA-Z0-9.-]", "_") : "image";
+                String fileName = UUID.randomUUID().toString() + "_" + cleanFilename;
+                
+                Files.copy(image.getInputStream(), this.rootPath.resolve(fileName));
+                book.setImageUrl("/uploads/" + fileName);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Could not upload the image: " + e.getMessage());
+            }
+        } else if (imageUrl != null) {
+            String trimmedUrl = imageUrl.trim();
+            if (trimmedUrl.isEmpty()) {
+                // User explicitly cleared the cover image
+                deleteLocalImage(book.getImageUrl());
+                book.setImageUrl(null);
+            } else if (!trimmedUrl.equals(book.getImageUrl())) {
+                // Case B: A new public URL is specified, remove old local image
+                deleteLocalImage(book.getImageUrl());
+                book.setImageUrl(trimmedUrl);
+            }
+        }
+
+        Book updatedBook = bookRepository.save(book);
+        return ResponseEntity.ok(updatedBook);
     }
 
     @DeleteMapping("/{id}")
@@ -104,9 +174,12 @@ public class BookApiController {
         }
 
         Book book = bookOptional.get();
-        String imageUrl = book.getImageUrl();
+        deleteLocalImage(book.getImageUrl());
+        bookRepository.delete(book);
+        return ResponseEntity.ok().body("Book deleted successfully");
+    }
 
-        // If the book has an uploaded image, delete it from disk
+    private void deleteLocalImage(String imageUrl) {
         if (imageUrl != null && imageUrl.startsWith("/uploads/")) {
             String filename = imageUrl.substring("/uploads/".length());
             try {
@@ -116,8 +189,5 @@ public class BookApiController {
                 System.err.println("Could not delete file " + filename + ": " + e.getMessage());
             }
         }
-
-        bookRepository.delete(book);
-        return ResponseEntity.ok().body("Book deleted successfully");
     }
 }
