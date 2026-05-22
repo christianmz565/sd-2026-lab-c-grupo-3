@@ -171,3 +171,8 @@ dist
 
 # Antigravity CLI
 .antigravitycli/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
