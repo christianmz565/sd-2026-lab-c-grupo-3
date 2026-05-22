@@ -1,0 +1,107 @@
+[
+  {
+    "isbn": "0451524934",
+    "title": "1984",
+    "author": "George Orwell",
+    "description": "A dystopian novel set in a totalitarian society ruled by Big Brother, exploring themes of surveillance, control, and truth.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0451524934-L.jpg"
+  },
+  {
+    "isbn": "0446310786",
+    "title": "To Kill a Mockingbird",
+    "author": "Harper Lee",
+    "description": "The story of young Scout Finch and her father Atticus, a lawyer defending a Black man falsely accused of rape in the segregated South.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0446310786-L.jpg"
+  },
+  {
+    "isbn": "0743273567",
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "description": "A portrait of the Jazz Age, following the mysterious millionaire Jay Gatsby and his tragic obsession with the beautiful Daisy Buchanan.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0743273567-L.jpg"
+  },
+  {
+    "isbn": "0593230574",
+    "title": "Project Hail Mary",
+    "author": "Andy Weir",
+    "description": "A lone astronaut must use his scientific wits to solve an extinction-level threat to Earth, aided by an unexpected alien ally.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0593230574-L.jpg"
+  },
+  {
+    "isbn": "0345391802",
+    "title": "The Hitchhiker's Guide to the Galaxy",
+    "author": "Douglas Adams",
+    "description": "A comedic sci-fi adventure following Arthur Dent, who is rescued by an alien friend just before Earth is demolished to make way for a hyperspace bypass.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0345391802-L.jpg"
+  },
+  {
+    "isbn": "0061120081",
+    "title": "The Alchemist",
+    "author": "Paulo Coelho",
+    "description": "An allegorical novel about a Spanish shepherd boy named Santiago who travels to Egypt in search of a worldly treasure, discovering self-wisdom along the way.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0061120081-L.jpg"
+  },
+  {
+    "isbn": "0316769487",
+    "title": "The Catcher in the Rye",
+    "author": "J.D. Salinger",
+    "description": "A novel detailing two days in the life of Holden Caulfield, a disillusioned teenager navigating alienation and identity in New York City.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0316769487-L.jpg"
+  },
+  {
+    "isbn": "0345533488",
+    "title": "The Hobbit",
+    "author": "J.R.R. Tolkien",
+    "description": "The classic fantasy journey of Bilbo Baggins, a home-loving hobbit who is swept into a dangerous quest to raid the treasure hoard of Smaug the dragon.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0345533488-L.jpg"
+  },
+  {
+    "isbn": "038549081X",
+    "title": "The Handmaid's Tale",
+    "author": "Margaret Atwood",
+    "description": "A dystopian vision of a near-future New England under a totalitarian Christian teocracy, exploring themes of female subjugation and agency.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/038549081X-L.jpg"
+  },
+  {
+    "isbn": "1400032717",
+    "title": "The Curious Incident of the Dog in the Night-Time",
+    "author": "Mark Haddon",
+    "description": "An investigative mystery solved by Christopher John Francis Boone, a mathematically gifted 15-year-old boy on the autism spectrum.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/1400032717-L.jpg"
+  },
+  {
+    "isbn": "0553380161",
+    "title": "A Game of Thrones",
+    "author": "George R.R. Martin",
+    "description": "The epic fantasy opener introducing the brutal political maneuvering and civil wars between noble houses for control of the Iron Throne.",
+    "image_url": "https://covers.openlibrary.org/b/id/15128814-M.jpg"
+  },
+  {
+    "isbn": "0439023521",
+    "title": "The Hunger Games",
+    "author": "Suzanne Collins",
+    "description": "In a dystopian future nation of Panem, Katniss Everdeen volunteers to take her sister's place in a televised, fight-to-the-death survival tournament.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0439023521-L.jpg"
+  },
+  {
+    "isbn": "0142437204",
+    "title": "Frankenstein",
+    "author": "Mary Shelley",
+    "description": "The seminal gothic horror tale of Victor Frankenstein, a scientist who breathes life into a creature made from scavenged body parts, with catastrophic results.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0142437204-L.jpg"
+  },
+  {
+    "isbn": "0141439513",
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "description": "The turbulent romantic clash between Elizabeth Bennet, the daughter of a country gentleman, and Fitzwilliam Darcy, a rich aristocratic landowner.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0141439513-L.jpg"
+  },
+  {
+    "isbn": "0307474275",
+    "title": "The Da Vinci Code",
+    "author": "Dan Brown",
+    "description": "A fast-paced thriller following symbologist Robert Langdon as he investigates a murder in the Louvre and uncovers a secret religious society.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0307474275-L.jpg"
+  }
+]
