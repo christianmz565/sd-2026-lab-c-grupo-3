@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiberSpace — Repositorio Digital de Libros</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- App Shell -->
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <span>LiberSpace</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" id="nav-all-books">
+                    <i class="fa-solid fa-house-chimney icon-nav"></i>
+                    <span>Colección Completa</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <p>SD-2026 Lab 06</p>
+                <span>v1.0.0 — MVP</span>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <div class="header-titles">
+                    <h1>Colección de Libros</h1>
+                    <p class="subtitle">Gestiona, cataloga y explora tu biblioteca física y digital</p>
+                </div>
+                
+                <button class="btn btn-primary" id="btn-open-add-modal">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Registrar Libro</span>
+                </button>
+            </header>
+
+            <!-- Dashboard Controls -->
+            <section class="controls-section">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Buscar por título, autor o ISBN...">
+                </div>
+                <div class="stats-counter" id="books-count-badge">
+                    <span>0 Libros</span>
+                </div>
+            </section>
+
+            <!-- Books Grid / Empty State -->
+            <section class="grid-section">
+                <!-- Loading State -->
+                <div class="loading-state" id="loading-state">
+                    <div class="spinner"></div>
+                    <p>Cargando colección de la biblioteca...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state hidden" id="empty-state">
+                    <div class="empty-icon">
+                        <i class="fa-solid fa-book-open-reader"></i>
+                    </div>
+                    <h2>No hay libros en el repositorio</h2>
+                    <p>Comienza registrando tu primer libro en el catálogo digital.</p>
+                    <button class="btn btn-secondary" id="btn-empty-add">
+                        <i class="fa-solid fa-plus"></i> Registrar Libro
+                    </button>
+                </div>
+
+                <!-- Cards Grid -->
+                <div class="books-grid" id="books-grid"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Register/Edit Book Modal (Drawer style) -->
+    <div class="modal-backdrop hidden" id="add-book-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="modal-form-title">Registrar Nuevo Libro</h2>
+                <button class="btn-close" id="btn-close-add-modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="add-book-form" class="modal-form" enctype="multipart/form-data">
+                <!-- Hidden Input to track Book ID during editing -->
+                <input type="hidden" id="input-book-id" name="bookId" value="">
+                
+                <div class="form-scroll-container">
+                    <!-- Title -->
+                    <div class="form-group">
+                        <label for="input-title">Título del Libro <span class="required">*</span></label>
+                        <input type="text" id="input-title" name="title" required placeholder="Ej: El Hobbit">
+                    </div>
+
+                    <!-- Author -->
+                    <div class="form-group">
+                        <label for="input-author">Autor <span class="required">*</span></label>
+                        <input type="text" id="input-author" name="author" required placeholder="Ej: J.R.R. Tolkien">
+                    </div>
+
+                    <!-- ISBN -->
+                    <div class="form-group">
+                        <label for="input-isbn">ISBN <span class="required">*</span></label>
+                        <input type="text" id="input-isbn" name="isbn" required placeholder="Ej: 978-0261103344">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="input-description">Descripción</label>
+                        <textarea id="input-description" name="description" rows="4" placeholder="Breve resumen de la trama o contenido del libro..."></textarea>
+                    </div>
+
+                    <!-- Portrait Image Input selection (File vs URL) -->
+                    <div class="form-group">
+                        <label>Imagen de Portada</label>
+                        
+                        <!-- Tab Selector -->
+                        <div class="image-source-tabs">
+                            <button type="button" class="tab-btn active" id="tab-btn-file">
+                                <i class="fa-solid fa-file-arrow-up"></i> Subir Archivo
+                            </button>
+                            <button type="button" class="tab-btn" id="tab-btn-url">
+                                <i class="fa-solid fa-link"></i> Dirección URL
+                            </button>
+                        </div>
+
+                        <!-- Image File Upload Container -->
+                        <div class="image-upload-wrapper" id="image-upload-wrapper">
+                            <input type="file" id="input-image" name="image" accept="image/*" class="hidden-file-input">
+                            <div class="upload-placeholder" id="upload-placeholder">
+                                <i class="fa-regular fa-image upload-icon"></i>
+                                <p class="upload-text">Arrastra la portada aquí o <span>búscala</span></p>
+                                <p class="upload-hint">Formatos soportados: PNG, JPG, WEBP (Max 5MB)</p>
+                            </div>
+                            <div class="upload-preview-container hidden" id="upload-preview-container">
+                                <img src="" alt="Vista previa de portada" id="upload-preview">
+                                <button type="button" class="btn-remove-image" id="btn-remove-image">
+                                    <i class="fa-solid fa-trash-can"></i> Quitar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Image URL Container -->
+                        <div class="image-url-wrapper hidden" id="image-url-wrapper">
+                            <input type="text" id="input-image-url" name="imageUrl" placeholder="https://ejemplo.com/portada.jpg">
+                            <p class="url-input-hint">Pega un enlace público directo a la imagen (.jpg, .png, .webp)</p>
+                            <div class="url-preview-container hidden" id="url-preview-container">
+                                <img src="" alt="Vista previa por enlace" id="url-preview">
+                                <button type="button" class="btn-remove-image" id="btn-remove-url">
+                                    <i class="fa-solid fa-trash-can"></i> Quitar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-tertiary" id="btn-cancel-add">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-book">
+                        <span id="submit-btn-text">Guardar Libro</span>
+                        <div class="spinner spinner-sm hidden" id="submit-spinner"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Detail View Modal -->
+    <div class="modal-backdrop hidden" id="book-detail-modal">
+        <div class="modal-container modal-detail">
+            <div class="modal-header">
+                <h2>Detalles del Libro</h2>
+                <button class="btn-close" id="btn-close-detail-modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="detail-content" id="detail-content">
+                <!-- Dynamically populated -->
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-detail-edit">
+                    <i class="fa-solid fa-pen-to-square"></i> Editar
+                </button>
+                <button class="btn btn-danger" id="btn-detail-delete">
+                    <i class="fa-solid fa-trash-can"></i> Eliminar Libro
+                </button>
+                <button class="btn btn-secondary" id="btn-close-detail">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- App Logic JS -->
+    <script src="/js/app.js"></script>
+</body>
+</html>
