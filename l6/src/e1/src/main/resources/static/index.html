@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiberSpace — Digital Book Repository</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- App Shell -->
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <span>LiberSpace</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" id="nav-all-books">
+                    <i class="fa-solid fa-grid-2"></i>
+                    <i class="fa-solid fa-house-chimney icon-nav"></i>
+                    <span>All Collection</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <p>SD-2026 Lab 06</p>
+                <span>v1.0.0 — MVP</span>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <div class="header-titles">
+                    <h1>Book Collection</h1>
+                    <p class="subtitle">Manage, catalog, and explore your physical and digital library</p>
+                </div>
+                
+                <button class="btn btn-primary" id="btn-open-add-modal">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Register Book</span>
+                </button>
+            </header>
+
+            <!-- Dashboard Controls -->
+            <section class="controls-section">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search by title, author or ISBN...">
+                </div>
+                <div class="stats-counter" id="books-count-badge">
+                    <span>0 Books</span>
+                </div>
+            </section>
+
+            <!-- Books Grid / Empty State -->
+            <section class="grid-section">
+                <!-- Loading State -->
+                <div class="loading-state" id="loading-state">
+                    <div class="spinner"></div>
+                    <p>Loading library collection...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state hidden" id="empty-state">
+                    <div class="empty-icon">
+                        <i class="fa-solid fa-book-open-reader"></i>
+                    </div>
+                    <h2>No books in the repository</h2>
+                    <p>Get started by adding your first book to the digital catalog.</p>
+                    <button class="btn btn-secondary" id="btn-empty-add">
+                        <i class="fa-solid fa-plus"></i> Register Book
+                    </button>
+                </div>
+
+                <!-- Cards Grid -->
+                <div class="books-grid" id="books-grid"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Register Book Modal (Drawer style) -->
+    <div class="modal-backdrop hidden" id="add-book-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>Register New Book</h2>
+                <button class="btn-close" id="btn-close-add-modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="add-book-form" class="modal-form" enctype="multipart/form-data">
+                <div class="form-scroll-container">
+                    <!-- Title -->
+                    <div class="form-group">
+                        <label for="input-title">Book Title <span class="required">*</span></label>
+                        <input type="text" id="input-title" name="title" required placeholder="e.g., The Hobbit">
+                    </div>
+
+                    <!-- Author -->
+                    <div class="form-group">
+                        <label for="input-author">Author <span class="required">*</span></label>
+                        <input type="text" id="input-author" name="author" required placeholder="e.g., J.R.R. Tolkien">
+                    </div>
+
+                    <!-- ISBN -->
+                    <div class="form-group">
+                        <label for="input-isbn">ISBN <span class="required">*</span></label>
+                        <input type="text" id="input-isbn" name="isbn" required placeholder="e.g., 978-0261103344">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="input-description">Description</label>
+                        <textarea id="input-description" name="description" rows="4" placeholder="Brief summary of the book plot or content..."></textarea>
+                    </div>
+
+                    <!-- Portrait Image Upload -->
+                    <div class="form-group">
+                        <label>Portrait Image (Cover)</label>
+                        <div class="image-upload-wrapper" id="image-upload-wrapper">
+                            <input type="file" id="input-image" name="image" accept="image/*" class="hidden-file-input">
+                            <div class="upload-placeholder" id="upload-placeholder">
+                                <i class="fa-regular fa-image upload-icon"></i>
+                                <p class="upload-text">Drag & drop cover image here or <span>browse</span></p>
+                                <p class="upload-hint">Supports PNG, JPG, WEBP (Max 5MB)</p>
+                            </div>
+                            <div class="upload-preview-container hidden" id="upload-preview-container">
+                                <img src="" alt="Cover preview" id="upload-preview">
+                                <button type="button" class="btn-remove-image" id="btn-remove-image">
+                                    <i class="fa-solid fa-trash-can"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-tertiary" id="btn-cancel-add">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-book">
+                        <span id="submit-btn-text">Save Book</span>
+                        <div class="spinner spinner-sm hidden" id="submit-spinner"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Detail View Modal -->
+    <div class="modal-backdrop hidden" id="book-detail-modal">
+        <div class="modal-container modal-detail">
+            <div class="modal-header">
+                <h2>Book Details</h2>
+                <button class="btn-close" id="btn-close-detail-modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="detail-content" id="detail-content">
+                <!-- Dynamically populated -->
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="btn-detail-delete">
+                    <i class="fa-solid fa-trash-can"></i> Delete Book
+                </button>
+                <button class="btn btn-secondary" id="btn-close-detail">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- App Logic JS -->
+    <script src="/js/app.js"></script>
+</body>
+</html>
