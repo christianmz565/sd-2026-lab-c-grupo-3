@@ -1,24 +1,24 @@
-// Application State Management
+// Estado de la Aplicación
 let appState = {
     books: [],
     selectedBookId: null,
-    searchQuery: ""
+    searchQuery: "",
+    imageSourceMode: "file" // "file" o "url"
 };
 
 // Endpoints
 const API_URL = "/api/books";
 
-// Gradients for books without custom covers
+// Gradientes deterministas para libros sin portada
 const COVER_GRADIENTS = [
-    'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', // Indigo -> Purple
-    'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)', // Blue -> Cyan
-    'linear-gradient(135deg, #10b981 0%, #059669 100%)', // Emerald -> Green
-    'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', // Amber -> Orange
-    'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', // Pink -> Rose
-    'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'  // Violet -> Dark Violet
+    'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', // Índigo -> Púrpura
+    'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)', // Azul -> Cian
+    'linear-gradient(135deg, #10b981 0%, #059669 100%)', // Esmeralda -> Verde
+    'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', // Ámbar -> Naranja
+    'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', // Rosa -> Clavel
+    'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'  // Violeta -> Violeta Oscuro
 ];
 
-// Get cover gradient deterministically based on book title
 function getCoverGradient(title) {
     let hash = 0;
     for (let i = 0; i < title.length; i++) {
@@ -28,7 +28,7 @@ function getCoverGradient(title) {
     return COVER_GRADIENTS[index];
 }
 
-// DOM Elements
+// Elementos del DOM
 const elements = {
     booksGrid: document.getElementById("books-grid"),
     loadingState: document.getElementById("loading-state"),
@@ -36,26 +36,46 @@ const elements = {
     booksCountBadge: document.getElementById("books-count-badge"),
     searchInput: document.getElementById("search-input"),
     
-    // Modals
+    // Modales
     addBookModal: document.getElementById("add-book-modal"),
     bookDetailModal: document.getElementById("book-detail-modal"),
+    modalFormTitle: document.getElementById("modal-form-title"),
     
-    // Forms & Inputs
+    // Formularios e Inputs
     addBookForm: document.getElementById("add-book-form"),
-    inputImage: document.getElementById("input-image"),
+    inputBookId: document.getElementById("input-book-id"),
+    inputTitle: document.getElementById("input-title"),
+    inputAuthor: document.getElementById("input-author"),
+    inputIsbn: document.getElementById("input-isbn"),
+    inputDescription: document.getElementById("input-description"),
+    
+    // Pestañas de Imagen
+    tabBtnFile: document.getElementById("tab-btn-file"),
+    tabBtnUrl: document.getElementById("tab-btn-url"),
     imageUploadWrapper: document.getElementById("image-upload-wrapper"),
+    imageUrlWrapper: document.getElementById("image-url-wrapper"),
+    
+    // Inputs de Imagen y Previsualizaciones
+    inputImage: document.getElementById("input-image"),
+    inputImageUrl: document.getElementById("input-image-url"),
     uploadPlaceholder: document.getElementById("upload-placeholder"),
     uploadPreviewContainer: document.getElementById("upload-preview-container"),
     uploadPreview: document.getElementById("upload-preview"),
     btnRemoveImage: document.getElementById("btn-remove-image"),
+    
+    urlPreviewContainer: document.getElementById("url-preview-container"),
+    urlPreview: document.getElementById("url-preview"),
+    btnRemoveUrl: document.getElementById("btn-remove-url"),
+    
     submitBtnText: document.getElementById("submit-btn-text"),
     submitSpinner: document.getElementById("submit-spinner"),
     
-    // Detail View elements
+    // Detalle de Libro
     detailContent: document.getElementById("detail-content"),
+    btnDetailEdit: document.getElementById("btn-detail-edit"),
     btnDetailDelete: document.getElementById("btn-detail-delete"),
     
-    // Action Buttons
+    // Botones de acción general
     btnOpenAddModal: document.getElementById("btn-open-add-modal"),
     btnEmptyAdd: document.getElementById("btn-empty-add"),
     btnCloseAddModal: document.getElementById("btn-close-add-modal"),
@@ -65,25 +85,25 @@ const elements = {
     toastContainer: document.getElementById("toast-container")
 };
 
-// Initialize Application
+// Inicialización de la App
 document.addEventListener("DOMContentLoaded", () => {
     fetchBooks();
     setupEventListeners();
 });
 
-// Event Listeners Registration
+// Configuración de los escuchas de eventos
 function setupEventListeners() {
-    // Open/Close Add Book Modal
-    elements.btnOpenAddModal.addEventListener("click", openAddModal);
-    elements.btnEmptyAdd.addEventListener("click", openAddModal);
+    // Abrir/Cerrar Modal de Registro
+    elements.btnOpenAddModal.addEventListener("click", () => openAddModal());
+    elements.btnEmptyAdd.addEventListener("click", () => openAddModal());
     elements.btnCloseAddModal.addEventListener("click", closeAddModal);
     elements.btnCancelAdd.addEventListener("click", closeAddModal);
     
-    // Close Detail Modal
+    // Cerrar Modal de Detalles
     elements.btnCloseDetailModal.addEventListener("click", closeDetailModal);
     elements.btnCloseDetail.addEventListener("click", closeDetailModal);
     
-    // Search input handler (Debounced)
+    // Filtro de Búsqueda (Debounce)
     let searchTimeout;
     elements.searchInput.addEventListener("input", (e) => {
         clearTimeout(searchTimeout);
@@ -93,18 +113,24 @@ function setupEventListeners() {
         }, 200);
     });
 
-    // Form Submission
+    // Enviar Formulario
     elements.addBookForm.addEventListener("submit", handleFormSubmit);
 
-    // Image Upload Mechanics
-    elements.imageUploadWrapper.addEventListener("click", () => {
+    // Eventos de Pestañas de Origen de Imagen
+    elements.tabBtnFile.addEventListener("click", () => setImageSourceMode("file"));
+    elements.tabBtnUrl.addEventListener("click", () => setImageSourceMode("url"));
+
+    // Funcionalidades de Subida de Archivos
+    elements.imageUploadWrapper.addEventListener("click", (e) => {
+        // Evitar que el click se propague si se presiona el botón quitar
+        if (e.target.closest("#btn-remove-image")) return;
         elements.inputImage.click();
     });
     
     elements.inputImage.addEventListener("change", handleFileSelect);
     elements.btnRemoveImage.addEventListener("click", removeSelectedFile);
 
-    // Drag and drop upload zone
+    // Eventos Drag and Drop
     ['dragenter', 'dragover'].forEach(eventName => {
         elements.imageUploadWrapper.addEventListener(eventName, (e) => {
             e.preventDefault();
@@ -130,39 +156,68 @@ function setupEventListeners() {
         }
     }, false);
 
-    // Detail Modal actions
-    elements.btnDetailDelete.addEventListener("click", () => {
+    // Funcionalidades de URL de Imagen
+    elements.inputImageUrl.addEventListener("input", handleUrlInput);
+    elements.btnRemoveUrl.addEventListener("click", removeSelectedUrl);
+
+    // Modales - Botón de Editar y Eliminar dentro de Detalles
+    elements.btnDetailEdit.addEventListener("click", () => {
         if (appState.selectedBookId) {
-            deleteBook(appState.selectedBookId);
+            openEditModal(appState.selectedBookId);
         }
     });
 
-    // Close Modals on Outer Backdrop Click
+    elements.btnDetailDelete.addEventListener("click", () => {
+        if (appState.selectedBookId) {
+            const book = appState.books.find(b => b.id === appState.selectedBookId);
+            if (book && confirm(`¿Estás seguro de que deseas eliminar "${book.title}"?`)) {
+                deleteBook(appState.selectedBookId);
+            }
+        }
+    });
+
+    // Cerrar modales haciendo click fuera
     window.addEventListener("click", (e) => {
         if (e.target === elements.addBookModal) closeAddModal();
         if (e.target === elements.bookDetailModal) closeDetailModal();
     });
 }
 
-// Fetch Books from REST API
+// Alternar entre las pestañas de Subir Archivo y Dirección URL
+function setImageSourceMode(mode) {
+    appState.imageSourceMode = mode;
+    if (mode === "file") {
+        elements.tabBtnFile.classList.add("active");
+        elements.tabBtnUrl.classList.remove("active");
+        elements.imageUploadWrapper.classList.remove("hidden");
+        elements.imageUrlWrapper.classList.add("hidden");
+    } else {
+        elements.tabBtnFile.classList.remove("active");
+        elements.tabBtnUrl.classList.add("active");
+        elements.imageUploadWrapper.classList.add("hidden");
+        elements.imageUrlWrapper.classList.remove("hidden");
+    }
+}
+
+// Cargar Libros de la API REST
 async function fetchBooks() {
     showLoading(true);
     try {
         const response = await fetch(API_URL);
         if (!response.ok) {
-            throw new Error(`Server returned code ${response.status}`);
+            throw new Error(`El servidor respondió con código ${response.status}`);
         }
         appState.books = await response.json();
         renderBooks();
     } catch (error) {
-        console.error("Error loading books:", error);
-        showToast("Error loading book repository", "danger");
+        console.error("Error al cargar libros:", error);
+        showToast("Error al cargar la colección de libros", "danger");
     } finally {
         showLoading(false);
     }
 }
 
-// Render Books Grid
+// Renderizar la rejilla de libros
 function renderBooks() {
     const filteredBooks = appState.books.filter(book => {
         return book.title.toLowerCase().includes(appState.searchQuery) ||
@@ -170,8 +225,7 @@ function renderBooks() {
                book.isbn.toLowerCase().includes(appState.searchQuery);
     });
 
-    // Update Counter Badge
-    elements.booksCountBadge.textContent = `${filteredBooks.length} Book${filteredBooks.length === 1 ? '' : 's'}`;
+    elements.booksCountBadge.textContent = `${filteredBooks.length} Libro${filteredBooks.length === 1 ? '' : 's'}`;
 
     if (filteredBooks.length === 0) {
         elements.booksGrid.classList.add("hidden");
@@ -189,13 +243,21 @@ function renderBooks() {
         
         let coverHtml = "";
         if (book.imageUrl) {
-            coverHtml = `<img src="${book.imageUrl}" alt="${book.title}" class="book-cover">`;
+            coverHtml = `<img src="${book.imageUrl}" alt="${book.title}" class="book-cover" onerror="this.src=''; this.className='hidden'; this.nextElementSibling.classList.remove('hidden');">
+                         <div class="fallback-cover hidden" style="background: ${getCoverGradient(book.title)}">
+                             <div class="fallback-decorations">
+                                 <span>Repositorio</span>
+                                 <i class="fa-solid fa-bookmark"></i>
+                             </div>
+                             <div class="fallback-title">${book.title}</div>
+                             <div class="fallback-author">${book.author}</div>
+                         </div>`;
         } else {
             const gradient = getCoverGradient(book.title);
             coverHtml = `
                 <div class="fallback-cover" style="background: ${gradient}">
                     <div class="fallback-decorations">
-                        <span>Repository</span>
+                        <span>Repositorio</span>
                         <i class="fa-solid fa-bookmark"></i>
                     </div>
                     <div class="fallback-title">${book.title}</div>
@@ -214,7 +276,7 @@ function renderBooks() {
                 <div class="book-footer">
                     <span class="book-isbn">${book.isbn}</span>
                     <div class="card-actions">
-                        <button class="btn-icon-danger btn-delete-card" data-id="${book.id}" title="Delete Book">
+                        <button class="btn-icon-danger btn-delete-card" data-id="${book.id}" title="Eliminar Libro">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </div>
@@ -222,20 +284,17 @@ function renderBooks() {
             </div>
         `;
 
-        // Click on card opens detailed view (Find by ID API consumption)
+        // Abrir detalles del libro al hacer click en la tarjeta
         card.addEventListener("click", (e) => {
-            // Prevent opening details if clicking the delete button
-            if (e.target.closest(".btn-delete-card")) {
-                return;
-            }
+            if (e.target.closest(".btn-delete-card")) return;
             openDetailModal(book.id);
         });
 
-        // Delete button inside card handler
+        // Botón de eliminar en tarjeta
         const btnDelete = card.querySelector(".btn-delete-card");
         btnDelete.addEventListener("click", (e) => {
             e.stopPropagation();
-            if (confirm(`Are you sure you want to delete "${book.title}"?`)) {
+            if (confirm(`¿Estás seguro de que deseas eliminar "${book.title}"?`)) {
                 deleteBook(book.id);
             }
         });
@@ -244,7 +303,7 @@ function renderBooks() {
     });
 }
 
-// Show/Hide Loading Animation
+// Carga visual
 function showLoading(show) {
     if (show) {
         elements.loadingState.classList.remove("hidden");
@@ -255,12 +314,60 @@ function showLoading(show) {
     }
 }
 
-// Open / Close Add modal
+// Abrir Modal de Registro (Modo Creación)
 function openAddModal() {
     elements.addBookForm.reset();
+    elements.inputBookId.value = "";
+    elements.modalFormTitle.textContent = "Registrar Nuevo Libro";
+    elements.submitBtnText.textContent = "Guardar Libro";
+    
     removeSelectedFile();
+    removeSelectedUrl();
+    setImageSourceMode("file");
+    
     elements.addBookModal.classList.remove("hidden");
-    document.body.style.overflow = "hidden"; // Prevent background scroll
+    document.body.style.overflow = "hidden";
+}
+
+// Abrir Modal de Edición (Modo Actualización)
+function openEditModal(bookId) {
+    const book = appState.books.find(b => b.id === bookId);
+    if (!book) return;
+
+    elements.inputBookId.value = book.id;
+    elements.inputTitle.value = book.title;
+    elements.inputAuthor.value = book.author;
+    elements.inputIsbn.value = book.isbn;
+    elements.inputDescription.value = book.description || "";
+    
+    elements.modalFormTitle.textContent = "Editar Libro";
+    elements.submitBtnText.textContent = "Guardar Cambios";
+    
+    removeSelectedFile();
+    removeSelectedUrl();
+    
+    // Determinar si la imagen es una subida local o una URL externa
+    if (book.imageUrl) {
+        if (book.imageUrl.startsWith("/uploads/")) {
+            setImageSourceMode("file");
+            // Mostrar previsualización de la imagen actual
+            elements.uploadPreview.src = book.imageUrl;
+            elements.uploadPlaceholder.classList.add("hidden");
+            elements.uploadPreviewContainer.classList.remove("hidden");
+        } else {
+            setImageSourceMode("url");
+            elements.inputImageUrl.value = book.imageUrl;
+            elements.urlPreview.src = book.imageUrl;
+            elements.urlPreviewContainer.classList.remove("hidden");
+        }
+    } else {
+        setImageSourceMode("file");
+    }
+    
+    // Cerrar el modal de detalles y abrir el modal del formulario
+    closeDetailModal();
+    elements.addBookModal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
 }
 
 function closeAddModal() {
@@ -268,36 +375,43 @@ function closeAddModal() {
     document.body.style.overflow = "";
 }
 
-// Open / Close Detail modal
+// Abrir Modal de Detalles (GET por ID)
 async function openDetailModal(bookId) {
     appState.selectedBookId = bookId;
     elements.detailContent.innerHTML = `
         <div class="loading-state">
             <div class="spinner"></div>
-            <p>Retrieving details...</p>
+            <p>Cargando detalles...</p>
         </div>
     `;
     elements.bookDetailModal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
 
     try {
-        // GET /api/books/{id} (Find by ID)
         const response = await fetch(`${API_URL}/${bookId}`);
         if (!response.ok) {
-            throw new Error(`Failed to load details. Code: ${response.status}`);
+            throw new Error(`Error al cargar los detalles. Código: ${response.status}`);
         }
         
         const book = await response.json();
         
         let coverHtml = "";
         if (book.imageUrl) {
-            coverHtml = `<img src="${book.imageUrl}" alt="${book.title}">`;
+            coverHtml = `<img src="${book.imageUrl}" alt="${book.title}" onerror="this.src=''; this.className='hidden'; this.nextElementSibling.classList.remove('hidden');">
+                         <div class="fallback-cover hidden" style="background: ${getCoverGradient(book.title)}">
+                             <div class="fallback-decorations">
+                                 <span>Repositorio</span>
+                                 <i class="fa-solid fa-bookmark"></i>
+                             </div>
+                             <div class="fallback-title">${book.title}</div>
+                             <div class="fallback-author">${book.author}</div>
+                         </div>`;
         } else {
             const gradient = getCoverGradient(book.title);
             coverHtml = `
                 <div class="fallback-cover" style="background: ${gradient}">
                     <div class="fallback-decorations">
-                        <span>Repository</span>
+                        <span>Repositorio</span>
                         <i class="fa-solid fa-bookmark"></i>
                     </div>
                     <div class="fallback-title">${book.title}</div>
@@ -308,7 +422,7 @@ async function openDetailModal(bookId) {
 
         const descriptionHtml = book.description 
             ? `<p class="detail-description">${escapeHtml(book.description)}</p>` 
-            : `<p class="detail-description no-description">No description provided for this repository entry.</p>`;
+            : `<p class="detail-description no-description">Sin descripción proporcionada para este libro.</p>`;
 
         elements.detailContent.innerHTML = `
             <div class="detail-cover-box">
@@ -316,21 +430,21 @@ async function openDetailModal(bookId) {
             </div>
             <div class="detail-info">
                 <h1 class="detail-title">${escapeHtml(book.title)}</h1>
-                <p class="detail-author">by ${escapeHtml(book.author)}</p>
+                <p class="detail-author">por ${escapeHtml(book.author)}</p>
                 
                 <div class="detail-meta-row">
                     <span class="detail-badge isbn-badge">ISBN: ${escapeHtml(book.isbn)}</span>
-                    <span class="detail-badge">Database ID: #${book.id}</span>
+                    <span class="detail-badge">ID Base de datos: #${book.id}</span>
                 </div>
                 
-                <div class="detail-label">Summary / Description</div>
+                <div class="detail-label">Resumen / Descripción</div>
                 ${descriptionHtml}
             </div>
         `;
 
     } catch (error) {
-        console.error("Error retrieving book details:", error);
-        showToast("Error retrieving book details from server", "danger");
+        console.error("Error al obtener detalles del libro:", error);
+        showToast("Error al obtener los detalles del libro", "danger");
         closeDetailModal();
     }
 }
@@ -341,19 +455,17 @@ function closeDetailModal() {
     appState.selectedBookId = null;
 }
 
-// Handle Image File Select Preview
+// Mecánicas de Subida de Archivos
 function handleFileSelect() {
     const file = elements.inputImage.files[0];
     if (file) {
-        // Validate file type
         if (!file.type.startsWith("image/")) {
-            showToast("Only image files are allowed", "danger");
+            showToast("Solo se permiten archivos de imagen", "danger");
             removeSelectedFile();
             return;
         }
-        // Validate file size (5MB)
         if (file.size > 5 * 1024 * 1024) {
-            showToast("Cover image must be smaller than 5MB", "danger");
+            showToast("La imagen de portada debe pesar menos de 5MB", "danger");
             removeSelectedFile();
             return;
         }
@@ -376,55 +488,95 @@ function removeSelectedFile(e) {
     elements.uploadPlaceholder.classList.remove("hidden");
 }
 
-// Handle Form Submit (Register book)
+// Mecánicas de Entrada URL de Imagen
+function handleUrlInput() {
+    const url = elements.inputImageUrl.value.trim();
+    if (url) {
+        elements.urlPreview.src = url;
+        elements.urlPreviewContainer.classList.remove("hidden");
+    } else {
+        removeSelectedUrl();
+    }
+}
+
+function removeSelectedUrl(e) {
+    if (e) e.stopPropagation();
+    elements.inputImageUrl.value = "";
+    elements.urlPreview.src = "";
+    elements.urlPreviewContainer.classList.add("hidden");
+}
+
+// Envío del Formulario (Guardar / Actualizar)
 async function handleFormSubmit(e) {
     e.preventDefault();
 
-    // Visual loading state
-    elements.submitBtnText.textContent = "Saving...";
+    const isEditMode = elements.inputBookId.value !== "";
+    const bookId = elements.inputBookId.value;
+
+    elements.submitBtnText.textContent = isEditMode ? "Actualizando..." : "Guardando...";
     elements.submitSpinner.classList.remove("hidden");
     elements.addBookForm.querySelectorAll("input, textarea, button").forEach(el => el.disabled = true);
 
     const formData = new FormData();
-    formData.append("title", document.getElementById("input-title").value);
-    formData.append("author", document.getElementById("input-author").value);
-    formData.append("isbn", document.getElementById("input-isbn").value);
-    formData.append("description", document.getElementById("input-description").value);
-    
-    const file = elements.inputImage.files[0];
-    if (file) {
-        formData.append("image", file);
+    formData.append("title", elements.inputTitle.value);
+    formData.append("author", elements.inputAuthor.value);
+    formData.append("isbn", elements.inputIsbn.value);
+    formData.append("description", elements.inputDescription.value);
+
+    // Adjuntar la imagen según el origen activo
+    if (appState.imageSourceMode === "file") {
+        const file = elements.inputImage.files[0];
+        if (file) {
+            formData.append("image", file);
+        } else if (isEditMode) {
+            // Si está editando, y el contenedor de vista previa está oculto, significa que quitó la imagen
+            if (elements.uploadPreviewContainer.classList.contains("hidden")) {
+                formData.append("imageUrl", ""); // Cadena vacía para quitar la imagen
+            }
+        }
+    } else {
+        const url = elements.inputImageUrl.value.trim();
+        formData.append("imageUrl", url); // Envia la url o cadena vacía si fue quitada
     }
 
     try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            body: formData
-        });
+        let response;
+        if (isEditMode) {
+            // PUT /api/books/{id} (Actualizar)
+            response = await fetch(`${API_URL}/${bookId}`, {
+                method: "PUT",
+                body: formData
+            });
+        } else {
+            // POST /api/books (Registrar)
+            response = await fetch(API_URL, {
+                method: "POST",
+                body: formData
+            });
+        }
 
-        if (response.status === 201) {
-            showToast("Book registered successfully!", "success");
+        if (response.status === 201 || response.status === 200) {
+            showToast(isEditMode ? "¡Libro actualizado correctamente!" : "¡Libro registrado correctamente!", "success");
             closeAddModal();
             fetchBooks();
         } else if (response.status === 409) {
-            showToast("ISBN already registered. Check detail logs.", "danger");
+            showToast("El ISBN ingresado ya está registrado por otro libro.", "danger");
         } else {
             const errorMsg = await response.text();
-            throw new Error(errorMsg || `Server responded with status ${response.status}`);
+            throw new Error(errorMsg || `Error de servidor: ${response.status}`);
         }
 
     } catch (error) {
-        console.error("Error registering book:", error);
-        showToast(error.message || "Failed to register book. Server error.", "danger");
+        console.error("Error al procesar el libro:", error);
+        showToast(error.message || "Error al conectar con el servidor", "danger");
     } finally {
-        // Reset loading state
-        elements.submitBtnText.textContent = "Save Book";
+        elements.submitBtnText.textContent = isEditMode ? "Guardar Cambios" : "Guardar Libro";
         elements.submitSpinner.classList.add("hidden");
         elements.addBookForm.querySelectorAll("input, textarea, button").forEach(el => el.disabled = false);
     }
 }
 
-// Delete Book API consumption
+// Eliminar un Libro de la API
 async function deleteBook(bookId) {
     try {
         const response = await fetch(`${API_URL}/${bookId}`, {
@@ -432,19 +584,19 @@ async function deleteBook(bookId) {
         });
 
         if (response.ok) {
-            showToast("Book deleted successfully", "success");
+            showToast("Libro eliminado de la colección", "success");
             closeDetailModal();
             fetchBooks();
         } else {
-            throw new Error(`Delete request failed. Code: ${response.status}`);
+            throw new Error(`Error en la solicitud de eliminación. Código: ${response.status}`);
         }
     } catch (error) {
-        console.error("Error deleting book:", error);
-        showToast("Error deleting book. Check connection.", "danger");
+        console.error("Error al eliminar libro:", error);
+        showToast("Error al eliminar el libro. Revisa la conexión.", "danger");
     }
 }
 
-// Show Toast Notification
+// Mostrar notificaciones Toast
 function showToast(message, type = "info") {
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
@@ -463,7 +615,6 @@ function showToast(message, type = "info") {
 
     elements.toastContainer.appendChild(toast);
 
-    // Remove toast after animation ends
     setTimeout(() => {
         toast.style.animation = 'toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) reverse forwards';
         setTimeout(() => {
@@ -472,7 +623,7 @@ function showToast(message, type = "info") {
     }, 4000);
 }
 
-// Utility function to escape HTML special characters
+// Limpiar HTML
 function escapeHtml(text) {
     if (!text) return "";
     return text
