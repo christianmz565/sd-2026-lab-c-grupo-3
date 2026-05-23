@@ -1,0 +1,167 @@
+{
+  "api_structure": {
+    "registrar": {
+      "method": "POST",
+      "endpoint": "/estudiantes",
+      "body": {
+        "matricula": "string",
+        "nombre": "string",
+        "carrera": "string",
+        "edad": "integer",
+        "email": "string",
+        "telefono": "string",
+        "matriculado": "boolean",
+        "semestres": "integer",
+        "estado": "string"
+      },
+      "response_success": {
+        "ok": true
+      }
+    },
+    "consultar": {
+      "method": "GET",
+      "endpoint": "/estudiantes",
+      "response_success": [
+        {
+          "id": "integer",
+          "matricula": "string",
+          "nombre": "string",
+          "carrera": "string",
+          "edad": "integer",
+          "email": "string",
+          "telefono": "string",
+          "matriculado": "boolean",
+          "semestres": "integer",
+          "estado": "string"
+        }
+      ]
+    },
+    "actualizar": {
+      "method": "PUT",
+      "endpoint": "/estudiantes/<id>",
+      "body": {
+        "matricula": "string (opcional)",
+        "nombre": "string (opcional)",
+        "carrera": "string (opcional)",
+        "edad": "integer (opcional)",
+        "email": "string (opcional)",
+        "telefono": "string (opcional)",
+        "matriculado": "boolean (opcional)",
+        "semestres": "integer (opcional)",
+        "estado": "string (opcional)"
+      },
+      "response_success": {
+        "actualizado": true
+      }
+    },
+    "eliminar": {
+      "method": "DELETE",
+      "endpoint": "/estudiantes/<id>",
+      "response_success": {
+        "eliminado": true
+      }
+    }
+  },
+  
+  "datos_iniciales": [
+    {
+      "matricula": "2024-IS-0142",
+      "nombre": "Carlos Mendoza",
+      "carrera": "Ingenieria de Sistemas",
+      "edad": 21,
+      "email": "carlos.mendoza@campus.edu",
+      "telefono": "+51 999 120 410",
+      "matriculado": true,
+      "semestres": 5,
+      "estado": "Activo"
+    },
+    {
+      "matricula": "2023-MED-0098",
+      "nombre": "Lucia Fernandez",
+      "carrera": "Medicina",
+      "edad": 23,
+      "email": "lucia.fernandez@campus.edu",
+      "telefono": "+51 988 204 118",
+      "matriculado": true,
+      "semestres": 8,
+      "estado": "Activo"
+    },
+    {
+      "matricula": "2025-ARQ-0210",
+      "nombre": "Javier Solis",
+      "carrera": "Arquitectura",
+      "edad": 19,
+      "email": "javier.solis@campus.edu",
+      "telefono": "+51 977 301 902",
+      "matriculado": false,
+      "semestres": 2,
+      "estado": "En riesgo"
+    },
+    {
+      "matricula": "2022-DG-0314",
+      "nombre": "Mariana Rios",
+      "carrera": "Diseno Grafico",
+      "edad": 22,
+      "email": "mariana.rios@campus.edu",
+      "telefono": "+51 966 221 665",
+      "matriculado": true,
+      "semestres": 7,
+      "estado": "Activo"
+    },
+    {
+      "matricula": "2021-DER-0047",
+      "nombre": "Roberto Alarcon",
+      "carrera": "Derecho",
+      "edad": 24,
+      "email": "roberto.alarcon@campus.edu",
+      "telefono": "+51 955 110 443",
+      "matriculado": true,
+      "semestres": 10,
+      "estado": "Graduado"
+    },
+    {
+      "matricula": "2024-ADM-0188",
+      "nombre": "Valeria Pineda",
+      "carrera": "Administracion",
+      "edad": 20,
+      "email": "valeria.pineda@campus.edu",
+      "telefono": "+51 944 501 330",
+      "matriculado": true,
+      "semestres": 3,
+      "estado": "Activo"
+    },
+    {
+      "matricula": "2023-PSI-0115",
+      "nombre": "Mateo Aguilar",
+      "carrera": "Psicologia",
+      "edad": 21,
+      "email": "mateo.aguilar@campus.edu",
+      "telefono": "+51 933 421 807",
+      "matriculado": false,
+      "semestres": 4,
+      "estado": "Baja"
+    },
+    {
+      "matricula": "2022-ECON-0223",
+      "nombre": "Sofia Herrera",
+      "carrera": "Economia",
+      "edad": 22,
+      "email": "sofia.herrera@campus.edu",
+      "telefono": "+51 922 331 776",
+      "matriculado": true,
+      "semestres": 6,
+      "estado": "Activo"
+    },
+    {
+      "matricula": "2025-ARQ-0211",
+      "nombre": "Diego Ramirez",
+      "carrera": "Arquitectura",
+      "edad": 19,
+      "email": "diego.ramirez@campus.edu",
+      "telefono": "+51 911 221 665",
+      "matriculado": false,
+      "semestres": 2,
+      "estado": "En riesgo"
+    }
+  ]
+}
