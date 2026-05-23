@@ -676,32 +676,6 @@
   </div>
 
   <script>
-    // Constant Mock Results (used as fallback if backend is unreachable)
-    const MOCK_DATA = {
-      summary: {
-        total_words: 1284,
-        unique_words: 342,
-        execution_time_ms: 142.5
-      },
-      word_counts: [
-        ["distributed", 48],
-        ["systems", 42],
-        ["mapreduce", 38],
-        ["worker", 29],
-        ["master", 25],
-        ["word", 22],
-        ["count", 21],
-        ["grpc", 18],
-        ["python", 15],
-        ["docker", 12],
-        ["kubernetes", 10],
-        ["data", 9],
-        ["network", 8],
-        ["concurrency", 7],
-        ["parallel", 6]
-      ]
-    };
-
     let selectedFile = null;
     let selectedFileText = "";
 
@@ -773,7 +747,7 @@
       document.getElementById('file-preview-card').style.display = 'none';
     }
 
-    // Connect to actual backend /api/count, with mock fallback
+    // Connect to actual backend /api/count
     function executeAnalysis() {
       const textInput = document.getElementById('text-input').value.trim();
       const textActive = document.getElementById('text-tab').classList.contains('active');
@@ -803,10 +777,11 @@
       visualizer.style.display = 'block';
       progressFill.style.width = "0%";
       document.getElementById('status-text').innerText = "Conectando con el backend...";
+      document.getElementById('progress-fill').style.background = "linear-gradient(to right, var(--primary), var(--secondary))";
 
-      // Trigger width animation
+      // Trigger progress animation
       setTimeout(() => {
-        progressFill.style.width = "40%";
+        progressFill.style.width = "50%";
         document.getElementById('status-text').innerText = "Procesando texto...";
       }, 200);
 
@@ -834,23 +809,16 @@
         }, 300);
       })
       .catch(error => {
-        console.warn("Backend offline o error. Ejecutando simulación local con datos mock:", error);
+        console.error("Error conectando con el backend:", error);
+        progressFill.style.width = "100%";
+        document.getElementById('progress-fill').style.background = "var(--secondary)";
+        document.getElementById('status-text').innerHTML = "<span style='color: var(--secondary); font-weight: 600;'>Error: El servidor no está disponible.</span>";
         
-        // Simulating the loading phases for the mock fallback
+        // Re-enable input button after a short delay
         setTimeout(() => {
-          progressFill.style.width = "75%";
-          document.getElementById('status-text').innerText = "Finalizando análisis (Simulación)...";
-        }, 1000);
-
-        setTimeout(() => {
-          progressFill.style.width = "100%";
-          document.getElementById('status-text').innerText = "Completado.";
-          
-          setTimeout(() => {
-            visualizer.style.display = 'none';
-            showResults(MOCK_DATA);
-          }, 300);
-        }, 2000);
+          document.getElementById('btn-submit').disabled = false;
+          document.getElementById('btn-submit').style.opacity = '1';
+        }, 1500);
       });
     }
 
