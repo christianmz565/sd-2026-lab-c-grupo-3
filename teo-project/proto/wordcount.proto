@@ -10,6 +10,6 @@ message CountWordsResponse {
   map<string, int32> counts = 1;
 }
 
-service WordCountWorker {
+service WordCountWorkerService {
   rpc CountWords(CountWordsRequest) returns (CountWordsResponse);
 }
