@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Registro Estudiantil</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-badge">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </span>
+                <div>
+                    <h2>CampusPulse</h2>
+                    <p>Registro</p>
+                </div>
+            </div>
+            <nav class="menu">
+                <a href="/" class="active"><i class="fa-solid fa-users"></i><span>Estudiantes</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <span>2026</span>
+                <strong>v1.0</strong>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-info">
+                    <div class="eyebrow">Panel academico</div>
+                    <h1>Registro Estudiantil</h1>
+                    <p>Gestiona perfiles, estado academico y seguimiento general del alumnado.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-ghost" id="btn-export">
+                        <i class="fa-solid fa-file-arrow-down"></i> Exportar
+                    </button>
+                    <button class="btn btn-primary" id="btn-open-modal">
+                        <i class="fa-solid fa-user-plus"></i> Registrar Estudiante
+                    </button>
+                </div>
+            </header>
+
+            <section class="content">
+                <div class="stats-grid">
+                    <article class="stat-card">
+                        <div>
+                            <p>Total registrados</p>
+                            <h3 id="stat-total">0</h3>
+                        </div>
+                        <span class="stat-icon">
+                            <i class="fa-solid fa-users"></i>
+                        </span>
+                    </article>
+                    <article class="stat-card">
+                        <div>
+                            <p>Matriculados</p>
+                            <h3 id="stat-matriculados">0</h3>
+                        </div>
+                        <span class="stat-icon">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                    </article>
+                    <article class="stat-card">
+                        <div>
+                            <p>Promedio edad</p>
+                            <h3 id="stat-edad">0.0</h3>
+                        </div>
+                        <span class="stat-icon">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </span>
+                    </article>
+                    <article class="stat-card">
+                        <div>
+                            <p>Carreras activas</p>
+                            <h3 id="stat-carreras">0</h3>
+                        </div>
+                        <span class="stat-icon">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </span>
+                    </article>
+                </div>
+
+                <div class="toolbar">
+                    <div class="search-field">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-input"
+                            placeholder="Buscar por nombre, matricula, carrera o email">
+                    </div>
+                    <div class="filters">
+                        <select id="filter-matriculado">
+                            <option value="all">Matriculados y no</option>
+                            <option value="true">Solo matriculados</option>
+                            <option value="false">No matriculados</option>
+                        </select>
+                        <select id="filter-estado">
+                            <option value="all">Todos los estados</option>
+                            <option value="Activo">Activo</option>
+                            <option value="En riesgo">En riesgo</option>
+                            <option value="Graduado">Graduado</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                        <select id="sort-by">
+                            <option value="id">Orden: ID</option>
+                            <option value="nombre">Orden: Nombre</option>
+                            <option value="edad">Orden: Edad</option>
+                            <option value="semestres">Orden: Semestres</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Estudiante</th>
+                                <th>Carrera</th>
+                                <th class="hide-mobile">Edad</th>
+                                <th class="hide-mobile">Email</th>
+                                <th class="hide-tablet">Telefono</th>
+                                <th>Matriculado</th>
+                                <th class="hide-mobile">Semestres</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body">
+                            <!-- Los datos se inyectarán aquí -->
+                            <tr>
+                                <td colspan="10" class="text-center">Cargando datos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Formulario -->
+    <div class="modal-backdrop hidden" id="student-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Registrar Estudiante</h2>
+                <button class="btn-close" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="student-form">
+                    <input type="hidden" id="student-id">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="matricula">Matricula</label>
+                            <input type="text" id="matricula" required placeholder="Ej: 2024-IS-0142">
+                        </div>
+                        <div class="form-group">
+                            <label for="nombre">Nombre Completo</label>
+                            <input type="text" id="nombre" required placeholder="Ej: Juan Perez">
+                        </div>
+                        <div class="form-group">
+                            <label for="carrera">Carrera</label>
+                            <input type="text" id="carrera" required placeholder="Ej: Ingenieria de Software">
+                        </div>
+                        <div class="form-group">
+                            <label for="edad">Edad</label>
+                            <input type="number" id="edad" required min="15" max="100" placeholder="Ej: 20">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" required placeholder="nombre@universidad.edu">
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">Telefono</label>
+                            <input type="tel" id="telefono" required placeholder="+51 999 123 456">
+                        </div>
+                        <div class="form-group">
+                            <label for="matriculado">Matriculado</label>
+                            <select id="matriculado" required>
+                                <option value="true">Si</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="semestres">Semestres</label>
+                            <input type="number" id="semestres" required min="1" max="14" placeholder="Ej: 6">
+                        </div>
+                        <div class="form-group">
+                            <label for="estado">Estado</label>
+                            <select id="estado" required>
+                                <option value="Activo">Activo</option>
+                                <option value="En riesgo">En riesgo</option>
+                                <option value="Graduado">Graduado</option>
+                                <option value="Baja">Baja</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="btn-cancel">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="btn-submit">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Eliminacion -->
+    <div class="modal-backdrop hidden" id="delete-modal">
+        <div class="modal modal-confirm">
+            <div class="modal-header">
+                <h2>Confirmar eliminacion</h2>
+                <button class="btn-close" id="btn-close-delete"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="confirm-text">Estas seguro que quieres eliminar este estudiante? Esta accion no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-delete">Cancelar</button>
+                <button class="btn btn-danger" id="btn-confirm-delete">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+
+</html>
