@@ -44,6 +44,7 @@
           packages =
             with pkgs;
             [
+              typst
               tinymist
               typstyle
               # javaPackages.compiler.openjdk11-bootstrap

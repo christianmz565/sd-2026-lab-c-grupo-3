@@ -1,0 +1,17 @@
+// START-SNIPPET,proto
+syntax = "proto3";
+
+package wordcount.v1;
+
+message CountWordsRequest {
+  string text = 1;
+}
+
+message CountWordsResponse {
+  map<string, int32> counts = 1;
+}
+
+service WordCountWorkerService {
+  rpc CountWords(CountWordsRequest) returns (CountWordsResponse);
+}
+// END-SNIPPET

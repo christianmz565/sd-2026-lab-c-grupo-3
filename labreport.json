@@ -1,17 +1,11 @@
 {
   "multiLab": true,
-  "sessions": [
-    "l4",
-    "l5",
-    "l6"
-  ],
+  "sessions": ["l4", "l5", "l6"],
   "capture": {
     "columns": 120,
     "freezeFlags": [
       "--font.family",
       "CaskaydiaMono Nerd Font",
-      "--width",
-      "1000",
       "--theme",
       "catppuccin-mocha"
     ],
