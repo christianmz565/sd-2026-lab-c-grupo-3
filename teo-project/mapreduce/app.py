@@ -1,13 +1,12 @@
 import os
 import sys
-import grpc
 from concurrent import futures
-
 from http.server import HTTPServer
 
-from mapreduce.map.map import run_map
-from mapreduce.reduce.reduce import run_reduce
+import requests
 
+import grpc
+from mapreduce.map.map import run_map
 from mapreduce.master_handler import MasterHandler
 
 path = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +14,7 @@ path_grpc = os.path.abspath(os.path.join(path, "grpc"))
 
 if path_grpc not in os.sys.path:
     sys.path.append(path_grpc)
-   
+
 # Try to import gRPC generated files, but handle the case where they don't exist.
 try:
     import wordcount_pb2 as pb2
@@ -29,16 +28,26 @@ except ModuleNotFoundError:
 class WordCountWorkerServicer(pb2_grpc.WordCountServiceServicer):
     def CountWords(self, request, context):
         print(f"[Worker] Received text chunk of size {len(request.text)}")
-        
+
         mapped_data = run_map(request.text)
-        total_counts = run_reduce(mapped_data)
-    
-        return pb2.WordCountResponse(counts=total_counts)
+
+        return pb2.WordCountResponse(counts=mapped_data)
+
+
+def register_worker(worker_address):
+
+    master_url = "http://localhost:8000/register"
+    payload = {"worker": worker_address}
+    try:
+        response = requests.post(master_url, json=payload)
+        print(f"[Worker] Registro enviado al master")
+    except Exception as e:
+        print(f"[Worker] Error registrando: {e}")
+
 
 def run_master() -> None:
-    # Daniel here
-    print("role=master")
-    
+    print("role=master Divide el trabajo A travez del Master Handler")
+
     port = 8000
     server_address = ("", port)
     httpd = HTTPServer(server_address, MasterHandler)
@@ -50,20 +59,24 @@ def run_master() -> None:
     except KeyboardInterrupt:
         print("\n[Master] Deteniendo servidor HTTP...")
         httpd.server_close()
-    
+
 
 def run_worker() -> None:
     print("role=worker - Starting gRPC server...")
-    
+    port = os.environ.get("WORKER_PORT", "50051")
     # Create and start gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     pb2_grpc.add_WordCountServiceServicer_to_server(WordCountWorkerServicer(), server)
-    
+
     # Listen on port 50051
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port(f"[::]:{port}")
     server.start()
-    print("[Worker] gRPC server started on port 50051")
+
+    register_worker(port)  # worker_adress
+
+    print(f"[Worker] gRPC server started on port {port}")
     server.wait_for_termination()
+
 
 def main() -> None:
     role = os.environ.get("MAPREDUCE_ROLE", "master").strip().lower()
