@@ -6,7 +6,7 @@ import sys
 import urllib.request
 import webbrowser
 
-DEFAULT_SERVER_URL = "http://localhost:8000"
+DEFAULT_SERVER_URL = "http://localhost:9000"
 
 
 def send_post_request(url, text):
@@ -35,8 +35,8 @@ def main():
         "-u",
         "--url",
         type=str,
-        default=f"${DEFAULT_SERVER_URL}/api/count",
-        help=f"URL del endpoint del backend (por defecto: ${DEFAULT_SERVER_URL}/api/count).",
+        default=f"{DEFAULT_SERVER_URL}/api/count",
+        help=f"URL del endpoint del backend (por defecto: {DEFAULT_SERVER_URL}/api/count).",
     )
     parser.add_argument(
         "-o",
@@ -49,7 +49,7 @@ def main():
 
     if args.open_ui:
         print(
-            f"\033[92mAbriendo la interfaz gráfica en el navegador:\033[0m ${DEFAULT_SERVER_URL}"
+            f"\033[92mAbriendo la interfaz gráfica en el navegador:\033[0m {DEFAULT_SERVER_URL}"
         )
         webbrowser.open(DEFAULT_SERVER_URL)
         sys.exit(0)

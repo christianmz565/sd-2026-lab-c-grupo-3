@@ -1,9 +1,0 @@
-services:
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    working_dir: /app
-    command: ["sleep", "infinity"]
-    volumes:
-      - ./:/app

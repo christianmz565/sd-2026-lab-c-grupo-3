@@ -1,0 +1,29 @@
+services:
+  master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MAPREDUCE_ROLE=master
+    ports:
+      - "9000:9000"
+    networks:
+      - mapreduce-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MAPREDUCE_ROLE=worker
+      - WORKER_PORT=50051
+      - MASTER_HOST=master
+      - WORKER_HOST=worker
+    depends_on:
+      - master
+    networks:
+      - mapreduce-net
+
+networks:
+  mapreduce-net:
+    driver: bridge

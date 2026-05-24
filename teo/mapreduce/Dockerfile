@@ -8,6 +8,9 @@ COPY pyproject.toml README.md /app/
 RUN uv sync --no-dev --no-cache
 
 COPY proto /app/proto
-COPY grpc /app/grpc
+COPY rpc /app/rpc
+COPY mapreduce /app/mapreduce
 
-CMD ["python", "mapreduce/app.py"]
+ENV PATH="/app/.venv/bin:$PATH"
+
+CMD ["python", "-m", "mapreduce.app"]
