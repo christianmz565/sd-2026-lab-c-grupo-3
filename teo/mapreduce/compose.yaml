@@ -18,7 +18,6 @@ services:
       - MAPREDUCE_ROLE=worker
       - WORKER_PORT=50051
       - MASTER_HOST=master
-      - WORKER_HOST=worker
     depends_on:
       - master
     networks:

@@ -14,7 +14,7 @@ def send_post_request(url, text):
     req = urllib.request.Request(
         url, data=data, headers={"Content-Type": "application/json"}, method="POST"
     )
-    with urllib.request.urlopen(req, timeout=5) as response:
+    with urllib.request.urlopen(req, timeout=300) as response:
         return json.loads(response.read().decode("utf-8"))
 
 

@@ -3,9 +3,9 @@ import sys
 from concurrent import futures
 from http.server import HTTPServer
 
+import grpc
 import requests
 
-import grpc
 from mapreduce.map.map import run_map
 from mapreduce.master_handler import MasterHandler
 
@@ -19,7 +19,7 @@ try:
     import wordcount_pb2 as pb2
     import wordcount_pb2_grpc as pb2_grpc
 except ModuleNotFoundError:
-    print("\n⚠️ [Warning] gRPC generated files not found")
+    print("\n[Warning] gRPC generated files not found")
     pb2, pb2_grpc = None, None
 
 
@@ -68,11 +68,18 @@ def run_worker() -> None:
     """
     Starts the gRPC server for the worker node and registers with the master.
     """
+    import socket
+
     print("[Worker] Starting gRPC server...")
     port = os.environ.get("WORKER_PORT", "50051")
-    worker_host = os.environ.get("WORKER_HOST", "localhost")
 
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    worker_host = os.environ.get("WORKER_HOST", socket.gethostname())
+
+    options = [
+        ("grpc.max_send_message_length", 100 * 1024 * 1024),
+        ("grpc.max_receive_message_length", 100 * 1024 * 1024),
+    ]
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=options)
     pb2_grpc.add_WordCountWorkerServiceServicer_to_server(
         WordCountWorkerServicer(), server
     )

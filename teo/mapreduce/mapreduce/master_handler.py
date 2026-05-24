@@ -1,3 +1,4 @@
+import concurrent.futures
 import json
 import os
 import sys
@@ -5,7 +6,10 @@ import time
 from http.server import SimpleHTTPRequestHandler
 
 import grpc
+
 from mapreduce.reduce.reduce import run_reduce
+
+MAX_CHUNK_SIZE = 100000
 
 path = os.path.dirname(os.path.abspath(__file__))
 path_grpc = os.path.abspath(os.path.join(path, "..", "rpc", "generated"))
@@ -17,7 +21,7 @@ try:
     import wordcount_pb2 as pb2
     import wordcount_pb2_grpc as pb2_grpc
 except ModuleNotFoundError:
-    print("\n⚠️ [Warning] gRPC generated files not found")
+    print("\n[Warning] gRPC generated files not found")
     pb2, pb2_grpc = None, None
 
 WORKERS = []
@@ -38,22 +42,32 @@ def distribute_map_tasks(chunks: list[str]) -> list[dict]:
     """
     Distributes map tasks across registered workers using gRPC.
     """
-    partial_results = []
 
-    for i, chunk in enumerate(chunks):
+    def process_chunk(args):
+        i, chunk = args
         worker = WORKERS[i % len(WORKERS)]
-        print(f"[Master] Sending chunk to {worker}")
+        print(f"[Master] Sending chunk {i} to {worker}")
 
         try:
-            channel = grpc.insecure_channel(worker)
-            stub = pb2_grpc.WordCountWorkerServiceStub(channel)
-            request = pb2.CountWordsRequest(text=chunk)
-            response = stub.CountWords(request)
-            partial_results.append(dict(response.counts))
+            options = [
+                ("grpc.max_send_message_length", 100 * 1024 * 1024),
+                ("grpc.max_receive_message_length", 100 * 1024 * 1024),
+            ]
+            with grpc.insecure_channel(worker, options=options) as channel:
+                stub = pb2_grpc.WordCountWorkerServiceStub(channel)
+                request = pb2.CountWordsRequest(text=chunk)
+                response = stub.CountWords(request, timeout=60)
+                return dict(response.counts)
         except Exception as e:
             print(f"[Master] Error communicating with worker {worker}: {e}")
+            return {}
 
-    return partial_results
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(20, len(WORKERS) * 2)
+    ) as executor:
+        results = list(executor.map(process_chunk, enumerate(chunks)))
+
+    return [r for r in results if r]
 
 
 class MasterHandler(SimpleHTTPRequestHandler):
@@ -89,7 +103,18 @@ class MasterHandler(SimpleHTTPRequestHandler):
 
             print(f"[Master] Processing request: {len(text)} characters")
             start_time = time.perf_counter()
-            chunks = split_text(text, chunk_size=50)
+
+            words = text.split()
+            total_words = len(words)
+            num_workers = len(WORKERS)
+
+            chunk_size = min(MAX_CHUNK_SIZE, max(20, (total_words // num_workers) + 1))
+
+            print(
+                f"[Master] Distributing {total_words} words across {num_workers} workers (chunk size: {chunk_size})"
+            )
+
+            chunks = split_text(text, chunk_size=chunk_size)
             partial_results = distribute_map_tasks(chunks)
 
             final_result = run_reduce(partial_results)

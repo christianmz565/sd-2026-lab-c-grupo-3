@@ -12,5 +12,7 @@ COPY rpc /app/rpc
 COPY mapreduce /app/mapreduce
 
 ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 CMD ["python", "-m", "mapreduce.app"]
