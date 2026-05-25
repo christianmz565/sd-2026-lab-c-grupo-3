@@ -2,7 +2,7 @@
   "multiLab": true,
   "sessions": ["l4", "l5", "l6"],
   "capture": {
-    "columns": 120,
+    "columns": 150,
     "freezeFlags": [
       "--font.family",
       "CaskaydiaMono Nerd Font",

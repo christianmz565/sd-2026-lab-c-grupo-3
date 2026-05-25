@@ -51,8 +51,10 @@
               jdk21
               jdt-language-server
               maven
+              gradle
               uv
               just
+              nixd
             ]
             ++ fonts
             ++ [
