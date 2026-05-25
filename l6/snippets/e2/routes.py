@@ -3,18 +3,20 @@ from flask import jsonify, request, send_from_directory
 from .models import Estudiante, db
 
 
-# START-SNIPPET,routes
 def register_routes(app):
 
     @app.route("/")
     def index():
         return send_from_directory(app.static_folder, "index.html")
 
+    # START-SNIPPET,routes-list
     @app.route("/estudiantes", methods=["GET"])
     def listar():
         estudiantes = Estudiante.query.all()
         return jsonify([e.to_dict() for e in estudiantes])
+    # END-SNIPPET
 
+    # START-SNIPPET,routes-create
     @app.route("/estudiantes", methods=["POST"])
     def agregar():
         data = request.json
@@ -34,6 +36,7 @@ def register_routes(app):
         db.session.add(nuevo)
         db.session.commit()
         return jsonify({"ok": True})
+    # END-SNIPPET
 
     @app.route("/estudiantes/<int:i>", methods=["PUT"])
     def actualizar(i):
@@ -67,6 +70,7 @@ def register_routes(app):
             return jsonify({"actualizado": True})
         return jsonify({"error": "Estudiante no encontrado"}), 404
 
+    # START-SNIPPET,routes-delete
     @app.route("/estudiantes/<int:i>", methods=["DELETE"])
     def eliminar(i):
         estudiante = db.session.get(Estudiante, i)
@@ -75,6 +79,4 @@ def register_routes(app):
             db.session.commit()
             return jsonify({"eliminado": True})
         return jsonify({"error": "Estudiante no encontrado"}), 404
-
-
-# END-SNIPPET
+    # END-SNIPPET

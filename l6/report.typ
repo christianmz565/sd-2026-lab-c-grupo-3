@@ -68,16 +68,27 @@
 
     == Ejercicio 1: API RESTful Biblioteca (Java + Spring Boot)
 
-    Se implementó un sistema de gestión bibliotecaria profesional utilizando Spring Boot. El controlador de la API expone endpoints para la gestión integral de libros, soportando la subida de imágenes de portada y almacenamiento en una base de datos SQLite.
+    Se implementó un sistema de gestión bibliotecaria profesional utilizando Spring Boot. La arquitectura se diseñó en capas, separando el modelo de datos, la capa de acceso a datos (repositorio) y la capa de exposición del servicio (controlador).
+
+    En primer lugar, la clase controladora se anotó con `@RestController` y `@RequestMapping` para definir la raíz de los endpoints de libros. Durante la inicialización del controlador, se crea el directorio local de subida de imágenes en caso de que no exista:
 
     #code-block(
       "l6/snippets/e1/BookApiController.java",
-      snippet: "controller",
+      snippet: "controller-setup",
       lang: "java",
       prefix: "//",
     )
 
-    El modelo de datos se definió utilizando JPA, asegurando que cada libro posea atributos obligatorios como título, autor e ISBN único, además de una descripción opcional y una URL para la imagen de portada.
+    Para la creación y registro de libros (operación POST), se implementó soporte para peticiones de tipo `multipart/form-data`. Esto permite procesar metadatos en combinación con una imagen binaria (portada). Se valida que los atributos esenciales no estén vacíos, se asegura la unicidad del ISBN mediante consultas al repositorio y se guarda el archivo localmente generando un identificador único para evitar colisiones:
+
+    #code-block(
+      "l6/snippets/e1/BookApiController.java",
+      snippet: "controller-create",
+      lang: "java",
+      prefix: "//",
+    )
+
+    El modelo de datos correspondiente a los libros se definió mediante una clase JPA (`Book`), mapeándola a una tabla relacional en una base de datos SQLite. Los atributos clave se decoraron con restricciones de integridad como `nullable = false` y `unique = true` para el ISBN:
 
     #code-block(
       "l6/snippets/e1/Book.java",
@@ -93,32 +104,54 @@
 
     Se desarrolló una interfaz web moderna y responsiva para interactuar con la biblioteca de forma intuitiva, permitiendo el registro y edición de libros mediante formularios dinámicos.
 
-    #figure(
-      grid(
-        columns: (1fr, 1fr),
-        gutter: 1em,
-        image("img/lab/e1_gui_create_form.png", width: 100%),
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      figure(image("img/lab/e1_gui_create_form.png", width: 100%), caption: [Formulario de creación para libros.]),
+      figure(
         image("img/lab/e1_gui_create_result.png", width: 100%),
+        caption: [Resultado de crear un libro y mostrar sus datos.],
       ),
-      caption: [Interfaz gráfica de la biblioteca: Formulario de registro y vista de colección.],
+    )
+    #figure(
+      image("img/lab/e1_gui_delete_one_book_result.png", width: 45%),
+      caption: [Resultado de eliminar un libro en el listado.],
     )
 
     == Ejercicio 2: API RESTful Estudiantes (Python)
 
-    Este ejercicio consistió en la creación de un sistema de registro estudiantil avanzado empleando Flask y SQLAlchemy. Se implementaron rutas para el registro, consulta, actualización y eliminación de perfiles académicos.
-
-    #code-block(
-      "l6/snippets/e2/routes.py",
-      snippet: "routes",
-      lang: "python",
-      prefix: "#",
-    )
-
-    La persistencia de datos se gestiona a través de un modelo ORM que mapea la entidad `Estudiante` a una tabla en SQLite, incluyendo campos para métricas académicas y estados de matriculación.
+    Este ejercicio consistió en la creación de un sistema de registro estudiantil avanzado empleando Flask y SQLAlchemy. La persistencia de datos se gestiona a través de un modelo ORM que mapea la entidad `Estudiante` a una tabla en SQLite, incluyendo campos para métricas académicas y estados de matriculación:
 
     #code-block(
       "l6/snippets/e2/models.py",
       lang: "python",
+    )
+
+    Las rutas y controladores de la API se implementaron utilizando decoradores de Flask sobre funciones orientadas a recursos. A continuación, se presenta el endpoint GET que consulta todos los estudiantes de la base de datos a través de la capa ORM y los serializa a formato JSON para su transmisión:
+
+    #code-block(
+      "l6/snippets/e2/routes.py",
+      snippet: "routes-list",
+      lang: "python",
+      prefix: "#",
+    )
+
+    Para la inserción de nuevos registros académicos (operación POST), se extrae el cuerpo en formato JSON de la petición HTTP, se realiza la coerción y validación de tipos necesarios (como el estado de matriculado y semestres) y se guarda la nueva entidad en la base de datos de manera atómica:
+
+    #code-block(
+      "l6/snippets/e2/routes.py",
+      snippet: "routes-create",
+      lang: "python",
+      prefix: "#",
+    )
+
+    Por último, la eliminación de un recurso individual se realiza mediante el verbo DELETE, especificando el ID único del estudiante directamente en la URI. El servidor busca el estudiante y remueve su registro de SQLite, retornando una respuesta semántica:
+
+    #code-block(
+      "l6/snippets/e2/routes.py",
+      snippet: "routes-delete",
+      lang: "python",
+      prefix: "#",
     )
 
     A continuación se presenta la ejecución del cliente consumidor, el cual automatiza una serie de peticiones HTTP para validar el ciclo de vida completo de un recurso estudiantil en el servidor.
@@ -130,16 +163,19 @@
 
     Finalmente, se diseñó un panel administrativo (Dashboard) que ofrece visualizaciones estadísticas sobre el alumnado y herramientas de filtrado avanzado para la gestión de registros.
 
-    #figure(
-      grid(
-        columns: (1fr, 1fr),
-        gutter: 1em,
-        image("img/lab/e2_gui_create_form.png", width: 100%),
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      figure(image("img/lab/e2_gui_create_form.png", width: 100%), caption: [Formulario de creación para estudiantes.]),
+      figure(
         image("img/lab/e2_gui_create_result.png", width: 100%),
+        caption: [Resultado de crear un estudiante y ver sus datos.],
       ),
-      caption: [Panel de gestión estudiantil: Registro de alumnos y visualización del listado.],
     )
-
+    #figure(
+      image("img/lab/e2_gui_delete_all_students_manually_result.png", width: 45%),
+      caption: [Resultado de eliminar todos los estudiantes del listado.],
+    )
   ]
 
   #lab-section("CUESTIONARIO")[
@@ -191,5 +227,46 @@
     [5] Fielding, R. (2000). Architectural Styles and the Design of Network-based Software Architectures. Dissertation. University of California, Irvine.
 
     [6] Pautasso, O., Zimmermann, O., & Leymann, F. (2008). RESTful Web Services vs. "Big" Web Services: Making the Right Architectural Decision. WWW '08.
+  ]
+
+  #lab-section("ANEXOS")[
+    #set par(justify: true)
+
+    == Ejercicio 1: API RESTful Biblioteca (Java + Spring Boot)
+
+    === Aplicación Principal (Spring Boot)
+    #code-block("l6/src/e1/src/main/java/com/lab06/e1/E1Application.java", lang: "java")
+
+    === Modelo del Libro (Entidad JPA)
+    #code-block("l6/src/e1/src/main/java/com/lab06/e1/model/Book.java", lang: "java")
+
+    === Repositorio de Libros (Spring Data JPA)
+    #code-block("l6/src/e1/src/main/java/com/lab06/e1/repository/BookRepository.java", lang: "java")
+
+    === Controlador de la API REST
+    #code-block("l6/src/e1/src/main/java/com/lab06/e1/controller/BookApiController.java", lang: "java")
+
+    === Configuración CORS (WebConfig)
+    #code-block("l6/src/e1/src/main/java/com/lab06/e1/config/WebConfig.java", lang: "java")
+
+    === Poblado Inicial de Base de Datos (DatabaseSeeder)
+    #code-block("l6/src/e1/src/main/java/com/lab06/e1/config/DatabaseSeeder.java", lang: "java")
+
+    == Ejercicio 2: API RESTful Estudiantes (Python + Flask)
+
+    === Archivo Principal de Inicio (main.py)
+    #code-block("l6/src/e2/main.py", lang: "python")
+
+    === Inicialización de la Aplicación y SQLAlchemy (`__init__.py`)
+    #code-block("l6/src/e2/app/__init__.py", lang: "python")
+
+    === Modelo del Estudiante (SQLAlchemy)
+    #code-block("l6/src/e2/app/models.py", lang: "python")
+
+    === Definición de Rutas de la API (routes.py)
+    #code-block("l6/src/e2/app/routes.py", lang: "python")
+
+    === Script Cliente de Pruebas (cliente.py)
+    #code-block("l6/src/e2/cliente.py", lang: "python")
   ]
 ]

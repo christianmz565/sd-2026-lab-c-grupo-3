@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-// START-SNIPPET,controller
+// START-SNIPPET,controller-setup
 @RestController
 @RequestMapping("/api/books")
 @CrossOrigin(origins = "*")
@@ -35,6 +35,7 @@ public class BookApiController {
       throw new RuntimeException("Could not initialize folder for upload!", e);
     }
   }
+  // END-SNIPPET
 
   @GetMapping
   public List<Book> getAllBooks() {
@@ -49,6 +50,7 @@ public class BookApiController {
       .orElse(ResponseEntity.notFound().build());
   }
 
+  // START-SNIPPET,controller-create
   @PostMapping(consumes = { "multipart/form-data" })
   public ResponseEntity<?> registerBook(
     @RequestParam("title") String title,
@@ -104,6 +106,7 @@ public class BookApiController {
     Book savedBook = bookRepository.save(book);
     return ResponseEntity.status(HttpStatus.CREATED).body(savedBook);
   }
+  // END-SNIPPET
 
   @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
   public ResponseEntity<?> updateBook(
@@ -206,4 +209,3 @@ public class BookApiController {
     }
   }
 }
-// END-SNIPPET
