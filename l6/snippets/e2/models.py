@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 class Estudiante(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     matricula = db.Column(db.String(50), nullable=False)
@@ -25,5 +26,5 @@ class Estudiante(db.Model):
             "telefono": self.telefono,
             "matriculado": self.matriculado,
             "semestres": self.semestres,
-            "estado": self.estado
+            "estado": self.estado,
         }

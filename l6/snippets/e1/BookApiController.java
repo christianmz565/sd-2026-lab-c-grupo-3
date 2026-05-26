@@ -35,6 +35,7 @@ public class BookApiController {
       throw new RuntimeException("Could not initialize folder for upload!", e);
     }
   }
+
   // END-SNIPPET
 
   @GetMapping
@@ -70,7 +71,6 @@ public class BookApiController {
       return ResponseEntity.badRequest().body("ISBN is required");
     }
 
-    // Check if ISBN already exists
     if (bookRepository.findByIsbn(isbn.trim()).isPresent()) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(
         "Book with this ISBN is already registered"
@@ -106,6 +106,7 @@ public class BookApiController {
     Book savedBook = bookRepository.save(book);
     return ResponseEntity.status(HttpStatus.CREATED).body(savedBook);
   }
+
   // END-SNIPPET
 
   @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })

@@ -14,6 +14,7 @@ def register_routes(app):
     def listar():
         estudiantes = Estudiante.query.all()
         return jsonify([e.to_dict() for e in estudiantes])
+
     # END-SNIPPET
 
     # START-SNIPPET,routes-create
@@ -36,6 +37,7 @@ def register_routes(app):
         db.session.add(nuevo)
         db.session.commit()
         return jsonify({"ok": True})
+
     # END-SNIPPET
 
     @app.route("/estudiantes/<int:i>", methods=["PUT"])
@@ -79,4 +81,5 @@ def register_routes(app):
             db.session.commit()
             return jsonify({"eliminado": True})
         return jsonify({"error": "Estudiante no encontrado"}), 404
+
     # END-SNIPPET
