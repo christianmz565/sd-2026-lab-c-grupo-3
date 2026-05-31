@@ -1,115 +1,412 @@
-Aquí tienes la transcripción de tu laboratorio basada en los documentos proporcionados, siguiendo el formato solicitado y describiendo los elementos visuales presentes.
+```
+FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS
+ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA
+Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación
+Aprobación: 2022/03/01 Código: GUIA-PRLD- 001 Página: 1
+```
+## (formato docente)
+
+## INFORMACIÓN BÁSICA
+
+## ASIGNATURA: SISTEMAS^ DISTRIBUIDOS^
+
+## TÍTULO DE LA
+
+## PRÁCTICA:
+
+```
+SOAP Web services
+```
+## NÚMERO DE
+
+## PRÁCTICA: 07
+
+## AÑO LECTIVO: 2026
+
+## NRO.
+
+## SEMESTRE:
+
+### 2026 A
+
+## TIPO DE
+
+## PRÁCTICA:
+
+## INDIVIDUAL^
+
+## GRUPAL X MÁXIMO DE ESTUDIANTES 3
+
+## FECHA INICIO: 25 / 05 /202 6 FECHA FIN: 29 / 05 /202 6 DURACIÓN: 2 horas
 
 ## RECURSOS A UTILIZAR:
 
-**Entorno de desarrollo:** NetBeans (recomendado para servidores), Eclipse (recomendado para clientes), GlassFish Server, Java Development Kit (JDK 7 o superior).
-**Lenguajes de Programación:** Java (JAX-WS para servicios SOAP).
-**Herramientas adicionales:** SoapUI (para pruebas y simulación de servicios).
+## VSCode, Netbeans, Eclipse.
+
+## Apache NetBeans IDE, Java JDK 17+, Apache Tomcat, Python, Postman, SOAP UI Open Source
+
+## Librerías: JAX-WS, Zeep (Python SOAP Client)
 
 ## DOCENTE(s):
 
-- **Mg. Maribel Molina Barriga**.
+- Mg. Maribel Molina Barriga
 
 ## OBJETIVOS/TEMAS Y COMPETENCIAS
 
 ## OBJETIVOS:
 
-- **Desarrollar y desplegar servicios web basados en el protocolo SOAP** utilizando entornos integrados como NetBeans y Eclipse.
-- **Configurar y gestionar servidores de aplicaciones** (GlassFish) para la exposición de servicios distribuidos.
-- **Generar y analizar contratos WSDL** para facilitar el consumo de servicios por parte de clientes externos.
-- **Implementar operaciones CRUD** (Create, Read, Update, Delete) en un entorno de servicios web distribuidos.
-- **Utilizar herramientas de terceros como SoapUI** para la validación y pruebas de endpoints SOAP.
+- Identificar el SOAP Web Services
+- Realizar aplicaciones con SOAP Web Services
 
 ## TEMAS:
 
-- **Servicios Web SOAP (Simple Object Access Protocol)**.
-- **WSDL (Web Services Description Language)**.
-- **JAX-WS y anotaciones de Java para Web Services**.
-- **Consumo de servicios mediante proxies y clientes Java**.
+- El SOAP Web Services
+- Aplicar SOAP Web Services con Java
 
----
+## COMPETENCIA C.e.^ Identifica^ de^ forma^ reflexiva^ y^ responsable,^ necesidades^ a^ ser^ resueltas^ usando^
 
-## I. SOLUCIÓN DE EJERCICIOS/PROBLEMAS RESUELTOS
+```
+tecnologías de información y/o desarrollo de software en los ámbitos local, nacional o
+internacional, utilizando técnicas, herramientas, metodologías, estándares y principios de la
+ingeniería
+```
+## CONTENIDO DE LA GUÍA
 
-### Consideraciones Iniciales:
-Se emplean dos editores: **NetBeans** es ideal para levantar servidores por su facilidad con GlassFish y JDK 7, mientras que **Eclipse** se utiliza para la creación de clientes.
+## I. MARCO CONCEPTUAL
 
-### 1. Creación del Servidor en NetBeans
-Lo primero es crear una **Web Application** en NetBeans.
+### SOAP
 
-> **Descripción de Imagen:** Se observa la interfaz de NetBeans IDE 13 con el diálogo "New Web Application". El proyecto se denomina "WebApplication5" y se muestra la estructura de carpetas local del usuario.
+Abreviación de Simple Object Access Protocol , es un protocolo de mensajería construido en XML que se usa para
+codificar información de los requerimientos de los Web Services y para responder los mensajes “antes de
+enviarlos por la red”.
+SOAP es un protocolo estándar basado en XML para intercambiar información estructurada entre aplicaciones
+distribuidas. Los mensajes SOAP son independientes de los sistemas operativos y pueden ser transportados por
+los protocolos que funcionan en la Internet, como ser: SMTP, MIME y HTTP.
 
-### 2. Clase Modelo: User.java
-Se crea la clase `User` que servirá como modelo para el servidor web.
+# GUÍA DE LABORATORIO
 
-> **Descripción de Imagen:** Captura del código fuente de `User.java`. Incluye una lista estática de usuarios predefinidos ("Rosa Marfil", "Pepito Grillo", "Manuela Río") y atributos de tipo String para `name` y `username`, con sus respectivos constructores.
 
-### 3. Interfaz SOAPI.java
-Esta interfaz define los métodos que el servidor expondrá.
+**FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS
+ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA
+Formato:** Guía de Práctica de Laboratorio / Talleres / Centros de Simulación
+**Aprobación: 2022/03/01 Código: GUIA-PRLD- 001 Página:** 1
+^
+Características:
 
-> **Descripción de Imagen:** Código de la interfaz `SOAPI` anotada con `@WebService`. Define los métodos `@WebMethod public List<User> getUsers()` y `@WebMethod public void addUser(User user)`.
+- Basado en XML
+- Independiente de plataforma
+- Comunicación vía HTTP, SMTP, TCP
+- Altamente estructurado
+- Usa WSDL para describir servicios
 
-### 4. Implementación: Clase SOAPImpl.java
-Esta clase contiene la lógica de las operaciones que consumirán los clientes.
+```
+Componentes principales:
+```
+1. Envelope: Define inicio y fin del mensaje.
+2. Header: Metadatos opcionales.
+3. Body: Datos enviados.
+4. Fault: Errores del servicio.
 
-> **Descripción de Imagen (Diálogo):** Ventana "New Web Service" donde se nombra al servicio y se selecciona la opción "Create Web Service from Scratch".
-> **Descripción de Imagen (Código):** La clase `SOAPImpl` implementa `SOAPI` y utiliza la anotación `@WebService(endpointInterface = "es.rosamarfil.soap.SOAPI")`. Los métodos sobrescritos llaman a la lógica de la clase `User` para retornar o añadir elementos a la lista.
+```
+SOA y SOAP suelen ser términos que, a menudo, suelen generar bastante confusión (supongo que por la
+semejanza de sus siglas). Parece que muchas veces no tenemos del todo claro dónde empieza y acaba cada cosa
+aunque, en el fondo, sabemos que existe relación entre ambos términos. Incluso es común encontrar por ahí
+algunos artículos donde se refieren a SOA cuando realmente quieren decir SOAP.
+Con el desarrollo de servicios web basados en REST también puede ocurrir algo parecido.
+Los "Web services" son aplicaciones distribuidas que se basan en una serie de protocolos y estándares para
+intercambiar información.
+También se definen como distintas aplicaciones de software desarrolladas en lenguajes de
+programación diferente y ejecutada sobre cualquier plataforma puede utilizar los Web Services para interactuar
+datos en redes de computadoras.
+Los Cliente puede ser:
+```
+- Un aplicativo móvil(Androi, IOS)
+- Un aplicativo de Escritorio
+- Una aplicación web que esté en PHP
+Los servicios SOAP o mejor conocimos simplemente como Web Services, son servicios que basan su comunicación
+bajo el protocolo SOAP (Simple Object Access Protocol) el cual este definido por **_“protocolo estándar que define
+cómo dos objetos en diferentes procesos pueden comunicarse por medio de intercambio de datos XML”_**. Por lo
+tanto, queda claro que la comunicación se realiza mediante XML.
 
-### 5. Despliegue en GlassFish
-Se debe arrancar el servidor desde la pestaña **Services → Servers → GlassFish**. Posteriormente, se usa la opción **"Generate SOAP-over-HTTP wrapper"** para crear el punto de acceso WSDL.
+```
+Los servicios SOAP funcionan por lo general por el protocolo HTTP que es lo más común cuando invocamos un
+Web Services, sin embargo, SOAP no está limitado a este protocolo, si no que puede ser enviado por FTP, POP3,
+TCP, Colas de mensajería (JMS, MQ, etc). Pero HTTP es el protocolo principal.
+```
+```
+Característica SOAP REST
+Formato XML JSON/XML
+Contrato WSDL OpenAPI
+Seguridad WS-Security HTTPS/OAuth
+Rendimiento Menor Mayor
+Formalidad empresarial Alta Media
+```
 
-> **Descripción de Imagen:** Consola de salida de GlassFish indicando que el Web Service ha sido desplegado exitosamente en una dirección URL específica (ej. `http://localhost:8080/WebServerSoap/SOAPImplService`).
+```
+FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS
+ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA
+Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación
+Aprobación: 2022/03/01 Código: GUIA-PRLD- 001 Página: 1
+```
+(^)
 
-### 6. Archivo WSDL
-El WSDL contiene la información técnica para que el cliente consuma el servicio.
+## III. EJERCICIOS RESULETOS POR EL DOCENTE
 
-> **Descripción de Imagen:** Vista de un navegador mostrando el código XML del WSDL. Se aprecian las etiquetas `<types>`, `<message>`, `<portType>` y `<operation>`, detallando los métodos `addUser` y `getUsers`.
+## Programa Aplicativo: Servicio SOAP de Suma
 
-### 7. Creación del Cliente en Eclipse
-En Eclipse, se crea un nuevo **Java Project** y se enlaza mediante un **Web Service Client**.
+## Paso 1: Crear Servicio SOAP (Java)
 
-> **Descripción de Imagen:** Asistente de Eclipse para crear un proyecto Java ("ClientSOAP") y el diálogo "Web Services" donde se solicita la URL del WSDL (ej. `http://localhost:8080/.../SOAPImplService?wsdl`).
+```
+import javax.jws.WebMethod;
+import javax.jws.WebService;
+```
+```
+@WebService
+public class CalculadoraSOAP {
+```
+```
+@WebMethod
+public int sumar(int a, int b){
+return a+b;
+}
+}
+```
+## Paso 2: Publicar Servicio
 
-### 8. Clase UserClient.java (Main)
-Se implementa una clase principal para consumir las operaciones del servicio.
+```
+import javax.xml.ws.Endpoint;
+```
+```
+public class Publicador {
+public static void main(String[] args){
+Endpoint.publish(
+"http://localhost:8080/calculadora",
+new CalculadoraSOAP()
+);
+```
+```
+System.out.println("Servicio SOAP activo");
+}
+}
+```
+## Paso 3: Consumidor Java
 
-> **Descripción de Imagen:** Código Java de `UserClient`. Utiliza `SOAPImplServiceLocator` para obtener el puerto del servicio, llama a `getUsers()` para mostrar la lista inicial, añade un nuevo usuario ("Pablo Ruiz") y vuelve a imprimir la lista para verificar el cambio.
+```
+import java.net.URL;
+import javax.xml.namespace.QName;
+import javax.xml.ws.Service;
+```
+```
+public class ClienteSOAP {
+public static void main(String[] args) throws Exception {
+```
+```
+URL url = new URL(
+"http://localhost:8080/calculadora?wsdl");
+```
+```
+QName qname =
+new QName(
+"http://",
+"CalculadoraSOAPService");
+```
+```
+Service service =
+Service.create(url,qname);
+```
+```
+CalculadoraSOAP calc =
+service.getPort(CalculadoraSOAP.class);
+```
+```
+System.out.println(calc.sumar(10,20));
+}
+```
+## }
 
----
+## IV. EJERCICIOS/PROBLEMAS PROPUESTOS
 
-## II. EJERCICIOS/PROBLEMAS PROPUESTOS
+## EJERCICIO 1
 
-### A. Diseño de un Servicio SOAP para Ventas en Línea
-Se desarrolló un servicio que implementa operaciones CRUD básicas:
-- **CREATE:** Agregar nuevos productos al stock.
-- **READ:** Obtener la lista de productos con cantidad y costo.
-- **UPDATE:** Actualizar precio y cantidad de un producto específico.
-- **DELETE:** Implementado como una eliminación lógica (reducir stock a 0).
+## Servicio SOAP: Conversor de Temperatura
 
-#### Componentes del Sistema de Ventas:
-1.  **Item.java:** Representa el producto. Contiene atributos como nombre, cantidad y costo.
-2.  **SOAPI.java (Interfaz):** Define métodos como `getItems()`, `buyItem()`, `addItem()` y `setItem()`.
-3.  **PublishService.java:** Clase encargada de publicar el endpoint en una URL local (ej. `http://localhost:1516/WS/Users`).
+## Desarrollar un servicio SOAP que convierta:
 
-> **Descripción de Tabla de Resultados (Simulada desde capturas de consola):**
-> 
-> | Producto | Cantidad | Precio |
-> | :--- | :--- | :--- |
-> | Gaseosa | 15 | 5.2 |
-> | Galletas | 10 | 1.6 |
-> | Celular | 12 | 900.0 |
-> 
-> *Nota: Tras una operación de "Update", el stock de Galletas se muestra actualizado a 18 unidades con precio 2.4.*
 
-### B. Investigación: Aplicación SoapUI
-**SoapUI** es una herramienta para probar, simular y generar código de servicios web de forma ágil partiendo del WSDL.
+```
+FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS
+ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA
+Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación
+Aprobación: 2022/03/01 Código: GUIA-PRLD- 001 Página: 1
+```
+- Celsius → Fahrenheit
+- Fahrenheit → Celsius
 
-#### Pasos para probar un servicio en SoapUI:
-1.  **Nuevo Proyecto:** Se asigna un nombre y la URL del descriptor WSDL (ej. el servicio de clima "Global Weather").
-2.  **Generación de Requests:** SoapUI crea automáticamente un esqueleto XML para cada operación (`GetCitiesByCountry`, `GetWeather`).
-3.  **Análisis de Interfaces:** La herramienta separa las interfaces según la versión de SOAP utilizada (SOAP 1.1 o SOAP 1.2).
+## Solución de referencia
 
----
+```
+@WebService
+public class ConversorSOAP {
+```
+```
+@WebMethod
+public double cToF(double c){
+return (c* 9 / 5 )+ 32 ;
+}
+```
+```
+@WebMethod
+public double fToC(double f){
+return (f- 32 )* 5 / 9 ;
+}
+}
+```
+## Consumidor:
 
-## CONCLUSIÓN
-El desarrollo de servicios SOAP en Java es **directo y amigable**, permitiendo el despliegue local rápido. La separación modular de clases (Modelo, Interfaz e Implementación) facilita el mantenimiento y el consumo distribuido de los servicios.
+```
+System.out.println(calc.cToF( 30 ));
+```
+## Resultado:
+
+```
+86.
+```
+- Diseñe un servicio SOAP básico para las ventas de productos en línea.
+- Investigue y analice una aplicación con SOAP services.
+
+## EJERCICIO 2
+
+## Cliente SOAP con Python
+
+## Consumir un servicio SOAP existente usando Python.
+
+## Instalar:
+
+```
+pip install zeep
+```
+## Código:
+
+```
+from zeep import Client
+```
+```
+client = Client(
+'http://www.dneonline.com/calculator.asmx?WSDL'
+)
+```
+```
+resultado = client.service.Add( 5 , 8 )
+```
+```
+print(resultado)
+```
+## Resultado esperado: 13
+
+## Actividad adicional (HTML + JS)
+
+## Consumir SOAP desde navegador
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+```
+
+```
+FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS
+ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA
+Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación
+Aprobación: 2022/03/01 Código: GUIA-PRLD- 001 Página: 1
+```
+```
+<button onclick="consumir()">
+Consultar
+</button>
+```
+```
+<script>
+function consumir(){
+```
+```
+fetch("http://localhost:8080/calculadora")
+.then(r=>console.log(r));
+```
+```
+}
+</script>
+```
+```
+</body>
+</html>
+```
+## Analizar por qué SOAP presenta limitaciones en consumo directo desde navegador.
+
+## IV. CUESTIONARIO
+
+```
+Resolver las siguientes preguntas:
+```
+1. ¿Puedo utilizar un componente JavaBeans para implementar un servicio web utilizando la invocación de
+    SOAP sobre JMS (Java Message Service)?
+2. ¿Cómo funciona la mensajería bidireccional con la implementación de SOAP y JMS? ¿Da soporte a varios
+    clientes realizando solicitudes simultáneas?
+3. ¿Por qué SOAP sigue siendo utilizado en sistemas empresariales críticos pese al auge de REST?
+4. ¿Qué implicancias tiene el uso de XML en el rendimiento de sistemas distribuidos de alta concurrencia?
+5. 3. ¿En qué escenarios arquitectónicos SOAP resulta más adecuado que REST? Justifique técnicamente.
+
+## V. REFERENCIAS Y BIBLIOGRÁFIA RECOMENDADAS:
+
+```
+[1] Tanenbaum, A.S. (2008). Sistemas distribuidos: principios y paradigmas. México. Pearson Educación.
+[2] Ceballos, F. J. (2006). Java 2, Curso de programación. México: Alfaomega, RaMa.
+[3]Deitel, H. M., & Deitel, P. J. (2004). Cómo programar en Java. México: Pearson Educación.
+[4] García Tomás, J., Ferrando, S., & Piattini, M. (2001). Redes para procesos distribuidos. México: Alfaomega
+Ra-Ma.
+[5] Orfali, R., & Harkey, D. (1998). Client/Server Programming with Java and CORBA. USA: Wiley
+[6] WebSphere Application Server, Revisado:20/05/2022. Recuperado de: https://www.ibm.com/docs/es/was-
+zos/8.5.5?topic=services-overview-online-garden-retailer-web-scenarios
+[7] Notas de la versión de Sun Java System Web Server , Revisado: 07/05/2022. Recuperado de:
+https://docs.oracle.com/cd/E19146-01/820-1828/geryf/index.html
+[8] SOA vs. SOAP y REST. Revisado: 20/05/2022. Recuperado de:
+https://www.adictosaltrabajo.com/2014/01/10/soavs-soap-rest/
+```
+```
+Revisar también:
+https://www.programacion.com.py/web/java-web/web-service-soap-con-java-ee
+http://gcoronelc.blogspot.com/2017/08/web-service-soap-ejemplo-1.html
+https://www.youtube.com/watch?v=2ToEge_xybI
+```
+## TÉCNICAS E INSTRUMENTOS DE EVALUACIÓN
+
+## TÉCNICAS:
+
+```
+Problemas /Ejercicios propuestos
+```
+## INSTRUMENTOS:
+
+```
+Lista de cotejo
+```
+
+```
+FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS
+ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA
+Formato: Guía de Práctica de Laboratorio / Talleres / Centros de Simulación
+Aprobación: 2022/03/01 Código: GUIA-PRLD- 001 Página: 1
+```
+(^) _/ Preguntas formuladas / Resolución de casos_
+
+## CRITERIOS DE EVALUACIÓN
+
+- Identifica el proceso de SOAP Web Services
+- Realiza aplicaciones con SOAP Web Services
+
+
+**FACULTAD DE INGENIERÍA DE PRODUCCIÓN Y SERVICIOS
+ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMA
+Formato:** Guía de Práctica de Laboratorio / Talleres / Centros de Simulación
+**Aprobación: 2022/03/01 Código: GUIA-PRLD- 001 Página:** 1
+
+

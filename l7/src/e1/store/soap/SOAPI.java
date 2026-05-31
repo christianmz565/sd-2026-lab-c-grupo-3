@@ -1,11 +1,11 @@
-package lab7.e2.soap;
+package lab7.e1.store.soap;
 
 import java.util.List;
 import javax.jws.WebMethod;
 import javax.jws.WebService;
-import lab7.e2.model.Item;
+import lab7.e1.store.model.Item;
 
-@WebService
+@WebService(targetNamespace = "http://lab7.e1.store/")
 public interface SOAPI {
   // START-SNIPPET,interface
   @WebMethod
@@ -19,8 +19,5 @@ public interface SOAPI {
 
   @WebMethod
   void setItem(String name, int cantidad, double precio);
-
-  @WebMethod
-  void deleteItem(String name);
   // END-SNIPPET
 }

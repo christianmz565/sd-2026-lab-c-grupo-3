@@ -1,4 +1,4 @@
-package lab7.e2.model;
+package lab7.e1.store.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -36,9 +36,9 @@ public class Item implements Serializable {
     ITEMS.add(item);
   }
 
-  public static String buyItem(String name, int cantidad) {
+  public static String buyItem(String nombre, int cantidad) {
     for (Item item : ITEMS) {
-      if (item.nombre.equalsIgnoreCase(name)) {
+      if (item.nombre.equalsIgnoreCase(nombre)) {
         if (item.cantidad - cantidad < 0) {
           return "Not enough items";
         }
@@ -50,19 +50,11 @@ public class Item implements Serializable {
     return "Item no match";
   }
 
-  public static void setItem(String name, int cantidad, double costo) {
+  public static void setItem(String nombre, int cantidad, double costo) {
     for (Item item : ITEMS) {
-      if (item.nombre.equalsIgnoreCase(name)) {
+      if (item.nombre.equalsIgnoreCase(nombre)) {
         item.cantidad = cantidad;
         item.costo = costo;
-      }
-    }
-  }
-
-  public static void deleteItem(String name) {
-    for (Item item : ITEMS) {
-      if (item.nombre.equalsIgnoreCase(name)) {
-        item.cantidad = 0;
       }
     }
   }

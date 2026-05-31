@@ -1,10 +1,14 @@
-package lab7.e2.soap;
+package lab7.e1.store.soap;
 
 import java.util.List;
 import javax.jws.WebService;
-import lab7.e2.model.Item;
+import lab7.e1.store.model.Item;
 
-@WebService(endpointInterface = "lab7.e2.soap.SOAPI")
+@WebService(
+    endpointInterface = "lab7.e1.store.soap.SOAPI",
+    serviceName = "StoreSOAPService",
+    targetNamespace = "http://lab7.e1.store/"
+)
 public class SOAPImpl implements SOAPI {
   // START-SNIPPET,impl
   @Override
@@ -25,11 +29,6 @@ public class SOAPImpl implements SOAPI {
   @Override
   public void setItem(String name, int cantidad, double precio) {
     Item.setItem(name, cantidad, precio);
-  }
-
-  @Override
-  public void deleteItem(String name) {
-    Item.deleteItem(name);
   }
   // END-SNIPPET
 }
