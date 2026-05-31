@@ -18,18 +18,18 @@ public class SOAPImpl implements SOAPI {
   }
 
   @Override
-  public void addItem(Item item) {
-    Item.addItem(item);
+  public boolean addItem(Item item) {
+    return Item.addItem(item);
   }
 
   @Override
-  public void setItem(String name, int cantidad, double precio) {
-    Item.setItem(name, cantidad, precio);
+  public boolean setItem(String name, int cantidad, double precio) {
+    return Item.setItem(name, cantidad, precio);
   }
 
   @Override
-  public void deleteItem(String name) {
-    Item.deleteItem(name);
+  public boolean deleteItem(String name) {
+    return Item.deleteItem(name);
   }
   // END-SNIPPET
 }

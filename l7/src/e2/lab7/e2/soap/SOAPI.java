@@ -15,12 +15,12 @@ public interface SOAPI {
   String buyItem(String name, int cantidad);
 
   @WebMethod
-  void addItem(Item item);
+  boolean addItem(Item item);
 
   @WebMethod
-  void setItem(String name, int cantidad, double precio);
+  boolean setItem(String name, int cantidad, double precio);
 
   @WebMethod
-  void deleteItem(String name);
+  boolean deleteItem(String name);
   // END-SNIPPET
 }
