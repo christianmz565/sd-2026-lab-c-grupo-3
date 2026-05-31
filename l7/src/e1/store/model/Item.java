@@ -32,11 +32,22 @@ public class Item implements Serializable {
     return ITEMS;
   }
 
-  public static void addItem(Item item) {
+  public static boolean addItem(Item item) {
+    if (item.nombre == null || item.nombre.isEmpty() || item.cantidad <= 0 || item.costo <= 0) {
+      return false;
+    }
     ITEMS.add(item);
+    return true;
   }
 
+<<<<<<< HEAD:l7/src/e1/store/model/Item.java
   public static String buyItem(String nombre, int cantidad) {
+=======
+  public static String buyItem(String name, int cantidad) {
+    if (cantidad <= 0) {
+      return "Invalid Quantity";
+    }
+>>>>>>> d6f0f7942d435d51f5bcbac034ff1dd2d63c8cb3:l7/src/e2/lab7/e2/model/Item.java
     for (Item item : ITEMS) {
       if (item.nombre.equalsIgnoreCase(nombre)) {
         if (item.cantidad - cantidad < 0) {
@@ -44,21 +55,46 @@ public class Item implements Serializable {
         }
         item.cantidad -= cantidad;
         return "Producto: " + item.nombre + " Cantidad: " + cantidad
-            + " Total: " + (cantidad * item.costo);
+            + " Total: " + String.format(java.util.Locale.US, "%.2f", (cantidad * item.costo));
       }
     }
     return "Item no match";
   }
 
+<<<<<<< HEAD:l7/src/e1/store/model/Item.java
   public static void setItem(String nombre, int cantidad, double costo) {
+=======
+  public static boolean setItem(String name, int cantidad, double costo) {
+    if (name == null || name.isEmpty() || cantidad <= 0 || costo <= 0) {
+      return false;
+    }
+>>>>>>> d6f0f7942d435d51f5bcbac034ff1dd2d63c8cb3:l7/src/e2/lab7/e2/model/Item.java
     for (Item item : ITEMS) {
       if (item.nombre.equalsIgnoreCase(nombre)) {
         item.cantidad = cantidad;
         item.costo = costo;
+        return true;
       }
     }
+    return false;
   }
 
+<<<<<<< HEAD:l7/src/e1/store/model/Item.java
+=======
+  public static boolean deleteItem(String name) {
+    if(name == null || name.isEmpty()) {
+      return false;
+    }
+    for (Item item : ITEMS) {
+      if (item.nombre.equalsIgnoreCase(name)) {
+        item.cantidad = 0;
+        return true;
+      }
+    }
+    return false;
+  }
+
+>>>>>>> d6f0f7942d435d51f5bcbac034ff1dd2d63c8cb3:l7/src/e2/lab7/e2/model/Item.java
   public String getNombre() {
     return nombre;
   }

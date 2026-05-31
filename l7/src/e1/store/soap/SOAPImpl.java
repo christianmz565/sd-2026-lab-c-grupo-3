@@ -22,13 +22,21 @@ public class SOAPImpl implements SOAPI {
   }
 
   @Override
-  public void addItem(Item item) {
-    Item.addItem(item);
+  public boolean addItem(Item item) {
+    return Item.addItem(item);
   }
 
   @Override
-  public void setItem(String name, int cantidad, double precio) {
-    Item.setItem(name, cantidad, precio);
+  public boolean setItem(String name, int cantidad, double precio) {
+    return Item.setItem(name, cantidad, precio);
   }
+<<<<<<< HEAD:l7/src/e1/store/soap/SOAPImpl.java
+=======
+
+  @Override
+  public boolean deleteItem(String name) {
+    return Item.deleteItem(name);
+  }
+>>>>>>> d6f0f7942d435d51f5bcbac034ff1dd2d63c8cb3:l7/src/e2/lab7/e2/soap/SOAPImpl.java
   // END-SNIPPET
 }
