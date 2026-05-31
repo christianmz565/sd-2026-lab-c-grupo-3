@@ -30,13 +30,10 @@ public class SOAPImpl implements SOAPI {
   public boolean setItem(String name, int cantidad, double precio) {
     return Item.setItem(name, cantidad, precio);
   }
-<<<<<<< HEAD:l7/src/e1/store/soap/SOAPImpl.java
-=======
 
   @Override
   public boolean deleteItem(String name) {
     return Item.deleteItem(name);
   }
->>>>>>> d6f0f7942d435d51f5bcbac034ff1dd2d63c8cb3:l7/src/e2/lab7/e2/soap/SOAPImpl.java
   // END-SNIPPET
 }

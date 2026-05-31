@@ -18,13 +18,9 @@ public interface SOAPI {
   boolean addItem(Item item);
 
   @WebMethod
-<<<<<<< HEAD:l7/src/e1/store/soap/SOAPI.java
-  void setItem(String name, int cantidad, double precio);
-=======
   boolean setItem(String name, int cantidad, double precio);
 
   @WebMethod
   boolean deleteItem(String name);
->>>>>>> d6f0f7942d435d51f5bcbac034ff1dd2d63c8cb3:l7/src/e2/lab7/e2/soap/SOAPI.java
   // END-SNIPPET
 }

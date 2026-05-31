@@ -128,7 +128,7 @@
 
     == Ejercicio 1: Servicio SOAP de Ventas en Linea
 
-    Se diseno un servicio basico de ventas con listado, compra, registro y actualizacion de productos.
+    Se diseno un servicio basico de ventas con listado, compra, registro, actualizacion y eliminacion logica de productos.
 
     #code-block("l7/src/e1/store/model/Item.java", snippet: "model", lang: "java")
 
@@ -139,6 +139,12 @@
     #code-block("l7/src/e1/store/demo/PublishService.java", snippet: "publish", lang: "java")
 
     #code-block("l7/src/e1/store/client/StoreClient.java", snippet: "client", lang: "java")
+
+    == Ejercicio 2: Cliente SOAP con Python
+
+    Se implemento un cliente interactivo con `zeep` para consumir el servicio SOAP de ventas en linea.
+
+    #code-block("l7/src/e3/client.py", lang: "python")
   ]
 
   #lab-section("INVESTIGACION")[
@@ -237,6 +243,11 @@
 
     === Cliente de Pruebas
     #code-block("l7/src/e1/store/client/StoreClient.java", lang: "java")
+
+    == Ejercicio 2: Cliente SOAP con Python
+
+    === Script
+    #code-block("l7/src/e3/client.py", lang: "python")
 
   ]
 ]
