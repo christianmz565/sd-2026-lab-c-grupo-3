@@ -1,13 +1,13 @@
-package lab7.e1.store.soap;
+package l7.e1.store.soap;
 
 import java.util.List;
 import javax.jws.WebService;
-import lab7.e1.store.model.Item;
+import l7.e1.store.model.Item;
 
 @WebService(
-    endpointInterface = "lab7.e1.store.soap.SOAPI",
+    endpointInterface = "l7.e1.store.soap.SOAPI",
     serviceName = "StoreSOAPService",
-    targetNamespace = "http://lab7.e1.store/"
+    targetNamespace = "http://l7.e1.store/"
 )
 public class SOAPImpl implements SOAPI {
   // START-SNIPPET,impl

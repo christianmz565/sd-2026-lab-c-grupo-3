@@ -1,4 +1,4 @@
-package lab7.e1.conversor;
+package l7.e1.conversor;
 
 import java.net.URL;
 import javax.xml.namespace.QName;
@@ -8,7 +8,7 @@ public class ConversorClient {
   // START-SNIPPET,client
   public static void main(String[] args) throws Exception {
     URL wsdlUrl = new URL("http://localhost:8080/conversor?wsdl");
-    QName serviceName = new QName("http://lab7.e1.conversor/", "ConversorSOAPService");
+    QName serviceName = new QName("http://l7.e1.conversor/", "ConversorSOAPService");
     Service service = Service.create(wsdlUrl, serviceName);
     ConversorAPI api = service.getPort(ConversorAPI.class);
 

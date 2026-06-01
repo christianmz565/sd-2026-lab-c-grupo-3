@@ -1,4 +1,4 @@
-package lab7.e1.store.model;
+package l7.e1.store.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -9,21 +9,20 @@ public class Item implements Serializable {
   private static final long serialVersionUID = 1L;
 
   // START-SNIPPET,model
-  private String nombre;
+  private String name;
   private int cantidad;
   private double costo;
 
   private static final List<Item> ITEMS = new ArrayList<>(Arrays.asList(
       new Item("Gaseosa", 15, 5.2),
       new Item("Galletas", 10, 1.6),
-      new Item("Celular", 12, 900.0)
-  ));
+      new Item("Celular", 12, 900.0)));
 
   public Item() {
   }
 
-  public Item(String nombre, int cantidad, double costo) {
-    this.nombre = nombre;
+  public Item(String name, int cantidad, double costo) {
+    this.name = name;
     this.cantidad = cantidad;
     this.costo = costo;
   }
@@ -33,36 +32,36 @@ public class Item implements Serializable {
   }
 
   public static boolean addItem(Item item) {
-    if (item.nombre == null || item.nombre.isEmpty() || item.cantidad <= 0 || item.costo <= 0) {
+    if (item.name == null || item.name.isEmpty() || item.cantidad <= 0 || item.costo <= 0) {
       return false;
     }
     ITEMS.add(item);
     return true;
   }
 
-  public static String buyItem(String nombre, int cantidad) {
+  public static String buyItem(String name, int cantidad) {
     if (cantidad <= 0) {
       return "Invalid Quantity";
     }
     for (Item item : ITEMS) {
-      if (item.nombre.equalsIgnoreCase(nombre)) {
+      if (item.name.equalsIgnoreCase(name)) {
         if (item.cantidad - cantidad < 0) {
           return "Not enough items";
         }
         item.cantidad -= cantidad;
-        return "Producto: " + item.nombre + " Cantidad: " + cantidad
+        return "Producto: " + item.name + " Cantidad: " + cantidad
             + " Total: " + String.format(java.util.Locale.US, "%.2f", (cantidad * item.costo));
       }
     }
     return "Item no match";
   }
 
-  public static boolean setItem(String nombre, int cantidad, double costo) {
-    if (nombre == null || nombre.isEmpty() || cantidad <= 0 || costo <= 0) {
+  public static boolean setItem(String name, int cantidad, double costo) {
+    if (name == null || name.isEmpty() || cantidad <= 0 || costo <= 0) {
       return false;
     }
     for (Item item : ITEMS) {
-      if (item.nombre.equalsIgnoreCase(nombre)) {
+      if (item.name.equalsIgnoreCase(name)) {
         item.cantidad = cantidad;
         item.costo = costo;
         return true;
@@ -71,24 +70,25 @@ public class Item implements Serializable {
     return false;
   }
 
-  public static boolean deleteItem(String nombre) {
-    if (nombre == null || nombre.isEmpty()) {
+  public static boolean deleteItem(String name) {
+    if (name == null || name.isEmpty()) {
       return false;
     }
     for (Item item : ITEMS) {
-      if (item.nombre.equalsIgnoreCase(nombre)) {
+      if (item.name.equalsIgnoreCase(name)) {
         item.cantidad = 0;
         return true;
       }
     }
     return false;
   }
+
   public String getNombre() {
-    return nombre;
+    return name;
   }
 
-  public void setNombre(String nombre) {
-    this.nombre = nombre;
+  public void setNombre(String name) {
+    this.name = name;
   }
 
   public int getCantidad() {
@@ -110,6 +110,6 @@ public class Item implements Serializable {
 
   @Override
   public String toString() {
-    return "Item{nombre='" + nombre + "', cantidad=" + cantidad + ", costo=" + costo + "}";
+    return "Item{name='" + name + "', cantidad=" + cantidad + ", costo=" + costo + "}";
   }
 }
