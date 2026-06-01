@@ -1,4 +1,4 @@
-package lab7.docente.calculadora;
+package docente.calculadora;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;

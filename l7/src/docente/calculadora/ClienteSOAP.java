@@ -1,4 +1,4 @@
-package lab7.docente.calculadora;
+package docente.calculadora;
 
 import java.net.URL;
 import javax.xml.namespace.QName;

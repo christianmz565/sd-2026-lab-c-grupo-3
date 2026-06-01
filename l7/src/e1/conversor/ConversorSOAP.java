@@ -1,11 +1,11 @@
-package lab7.e1.conversor;
+package l7.e1.conversor;
 
 import javax.jws.WebService;
 
 @WebService(
-    endpointInterface = "lab7.e1.conversor.ConversorAPI",
+    endpointInterface = "l7.e1.conversor.ConversorAPI",
     serviceName = "ConversorSOAPService",
-    targetNamespace = "http://lab7.e1.conversor/"
+    targetNamespace = "http://l7.e1.conversor/"
 )
 public class ConversorSOAP implements ConversorAPI {
   // START-SNIPPET,impl

@@ -3,15 +3,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>lab7</groupId>
-    <artifactId>lab7</artifactId>
+    <groupId>l7</groupId>
+    <artifactId>l7</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <exec.mainClass>lab7.e2.demo.PublishService</exec.mainClass>
+        <exec.mainClass>e1.store.demo.PublishService</exec.mainClass>
     </properties>
 
     <dependencies>
@@ -25,6 +25,30 @@
 
     <build>
         <plugins>
+            <!-- Compile sources from non-standard src layout -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>compile-e1</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/src/e1</compileSourceRoot>
+                            </compileSourceRoots>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Plugin to add multiple source directories -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -40,14 +64,13 @@
                         <configuration>
                             <sources>
                                 <source>src/e1</source>
-                                <source>src/e2</source>
                             </sources>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Plugin to run Java classes in a separate process with JVM options -->
+            <!-- Plugin to run Java classes -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -55,11 +78,9 @@
                 <configuration>
                     <executable>java</executable>
                     <arguments>
-                        <argument>--add-opens</argument>
-                        <argument>java.base/jdk.internal.misc=ALL-UNNAMED</argument>
-                        <argument>--add-opens</argument>
-                        <argument>java.base/java.lang=ALL-UNNAMED</argument>
-                        <argument>-classpath</argument>
+                        <argument>--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED</argument>
+                        <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
+                        <argument>-cp</argument>
                         <classpath/>
                         <argument>${exec.mainClass}</argument>
                     </arguments>

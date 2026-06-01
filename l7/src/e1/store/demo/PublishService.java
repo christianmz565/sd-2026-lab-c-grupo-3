@@ -1,7 +1,7 @@
-package lab7.e1.store.demo;
+package l7.e1.store.demo;
 
 import javax.xml.ws.Endpoint;
-import lab7.e1.store.soap.SOAPImpl;
+import l7.e1.store.soap.SOAPImpl;
 
 public class PublishService {
   // START-SNIPPET,publish
@@ -10,4 +10,3 @@ public class PublishService {
   }
   // END-SNIPPET
 }
- 

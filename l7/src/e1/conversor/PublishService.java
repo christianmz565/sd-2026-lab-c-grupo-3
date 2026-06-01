@@ -1,4 +1,4 @@
-package lab7.e1.conversor;
+package l7.e1.conversor;
 
 import javax.xml.ws.Endpoint;
 

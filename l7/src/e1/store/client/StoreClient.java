@@ -1,18 +1,18 @@
-package lab7.e1.store.client;
+package l7.e1.store.client;
 
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Service;
-import lab7.e1.store.model.Item;
-import lab7.e1.store.soap.SOAPI;
+import l7.e1.store.model.Item;
+import l7.e1.store.soap.SOAPI;
 
 public class StoreClient {
   // START-SNIPPET,client
   public static void main(String[] args) throws Exception {
     URL wsdlUrl = new URL("http://localhost:1516/WS/Store?wsdl");
-    QName serviceName = new QName("http://lab7.e1.store/", "StoreSOAPService");
+    QName serviceName = new QName("http://l7.e1.store/", "StoreSOAPService");
     Service service = Service.create(wsdlUrl, serviceName);
     SOAPI store = service.getPort(SOAPI.class);
 
