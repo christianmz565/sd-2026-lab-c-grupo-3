@@ -1,0 +1,35 @@
+package lab7.e2.soap;
+
+import java.util.List;
+import javax.jws.WebService;
+import lab7.e2.model.Item;
+
+@WebService(endpointInterface = "lab7.e2.soap.SOAPI")
+public class SOAPImpl implements SOAPI {
+  // START-SNIPPET,impl
+  @Override
+  public List<Item> getItems() {
+    return Item.getItems();
+  }
+
+  @Override
+  public String buyItem(String name, int cantidad) {
+    return Item.buyItem(name, cantidad);
+  }
+
+  @Override
+  public boolean addItem(Item item) {
+    return Item.addItem(item);
+  }
+
+  @Override
+  public boolean setItem(String name, int cantidad, double precio) {
+    return Item.setItem(name, cantidad, precio);
+  }
+
+  @Override
+  public boolean deleteItem(String name) {
+    return Item.deleteItem(name);
+  }
+  // END-SNIPPET
+}
