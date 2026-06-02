@@ -1,0 +1,13 @@
+package e1;
+
+import javax.jws.WebMethod;
+import javax.jws.WebService;
+
+@WebService(targetNamespace = "http://l7.e1.conversor/")
+public interface ConversorAPI {
+  @WebMethod
+  double cToF(double c);
+
+  @WebMethod
+  double fToC(double f);
+}

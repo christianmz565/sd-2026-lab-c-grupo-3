@@ -53,6 +53,7 @@
               maven
               gradle
               uv
+              bun
               just
               nixd
             ]

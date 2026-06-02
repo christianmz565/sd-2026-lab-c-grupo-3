@@ -3,8 +3,8 @@ package LabSD;
 import java.util.List;
 import javax.jws.WebService;
 import LabSD.Product;
-@WebService(endpointInterface = "es.rosamarfil.soap.SOAPI")
-public class SOAPImpl {
+@WebService(endpointInterface = "LabSD.SOAPI")
+public class SOAPImpl implements SOAPI {
 	@Override
 	 public List<Product> getProducts() {
 		 return Product.getProducts();

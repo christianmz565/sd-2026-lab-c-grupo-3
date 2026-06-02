@@ -41,11 +41,11 @@
 
     == Servicio SOAP de Suma (Calculadora)
 
-    #code-block("l7/src/docente/calculadora/CalculadoraSOAP.java", snippet: "service", lang: "java")
+    #code-block("l7/snippets/docente/calculadora/CalculadoraSOAP.java", snippet: "service", lang: "java")
 
-    #code-block("l7/src/docente/calculadora/Publicador.java", snippet: "publish", lang: "java")
+    #code-block("l7/snippets/docente/calculadora/Publicador.java", snippet: "publish", lang: "java")
 
-    #code-block("l7/src/docente/calculadora/ClienteSOAP.java", snippet: "client", lang: "java")
+    #code-block("l7/snippets/docente/calculadora/ClienteSOAP.java", snippet: "client", lang: "java")
 
     = EJERCICIOS/PROBLEMAS PROPUESTOS
 
@@ -53,13 +53,13 @@
 
     Se implemento el servicio SOAP con las operaciones `cToF` y `fToC`, junto con el publicador y el cliente Java.
 
-    #code-block("l7/src/e1/conversor/ConversorAPI.java", snippet: "interface", lang: "java")
+    #code-block("l7/snippets/e1/conversor/ConversorAPI.java", snippet: "interface", lang: "java")
 
-    #code-block("l7/src/e1/conversor/ConversorSOAP.java", snippet: "impl", lang: "java")
+    #code-block("l7/snippets/e1/conversor/ConversorSOAP.java", snippet: "impl", lang: "java")
 
-    #code-block("l7/src/e1/conversor/PublishService.java", snippet: "publish", lang: "java")
+    #code-block("l7/snippets/e1/conversor/PublishService.java", snippet: "publish", lang: "java")
 
-    #code-block("l7/src/e1/conversor/ConversorClient.java", snippet: "client", lang: "java")
+    #code-block("l7/snippets/e1/conversor/ConversorClient.java", snippet: "client", lang: "java")
 
     === Ejecucion del servicio
 
@@ -126,25 +126,25 @@
     </S:Envelope>
     ```
 
-    == Ejercicio 1: Servicio SOAP de Ventas en Linea
+    == Ejercicio 1 (Adicional): Servicio SOAP de Ventas en Linea
 
     Se diseno un servicio basico de ventas con listado, compra, registro, actualizacion y eliminacion logica de productos.
 
-    #code-block("l7/src/e1/store/model/Item.java", snippet: "model", lang: "java")
+    #code-block("l7/snippets/e1/store/model/Item.java", snippet: "model", lang: "java")
 
-    #code-block("l7/src/e1/store/soap/SOAPI.java", snippet: "interface", lang: "java")
+    #code-block("l7/snippets/e1/store/soap/SOAPI.java", snippet: "interface", lang: "java")
 
-    #code-block("l7/src/e1/store/soap/SOAPImpl.java", snippet: "impl", lang: "java")
+    #code-block("l7/snippets/e1/store/soap/SOAPImpl.java", snippet: "impl", lang: "java")
 
-    #code-block("l7/src/e1/store/demo/PublishService.java", snippet: "publish", lang: "java")
+    #code-block("l7/snippets/e1/store/demo/PublishService.java", snippet: "publish", lang: "java")
 
-    #code-block("l7/src/e1/store/client/StoreClient.java", snippet: "client", lang: "java")
+    #code-block("l7/snippets/e1/store/client/StoreClient.java", snippet: "client", lang: "java")
 
     == Ejercicio 2: Cliente SOAP con Python
 
     Se implemento un cliente interactivo con `zeep` para consumir el servicio SOAP de ventas en linea.
 
-    #code-block("l7/src/e3/client.py", lang: "python")
+    #code-block("l7/snippets/e2/client.py", lang: "python")
   ]
 
   #lab-section("INVESTIGACION")[
@@ -205,49 +205,49 @@
     == Servicio SOAP de Suma (Docente)
 
     === Servicio
-    #code-block("l7/src/docente/calculadora/CalculadoraSOAP.java", lang: "java")
+    #code-block("l7/snippets/docente/calculadora/CalculadoraSOAP.java", lang: "java")
 
     === Publicacion
-    #code-block("l7/src/docente/calculadora/Publicador.java", lang: "java")
+    #code-block("l7/snippets/docente/calculadora/Publicador.java", lang: "java")
 
     === Cliente
-    #code-block("l7/src/docente/calculadora/ClienteSOAP.java", lang: "java")
+    #code-block("l7/snippets/docente/calculadora/ClienteSOAP.java", lang: "java")
 
     == Ejercicio 1: Conversor de Temperatura
 
     === Interfaz
-    #code-block("l7/src/e1/conversor/ConversorAPI.java", lang: "java")
+    #code-block("l7/snippets/e1/conversor/ConversorAPI.java", lang: "java")
 
     === Implementacion
-    #code-block("l7/src/e1/conversor/ConversorSOAP.java", lang: "java")
+    #code-block("l7/snippets/e1/conversor/ConversorSOAP.java", lang: "java")
 
     === Publicacion
-    #code-block("l7/src/e1/conversor/PublishService.java", lang: "java")
+    #code-block("l7/snippets/e1/conversor/PublishService.java", lang: "java")
 
     === Cliente
-    #code-block("l7/src/e1/conversor/ConversorClient.java", lang: "java")
+    #code-block("l7/snippets/e1/conversor/ConversorClient.java", lang: "java")
 
     == Ejercicio 1: Ventas en Linea
 
     === Modelo Item
-    #code-block("l7/src/e1/store/model/Item.java", lang: "java")
+    #code-block("l7/snippets/e1/store/model/Item.java", lang: "java")
 
     === Interfaz del Servicio
-    #code-block("l7/src/e1/store/soap/SOAPI.java", lang: "java")
+    #code-block("l7/snippets/e1/store/soap/SOAPI.java", lang: "java")
 
     === Implementacion del Servicio
-    #code-block("l7/src/e1/store/soap/SOAPImpl.java", lang: "java")
+    #code-block("l7/snippets/e1/store/soap/SOAPImpl.java", lang: "java")
 
     === Publicacion del Servicio
-    #code-block("l7/src/e1/store/demo/PublishService.java", lang: "java")
+    #code-block("l7/snippets/e1/store/demo/PublishService.java", lang: "java")
 
     === Cliente de Pruebas
-    #code-block("l7/src/e1/store/client/StoreClient.java", lang: "java")
+    #code-block("l7/snippets/e1/store/client/StoreClient.java", lang: "java")
 
     == Ejercicio 2: Cliente SOAP con Python
 
     === Script
-    #code-block("l7/src/e3/client.py", lang: "python")
+    #code-block("l7/snippets/e2/client.py", lang: "python")
 
   ]
 ]

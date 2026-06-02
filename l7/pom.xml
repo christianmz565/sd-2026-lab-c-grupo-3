@@ -1,6 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>l7</groupId>
@@ -11,7 +13,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <exec.mainClass>e1.store.demo.PublishService</exec.mainClass>
+        <exec.mainClass>lab7.e2.demo.PublishService</exec.mainClass>
     </properties>
 
     <dependencies>
@@ -25,7 +27,7 @@
 
     <build>
         <plugins>
-            <!-- Compile sources from non-standard src layout -->
+            <!-- Compile sources from standard src layout -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -33,43 +35,15 @@
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                    <compileSourceRoots>
+                        <compileSourceRoot
+            >${project.basedir}/src</compileSourceRoot>
+                    </compileSourceRoots>
+                    <excludes>
+                        <exclude>examples/**</exclude>
+                    </excludes>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>compile-e1</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                            <compileSourceRoots>
-                                <compileSourceRoot>${project.basedir}/src/e1</compileSourceRoot>
-                            </compileSourceRoots>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
-            <!-- Plugin to add multiple source directories -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>src/e1</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- Plugin to run Java classes -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -78,10 +52,12 @@
                 <configuration>
                     <executable>java</executable>
                     <arguments>
-                        <argument>--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED</argument>
-                        <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
+                        <argument
+            >--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED</argument>
+                        <argument
+            >--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
                         <argument>-cp</argument>
-                        <classpath/>
+                        <classpath />
                         <argument>${exec.mainClass}</argument>
                     </arguments>
                 </configuration>
