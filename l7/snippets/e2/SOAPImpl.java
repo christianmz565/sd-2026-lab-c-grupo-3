@@ -4,6 +4,7 @@ import e2.servicio.model.Item;
 import java.util.List;
 import javax.jws.WebService;
 
+// START-SNIPPET,implementation
 @WebService(
   endpointInterface = "e2.servicio.soap.SOAPI",
   serviceName = "SOAPImplService",
@@ -37,3 +38,4 @@ public class SOAPImpl implements SOAPI {
     return Item.deleteItem(name);
   }
 }
+// END-SNIPPET

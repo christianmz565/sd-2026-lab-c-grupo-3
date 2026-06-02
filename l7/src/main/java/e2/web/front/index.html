@@ -1,267 +1,379 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="StoreSOAP — Panel de administración de productos con operaciones CRUD vía servicio SOAP."
+    />
+    <title>StoreSOAP | Panel de Productos</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-    content="StoreSOAP — Panel de administración de productos con operaciones CRUD vía servicio SOAP." />
-  <title>StoreSOAP | Panel de Productos</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-    rel="stylesheet" />
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="css/styles.css" />
-</head>
-
-<body>
-
-  <!-- ═══════════════════════════ NAVBAR ═══════════════════════════ -->
-  <header class="navbar" id="navbar">
-    <div class="nav-inner">
-      <div class="nav-brand">
-        <span class="brand-icon">🛒</span>
-        <span class="brand-name">StoreSOAP</span>
-        <span class="brand-badge">ADMIN</span>
-      </div>
-      <nav class="nav-links">
-        <a href="#products-section" class="nav-link active" id="nav-products">Productos</a>
-      </nav>
-      <div class="nav-actions">
-        <div class="connection-status" id="connection-status">
-          <span class="status-dot" id="status-dot"></span>
-          <span class="status-label" id="status-label">Conectando...</span>
+  <body>
+    <!-- ═══════════════════════════ NAVBAR ═══════════════════════════ -->
+    <header class="navbar" id="navbar">
+      <div class="nav-inner">
+        <div class="nav-brand">
+          <span class="brand-icon">🛒</span>
+          <span class="brand-name">StoreSOAP</span>
+          <span class="brand-badge">ADMIN</span>
         </div>
-        <button class="btn btn-primary btn-sm" id="btn-add-product">
-          <span>+</span> Nuevo Producto
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
-  <section class="hero" id="hero">
-    <div class="hero-glow hero-glow-1"></div>
-    <div class="hero-glow hero-glow-2"></div>
-    <div class="hero-content">
-      <h1 class="hero-title">
-        Panel de<br />
-        <span class="gradient-text">Gestión de Productos</span>
-      </h1>
-      <p class="hero-subtitle">
-        CRUD completo integrado con servicio SOAP · Inventario en tiempo real
-      </p>
-      <div class="hero-stats" id="hero-stats">
-        <div class="stat-pill">
-          <span class="stat-value" id="stat-total">0</span>
-          <span class="stat-name">Productos</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-value" id="stat-stock">0</span>
-          <span class="stat-name">Unidades</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-value" id="stat-value">S/. 0</span>
-          <span class="stat-name">Valor Total</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════ TOOLBAR ═══════════════════════════ -->
-  <section class="toolbar-section" id="products-section">
-    <div class="container">
-      <div class="toolbar">
-        <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="search-input" class="search-input" placeholder="Buscar producto por nombre..."
-            autocomplete="off" />
-          <button class="clear-search" id="clear-search" aria-label="Limpiar búsqueda">✕</button>
-        </div>
-        <div class="filter-wrap">
-          <select class="filter-select" id="stock-filter">
-            <option value="all">Todos</option>
-            <option value="in-stock">Con Stock</option>
-            <option value="out-of-stock">Sin Stock</option>
-          </select>
-          <button class="btn btn-ghost btn-sm" id="btn-refresh" title="Recargar productos">
-            <span class="refresh-icon">↻</span> Actualizar
+        <nav class="nav-links">
+          <a href="#products-section" class="nav-link active" id="nav-products"
+            >Productos</a
+          >
+        </nav>
+        <div class="nav-actions">
+          <div class="connection-status" id="connection-status">
+            <span class="status-dot" id="status-dot"></span>
+            <span class="status-label" id="status-label">Conectando...</span>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-add-product">
+            <span>+</span> Nuevo Producto
           </button>
         </div>
       </div>
-    </div>
-  </section>
+    </header>
 
-  <!-- ═══════════════════════════ PRODUCTS GRID ═══════════════════════════ -->
-  <main class="main-content">
-    <div class="container">
-      <!-- Loading Skeleton -->
-      <div class="products-grid" id="skeleton-grid">
-        <div class="product-card skeleton-card">
-          <div class="skeleton skeleton-img"></div>
-          <div class="skeleton skeleton-title"></div>
-          <div class="skeleton skeleton-text"></div>
-          <div class="skeleton skeleton-btn"></div>
-        </div>
-        <div class="product-card skeleton-card">
-          <div class="skeleton skeleton-img"></div>
-          <div class="skeleton skeleton-title"></div>
-          <div class="skeleton skeleton-text"></div>
-          <div class="skeleton skeleton-btn"></div>
-        </div>
-        <div class="product-card skeleton-card">
-          <div class="skeleton skeleton-img"></div>
-          <div class="skeleton skeleton-title"></div>
-          <div class="skeleton skeleton-text"></div>
-          <div class="skeleton skeleton-btn"></div>
-        </div>
-      </div>
-
-      <!-- Product Cards -->
-      <div class="products-grid hidden" id="products-grid"></div>
-
-      <!-- Empty State -->
-      <div class="empty-state hidden" id="empty-state">
-        <div class="empty-icon">📦</div>
-        <h3>No se encontraron productos</h3>
-        <p>Intenta cambiar los filtros o agrega un nuevo producto.</p>
-        <button class="btn btn-primary" id="btn-add-empty">+ Agregar Producto</button>
-      </div>
-    </div>
-  </main>
-
-
-
-  <!-- ═══════════════════════════ TOAST ═══════════════════════════ -->
-  <div class="toast-container" id="toast-container"></div>
-
-  <!-- ═══════════════════════════ MODAL: ADD / EDIT PRODUCT ═══════════════════════════ -->
-  <div class="modal-overlay hidden" id="modal-product" role="dialog" aria-modal="true"
-    aria-labelledby="modal-product-title">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 class="modal-title" id="modal-product-title">Nuevo Producto</h2>
-        <button class="modal-close" id="modal-product-close" aria-label="Cerrar">✕</button>
-      </div>
-      <form class="modal-body" id="form-product" novalidate>
-        <div class="form-group">
-          <label class="form-label" for="input-nombre">Nombre del Producto <span class="required">*</span></label>
-          <input type="text" id="input-nombre" name="nombre" class="form-input" placeholder="Ej: Gaseosa, Celular..."
-            required autocomplete="off" />
-          <span class="form-error" id="error-nombre"></span>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="input-cantidad">Cantidad <span class="required">*</span></label>
-            <input type="number" id="input-cantidad" name="cantidad" class="form-input" placeholder="0" min="1"
-              required />
-            <span class="form-error" id="error-cantidad"></span>
+    <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+    <section class="hero" id="hero">
+      <div class="hero-glow hero-glow-1"></div>
+      <div class="hero-glow hero-glow-2"></div>
+      <div class="hero-content">
+        <h1 class="hero-title">
+          Panel de<br />
+          <span class="gradient-text">Gestión de Productos</span>
+        </h1>
+        <p class="hero-subtitle">
+          CRUD completo integrado con servicio SOAP · Inventario en tiempo real
+        </p>
+        <div class="hero-stats" id="hero-stats">
+          <div class="stat-pill">
+            <span class="stat-value" id="stat-total">0</span>
+            <span class="stat-name">Productos</span>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="input-costo">Costo (S/.) <span class="required">*</span></label>
-            <input type="number" id="input-costo" name="costo" class="form-input" placeholder="0.00" min="0.01"
-              step="0.01" required />
-            <span class="form-error" id="error-costo"></span>
+          <div class="stat-pill">
+            <span class="stat-value" id="stat-stock">0</span>
+            <span class="stat-name">Unidades</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-value" id="stat-value">S/. 0</span>
+            <span class="stat-name">Valor Total</span>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-ghost" id="btn-cancel-product">Cancelar</button>
-          <button type="submit" class="btn btn-primary" id="btn-submit-product">
-            <span class="btn-spinner hidden" id="spinner-product"></span>
-            <span id="btn-submit-label">Guardar Producto</span>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════ TOOLBAR ═══════════════════════════ -->
+    <section class="toolbar-section" id="products-section">
+      <div class="container">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              id="search-input"
+              class="search-input"
+              placeholder="Buscar producto por nombre..."
+              autocomplete="off"
+            />
+            <button
+              class="clear-search"
+              id="clear-search"
+              aria-label="Limpiar búsqueda"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="filter-wrap">
+            <select class="filter-select" id="stock-filter">
+              <option value="all">Todos</option>
+              <option value="in-stock">Con Stock</option>
+              <option value="out-of-stock">Sin Stock</option>
+            </select>
+            <button
+              class="btn btn-ghost btn-sm"
+              id="btn-refresh"
+              title="Recargar productos"
+            >
+              <span class="refresh-icon">↻</span> Actualizar
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════ PRODUCTS GRID ═══════════════════════════ -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Loading Skeleton -->
+        <div class="products-grid" id="skeleton-grid">
+          <div class="product-card skeleton-card">
+            <div class="skeleton skeleton-img"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-btn"></div>
+          </div>
+          <div class="product-card skeleton-card">
+            <div class="skeleton skeleton-img"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-btn"></div>
+          </div>
+          <div class="product-card skeleton-card">
+            <div class="skeleton skeleton-img"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-btn"></div>
+          </div>
+        </div>
+
+        <!-- Product Cards -->
+        <div class="products-grid hidden" id="products-grid"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state hidden" id="empty-state">
+          <div class="empty-icon">📦</div>
+          <h3>No se encontraron productos</h3>
+          <p>Intenta cambiar los filtros o agrega un nuevo producto.</p>
+          <button class="btn btn-primary" id="btn-add-empty">
+            + Agregar Producto
           </button>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════ MODAL: BUY ═══════════════════════════ -->
-  <div class="modal-overlay hidden" id="modal-buy" role="dialog" aria-modal="true" aria-labelledby="modal-buy-title">
-    <div class="modal modal-sm">
-      <div class="modal-header">
-        <h2 class="modal-title" id="modal-buy-title">Comprar Producto</h2>
-        <button class="modal-close" id="modal-buy-close" aria-label="Cerrar">✕</button>
       </div>
-      <div class="modal-body">
-        <div class="buy-product-info" id="buy-product-info">
-          <div class="buy-product-name" id="buy-product-name">—</div>
-          <div class="buy-product-meta">
-            <span>Stock disponible: <strong id="buy-stock">0</strong></span>
-            <span>Precio: <strong id="buy-price">S/. 0.00</strong></span>
-          </div>
+    </main>
+
+    <!-- ═══════════════════════════ TOAST ═══════════════════════════ -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ═══════════════════════════ MODAL: ADD / EDIT PRODUCT ═══════════════════════════ -->
+    <div
+      class="modal-overlay hidden"
+      id="modal-product"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-product-title"
+    >
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title" id="modal-product-title">Nuevo Producto</h2>
+          <button
+            class="modal-close"
+            id="modal-product-close"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
         </div>
-        <form id="form-buy" novalidate>
+        <form class="modal-body" id="form-product" novalidate>
           <div class="form-group">
-            <label class="form-label" for="input-buy-cantidad">Cantidad a Comprar <span
-                class="required">*</span></label>
-            <input type="number" id="input-buy-cantidad" class="form-input" placeholder="1" min="1" required />
-            <span class="form-error" id="error-buy-cantidad"></span>
+            <label class="form-label" for="input-nombre"
+              >Nombre del Producto <span class="required">*</span></label
+            >
+            <input
+              type="text"
+              id="input-nombre"
+              name="nombre"
+              class="form-input"
+              placeholder="Ej: Gaseosa, Celular..."
+              required
+              autocomplete="off"
+            />
+            <span class="form-error" id="error-nombre"></span>
           </div>
-          <div class="buy-total-preview" id="buy-total-preview">
-            Total estimado: <strong id="buy-total">S/. 0.00</strong>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="input-cantidad"
+                >Cantidad <span class="required">*</span></label
+              >
+              <input
+                type="number"
+                id="input-cantidad"
+                name="cantidad"
+                class="form-input"
+                placeholder="0"
+                min="1"
+                required
+              />
+              <span class="form-error" id="error-cantidad"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-costo"
+                >Costo (S/.) <span class="required">*</span></label
+              >
+              <input
+                type="number"
+                id="input-costo"
+                name="costo"
+                class="form-input"
+                placeholder="0.00"
+                min="0.01"
+                step="0.01"
+                required
+              />
+              <span class="form-error" id="error-costo"></span>
+            </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-ghost" id="btn-cancel-buy">Cancelar</button>
-            <button type="submit" class="btn btn-success" id="btn-submit-buy">
-              <span class="btn-spinner hidden" id="spinner-buy"></span>
-              Confirmar Compra
+            <button type="button" class="btn btn-ghost" id="btn-cancel-product">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="btn-submit-product"
+            >
+              <span class="btn-spinner hidden" id="spinner-product"></span>
+              <span id="btn-submit-label">Guardar Producto</span>
             </button>
           </div>
         </form>
       </div>
     </div>
-  </div>
 
-  <!-- ═══════════════════════════ MODAL: DELETE ═══════════════════════════ -->
-  <div class="modal-overlay hidden" id="modal-delete" role="dialog" aria-modal="true"
-    aria-labelledby="modal-delete-title">
-    <div class="modal modal-sm">
-      <div class="modal-header modal-header-danger">
-        <h2 class="modal-title" id="modal-delete-title">⚠️ Eliminar Producto</h2>
-        <button class="modal-close" id="modal-delete-close" aria-label="Cerrar">✕</button>
-      </div>
-      <div class="modal-body">
-        <p class="delete-message">
-          ¿Estás seguro de que deseas eliminar <strong id="delete-product-name">—</strong>?
-          <br />
-          <span class="delete-note">Esta acción establecerá el stock en 0 (baja lógica).</span>
-        </p>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-ghost" id="btn-cancel-delete">Cancelar</button>
-          <button type="button" class="btn btn-danger" id="btn-confirm-delete">
-            <span class="btn-spinner hidden" id="spinner-delete"></span>
-            Sí, Eliminar
+    <!-- ═══════════════════════════ MODAL: BUY ═══════════════════════════ -->
+    <div
+      class="modal-overlay hidden"
+      id="modal-buy"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-buy-title"
+    >
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title" id="modal-buy-title">Comprar Producto</h2>
+          <button class="modal-close" id="modal-buy-close" aria-label="Cerrar">
+            ✕
           </button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════ MODAL: RESULT ═══════════════════════════ -->
-  <div class="modal-overlay hidden" id="modal-result" role="dialog" aria-modal="true"
-    aria-labelledby="modal-result-title">
-    <div class="modal modal-sm">
-      <div class="modal-header">
-        <h2 class="modal-title" id="modal-result-title">Resultado</h2>
-        <button class="modal-close" id="modal-result-close" aria-label="Cerrar">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="result-content" id="result-content"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" id="btn-close-result">Aceptar</button>
+        <div class="modal-body">
+          <div class="buy-product-info" id="buy-product-info">
+            <div class="buy-product-name" id="buy-product-name">—</div>
+            <div class="buy-product-meta">
+              <span>Stock disponible: <strong id="buy-stock">0</strong></span>
+              <span>Precio: <strong id="buy-price">S/. 0.00</strong></span>
+            </div>
+          </div>
+          <form id="form-buy" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="input-buy-cantidad"
+                >Cantidad a Comprar <span class="required">*</span></label
+              >
+              <input
+                type="number"
+                id="input-buy-cantidad"
+                class="form-input"
+                placeholder="1"
+                min="1"
+                required
+              />
+              <span class="form-error" id="error-buy-cantidad"></span>
+            </div>
+            <div class="buy-total-preview" id="buy-total-preview">
+              Total estimado: <strong id="buy-total">S/. 0.00</strong>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-ghost" id="btn-cancel-buy">
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-success" id="btn-submit-buy">
+                <span class="btn-spinner hidden" id="spinner-buy"></span>
+                Confirmar Compra
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Scripts -->
-  <script src="js/api.js"></script>
-  <script src="js/app.js"></script>
-</body>
+    <!-- ═══════════════════════════ MODAL: DELETE ═══════════════════════════ -->
+    <div
+      class="modal-overlay hidden"
+      id="modal-delete"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-delete-title"
+    >
+      <div class="modal modal-sm">
+        <div class="modal-header modal-header-danger">
+          <h2 class="modal-title" id="modal-delete-title">
+            ⚠️ Eliminar Producto
+          </h2>
+          <button
+            class="modal-close"
+            id="modal-delete-close"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="delete-message">
+            ¿Estás seguro de que deseas eliminar
+            <strong id="delete-product-name">—</strong>?
+            <br />
+          </p>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" id="btn-cancel-delete">
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              id="btn-confirm-delete"
+            >
+              <span class="btn-spinner hidden" id="spinner-delete"></span>
+              Sí, Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <!-- ═══════════════════════════ MODAL: RESULT ═══════════════════════════ -->
+    <div
+      class="modal-overlay hidden"
+      id="modal-result"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-result-title"
+    >
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title" id="modal-result-title">Resultado</h2>
+          <button
+            class="modal-close"
+            id="modal-result-close"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="result-content" id="result-content"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btn-close-result">
+              Aceptar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+  </body>
 </html>

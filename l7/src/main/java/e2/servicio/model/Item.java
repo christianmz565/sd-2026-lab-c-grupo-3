@@ -87,13 +87,7 @@ public class Item implements Serializable {
     if (name == null || name.isEmpty()) {
       return false;
     }
-    for (Item item : ITEMS) {
-      if (item.nombre.equalsIgnoreCase(name)) {
-        item.cantidad = 0;
-        return true;
-      }
-    }
-    return false;
+    return ITEMS.removeIf(item -> item.nombre.equalsIgnoreCase(name));
   }
 
   public String getNombre() {

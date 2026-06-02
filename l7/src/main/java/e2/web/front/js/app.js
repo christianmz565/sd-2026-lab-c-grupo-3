@@ -508,7 +508,7 @@ $('btn-confirm-delete').addEventListener('click', async () => {
     const ok = await API.deleteItem(deleteTarget);
     closeModal(dom.modalDelete);
     if (ok) {
-      showToast(`Producto "${deleteTarget}" eliminado (stock → 0).`, 'success');
+      showToast(`Producto "${deleteTarget}" eliminado correctamente.`, 'success');
       await loadProducts(false);
     } else {
       showToast('No se pudo eliminar el producto.', 'error');

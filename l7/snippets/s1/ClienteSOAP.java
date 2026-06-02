@@ -5,6 +5,7 @@ import java.net.URL;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Service;
 
+// START-SNIPPET,client
 public class ClienteSOAP {
 
   public static void main(String[] args) throws Exception {
@@ -15,3 +16,4 @@ public class ClienteSOAP {
     System.out.println(calc.sumar(10, 20));
   }
 }
+// END-SNIPPET

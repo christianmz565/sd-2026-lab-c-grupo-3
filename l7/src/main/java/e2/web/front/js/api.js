@@ -9,9 +9,13 @@ const API = (() => {
   }
 
   async function request(path, options = {}) {
+    const headers = { ...(options.headers || {}) };
+    if (options.body) {
+      headers['Content-Type'] = 'application/json';
+    }
     const res = await fetch(`${BASE_URL}${path}`, {
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
       ...options,
+      headers,
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();

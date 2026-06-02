@@ -2,6 +2,7 @@ package s1;
 
 import javax.jws.WebService;
 
+// START-SNIPPET,implementation
 @WebService(
   endpointInterface = "s1.CalculadoraAPI",
   serviceName = "CalculadoraSOAPService",
@@ -15,3 +16,4 @@ public class CalculadoraSOAP implements CalculadoraAPI {
     return a + b;
   }
 }
+// END-SNIPPET

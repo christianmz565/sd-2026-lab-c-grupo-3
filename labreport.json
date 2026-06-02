@@ -1,6 +1,6 @@
 {
   "multiLab": true,
-  "sessions": ["l4", "l5", "l6"],
+  "sessions": ["l4", "l5", "l6", "l7"],
   "capture": {
     "columns": 150,
     "freezeFlags": [

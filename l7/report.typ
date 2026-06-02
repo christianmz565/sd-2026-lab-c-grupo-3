@@ -37,217 +37,256 @@
 
     = EJERCICIOS RESUELTOS POR EL DOCENTE
 
-    Se replico el servicio SOAP de suma para validar publicacion y consumo mediante JAX-WS.
+    == Ejercicio Resuelto: Servicio SOAP de Suma
 
-    == Servicio SOAP de Suma (Calculadora)
+    Siguiendo las instrucciones de la guía, se implementó un servicio web SOAP básico en Java utilizando JAX-WS. El servicio define una operación `sumar` que recibe dos enteros y retorna su suma.
 
-    #code-block("l7/snippets/docente/calculadora/CalculadoraSOAP.java", snippet: "service", lang: "java")
+    Se definió primero una interfaz para el servicio, asegurando que el contrato sea claro y desacoplado de la implementación:
 
-    #code-block("l7/snippets/docente/calculadora/Publicador.java", snippet: "publish", lang: "java")
+    #code-block(
+      "l7/snippets/s1/CalculadoraAPI.java",
+      snippet: "interface",
+      lang: "java",
+      prefix: "//",
+    )
 
-    #code-block("l7/snippets/docente/calculadora/ClienteSOAP.java", snippet: "client", lang: "java")
+    La implementación de dicha interfaz se decoró con la anotación `@WebService`, especificando el espacio de nombres y los nombres de puerto y servicio para cumplir con los estándares WSDL:
 
-    = EJERCICIOS/PROBLEMAS PROPUESTOS
+    #code-block(
+      "l7/snippets/s1/CalculadoraSOAP.java",
+      snippet: "implementation",
+      lang: "java",
+      prefix: "//",
+    )
 
-    == Ejercicio 1: Conversor de Temperatura
+    Para exponer el servicio en la red, se utilizó la clase `Endpoint.publish`, asignando el servicio a la dirección `http://localhost:8080/calculadora`:
 
-    Se implemento el servicio SOAP con las operaciones `cToF` y `fToC`, junto con el publicador y el cliente Java.
+    #code-block(
+      "l7/snippets/s1/Publicador.java",
+      snippet: "publisher",
+      lang: "java",
+      prefix: "//",
+    )
 
-    #code-block("l7/snippets/e1/conversor/ConversorAPI.java", snippet: "interface", lang: "java")
+    Finalmente, se desarrolló un cliente consumidor en Java que localiza el WSDL, crea un proxy dinámico del servicio y realiza una llamada remota de prueba:
 
-    #code-block("l7/snippets/e1/conversor/ConversorSOAP.java", snippet: "impl", lang: "java")
+    #code-block(
+      "l7/snippets/s1/ClienteSOAP.java",
+      snippet: "client",
+      lang: "java",
+      prefix: "//",
+    )
 
-    #code-block("l7/snippets/e1/conversor/PublishService.java", snippet: "publish", lang: "java")
+    La validación del servicio se muestra en la siguiente captura, donde el cliente recibe correctamente el resultado de la operación remota:
 
-    #code-block("l7/snippets/e1/conversor/ConversorClient.java", snippet: "client", lang: "java")
+    #figure(
+      image("img/lab/s1/client.png"),
+      caption: [Ejecución del cliente SOAP en Java para la operación de suma.],
+    )
 
-    === Ejecucion del servicio
+    = SOLUCIÓN DE EJERCICIOS PROPUESTOS
 
-    ```bash
-    cd l7/src/e1
-    javac -d . $(find conversor -name "*.java")
-    java -cp . lab7.e1.conversor.PublishService
-    ```
+    == Ejercicio 1: Servicio SOAP de Conversión de Unidades
 
-    === Verificacion del WSDL
+    Se desarrolló un servicio SOAP más robusto que permite realizar diversas conversiones de unidades: temperatura (Celsius/Fahrenheit), longitud (Metros/Pies) y masa (Kilogramos/Libras). La lógica de negocio se centralizó en la implementación del servicio:
 
-    ```text
-    Ruta: http://localhost:8080/conversor?wsdl
-    Resultado: se genero el contrato WSDL con operaciones cToF y fToC.
-    ```
+    #code-block(
+      "l7/snippets/e1/ConversorSOAP.java",
+      snippet: "implementation",
+      lang: "java",
+      prefix: "//",
+    )
 
-    ```xml
-    <definitions name="ConversorSOAPService">
-      <portType name="ConversorAPI">
-        <operation name="cToF" />
-        <operation name="fToC" />
-      </portType>
-      <service name="ConversorSOAPService">
-        <port name="ConversorSOAPPort" />
-      </service>
-    </definitions>
-    ```
+    Para interactuar con este servicio, se implementó un cliente en Python utilizando la librería `zeep`. Este cliente ofrece un menú interactivo y maneja la comunicación SOAP de forma transparente:
 
-    === Pruebas del endpoint (curl)
+    #code-block(
+      "l7/snippets/e1/client.py",
+      snippet: "python-client",
+      lang: "python",
+      prefix: "#",
+    )
 
-    ```text
-    Ruta: http://localhost:8080/conversor
-    Metodo: POST (SOAP 1.1)
-    Operacion: cToF
-    Entrada: 30
-    Resultado: 86.0
-    ```
+    A continuación se presentan las evidencias de la ejecución del cliente Python interactuando con el servidor SOAP en Java:
 
-    ```xml
-    <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
-      <S:Body>
-        <ns2:cToFResponse xmlns:ns2="http://lab7.e1.conversor/">
-          <return>86.0</return>
-        </ns2:cToFResponse>
-      </S:Body>
-    </S:Envelope>
-    ```
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      figure(image("img/lab/e1/menu.png", width: 100%), caption: [Menú interactivo del cliente Python.]),
+      figure(
+        image("img/lab/e1/conversion.png", width: 100%),
+        caption: [Resultado de conversiones de temperatura y longitud.],
+      ),
+    )
 
-    ```text
-    Ruta: http://localhost:8080/conversor
-    Metodo: POST (SOAP 1.1)
-    Operacion: fToC
-    Entrada: 86
-    Resultado: 30.0
-    ```
+    == Ejercicio 2: Servicio SOAP de Gestión de Tienda (CRUD)
 
-    ```xml
-    <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
-      <S:Body>
-        <ns2:fToCResponse xmlns:ns2="http://lab7.e1.conversor/">
-          <return>30.0</return>
-        </ns2:fToCResponse>
-      </S:Body>
-    </S:Envelope>
-    ```
+    Se implementó un sistema de inventario avanzado mediante SOAP, permitiendo operaciones CRUD (Create, Read, Update, Delete) y una operación especial de compra que gestiona el stock de los productos.
 
-    == Ejercicio 1 (Adicional): Servicio SOAP de Ventas en Linea
+    La arquitectura se basa en un contrato de servicio definido mediante la interfaz `SOAPI`, la cual expone las operaciones necesarias para la gestión de productos. Se hace uso de objetos `Item` que JAX-WS serializa automáticamente a XML:
 
-    Se diseno un servicio basico de ventas con listado, compra, registro, actualizacion y eliminacion logica de productos.
+    #code-block(
+      "l7/snippets/e2/SOAPI.java",
+      snippet: "interface",
+      lang: "java",
+      prefix: "//",
+    )
 
-    #code-block("l7/snippets/e1/store/model/Item.java", snippet: "model", lang: "java")
+    La implementación del servicio en Java (`SOAPImpl`) delega la lógica de persistencia y reglas de negocio (como la validación de stock insuficiente durante una compra) a la clase de modelo `Item`:
 
-    #code-block("l7/snippets/e1/store/soap/SOAPI.java", snippet: "interface", lang: "java")
+    #code-block("l7/snippets/e2/SOAPImpl.java", snippet: "implementation", lang: "java", prefix: "//")
 
-    #code-block("l7/snippets/e1/store/soap/SOAPImpl.java", snippet: "impl", lang: "java")
+    La clase `Item` define los atributos de un producto (nombre, cantidad, costo) y implementa métodos para la gestión de inventario con código estándar de Java:
+    #code-block("l7/snippets/e2/Item.java", snippet: "logic", lang: "java", prefix: "//")
 
-    #code-block("l7/snippets/e1/store/demo/PublishService.java", snippet: "publish", lang: "java")
+    Al igual que en el ejercicio anterior, se desarrolló un cliente CLI en Python para validar las operaciones administrativas. En las capturas se observa la creación, actualización y eliminación de productos, así como la persistencia en el servidor:
 
-    #code-block("l7/snippets/e1/store/client/StoreClient.java", snippet: "client", lang: "java")
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      figure(image("img/lab/e2/cli_add_item.png", width: 100%), caption: [Agregando un nuevo producto via CLI.]),
+      figure(
+        image("img/lab/e2/cli_buy_item.png", width: 100%),
+        caption: [Simulación de compra de un producto via CLI.],
+      ),
+    )
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      figure(
+        image("img/lab/e2/cli_update_item.png", width: 100%),
+        caption: [Actualizando stock y precio de un producto.],
+      ),
+      figure(
+        image("img/lab/e2/cli_get_items.png", width: 100%),
+        caption: [Listado de productos disponibles en el inventario.],
+      ),
+    )
 
-    == Ejercicio 2: Cliente SOAP con Python
+    Para el consumo web, debido a las limitaciones del navegador para realizar peticiones SOAP directas (CORS, parsing XML complejo), se implementó un proxy en Node.js (Fastify) que traduce peticiones REST a llamadas SOAP internas:
 
-    Se implemento un cliente interactivo con `zeep` para consumir el servicio SOAP de ventas en linea.
+    #code-block(
+      "l7/snippets/e2/server.js",
+      snippet: "proxy",
+      lang: "javascript",
+      prefix: "//",
+    )
 
-    #code-block("l7/snippets/e2/client.py", lang: "python")
-  ]
+    Finalmente, se diseñó una interfaz web moderna que permite a los usuarios finales ver el catálogo y realizar compras de forma intuitiva, interactuando indirectamente con el servicio SOAP original:
 
-  #lab-section("INVESTIGACION")[
-    #set par(justify: true)
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      figure(image("img/lab/e2/gui_list.png", width: 100%), caption: [Interfaz web del catálogo de productos.]),
+      figure(
+        image("img/lab/e2/gui_create_dialog.png", width: 100%),
+        caption: [Formulario modal para agregar productos.],
+      ),
+    )
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 1em,
+      figure(
+        image("img/lab/e2/gui_create_result.png", width: 100%),
+        caption: [Resultado de la sincronización con el servidor.],
+      ),
+      figure(
+        image("img/lab/e2/gui_delete_dialog.png", width: 100%),
+        caption: [Confirmación de eliminación de recursos en la web.],
+      ),
+    )
 
-    == Aplicacion con SOAP Services
-
-    Se analizo el servicio publico "Calculator" de DNE Online. El WSDL define operaciones `Add`, `Subtract`,
-    `Multiply` y `Divide` con tipos `xsd:int`, y expone bindings SOAP 1.1 y 1.2. Este contrato permite consumir
-    el servicio desde herramientas como SoapUI, clientes JAX-WS y librerias como `zeep`.
-
-    Aspectos observados:
-    - Contrato formal con `wsdl:service`, `wsdl:port` y `wsdl:binding`.
-    - Mensajes SOAP con estructura XML fija y `soapAction` por operacion.
-    - Facil integracion para clientes multiplataforma mientras se respete el WSDL.
   ]
 
   #lab-section("CUESTIONARIO")[
     #set par(justify: true)
 
-    1. *JavaBeans y SOAP sobre JMS:* Si, un JavaBean puede formar parte de la implementacion, pero requiere
-    un stack que soporte SOAP sobre JMS y configuracion de colas, bindings y metadatos.
-    2. *Mensajeria bidireccional:* Se usa un canal de solicitud y una cola de respuesta (o `JMSReplyTo`) con
-    `correlationId` para mapear respuestas. Soporta multiples clientes segun la capacidad del broker y la
-    configuracion de consumidores concurrentes.
-    3. *Uso empresarial de SOAP:* Se mantiene por contratos WSDL, herramientas maduras y estandares WS- para
-    seguridad, transacciones y confiabilidad, claves en entornos regulados.
-    4. *Impacto de XML:* Incrementa el tamano de mensajes y el costo de parseo, elevando latencia y consumo de
-    CPU/memoria en alta concurrencia. Se mitiga con compresion o streaming.
-    5. *Escenarios donde SOAP es mejor:* Integracion B2B, procesos con contratos estrictos, auditoria y
-    requerimientos WS-Security/WS-ReliableMessaging, donde REST no cubre dichas garantias.
+    == 1. ¿Puedo utilizar un componente JavaBeans para implementar un servicio web utilizando la invocación de SOAP sobre JMS (Java Message Service)?
+
+    Sí, es posible. JAX-WS permite utilizar JavaBeans como implementaciones de servicios web. Al integrar SOAP con JMS, el componente JavaBean actúa como el receptor de los mensajes que llegan a una cola o tópico. El contenedor de aplicaciones se encarga de extraer el cuerpo SOAP del mensaje JMS, deserializarlo e invocar el método correspondiente en el JavaBean, permitiendo una comunicación asíncrona y fiable.
+
+    == 2. ¿Cómo funciona la mensajería bidireccional con la implementación de SOAP y JMS? ¿Da soporte a varios clientes realizando solicitudes simultáneas?
+
+    La mensajería bidireccional (solicitud-respuesta) en SOAP sobre JMS se logra mediante el uso de colas de respuesta (`ReplyTo`). El cliente envía un mensaje a una cola de solicitudes e incluye un identificador de correlación y la dirección de su propia cola de respuesta. El servidor procesa la solicitud y envía la respuesta a la cola especificada con el mismo ID de correlación. Sí da soporte a múltiples clientes simultáneos, ya que JMS es inherentemente escalable y maneja la concurrencia a través de gestores de colas que pueden distribuir mensajes entre múltiples hilos o instancias de servidor.
+
+    == 3. ¿Por qué SOAP sigue siendo utilizado en sistemas empresariales críticos pese al auge de REST?
+
+    SOAP prevalece en entornos empresariales (especialmente banca y seguros) debido a su robustez y formalidad. Ofrece estándares estrictos como WS-Security para cifrado y firma digital a nivel de mensaje (no solo transporte), WS-AtomicTransaction para transacciones distribuidas complejas, y el contrato WSDL que garantiza una tipificación fuerte y generación automática de clientes, lo cual reduce errores de integración en sistemas legados y de gran escala.
+
+    == 4. ¿Qué implicancias tiene el uso de XML en el rendimiento de sistemas distribuidos de alta concurrencia?
+
+    XML es un formato verboso y basado en texto, lo que implica un mayor consumo de ancho de banda en comparación con formatos binarios o JSON. Además, el parseo de XML requiere más recursos de CPU y memoria (especialmente con DOM), lo que puede convertirse en un cuello de botella en sistemas de alta concurrencia. El uso de SAX o StAX mitiga esto, pero el overhead de serialización/deserialización sigue siendo superior al de alternativas más ligeras.
+
+    == 5. ¿En qué escenarios arquitectónicos SOAP resulta más adecuado que REST? Justifique técnicamente.
+
+    SOAP es superior en escenarios que requieren:
+    - *Seguridad avanzada:* Cuando se necesita seguridad a nivel de mensaje (extremo a extremo) que persista a través de múltiples intermediarios.
+    - *Transaccionalidad:* En flujos financieros que exigen cumplimiento de propiedades ACID en múltiples servicios distribuidos.
+    - *Protocolos no-HTTP:* Cuando el servicio debe exponerse sobre SMTP, TCP o colas de mensajes (JMS) de forma transparente.
+    - *Contratos estrictos:* En integraciones B2B complejas donde la validación estricta de esquemas es crítica para la integridad de los datos.
   ]
 
-  #lab-section("CONCLUSION")[
+  #lab-section("CONCLUSIONES Y RECOMENDACIONES")[
     #show heading: set text(weight: "bold")
     #set par(justify: true)
 
-    Se implementaron servicios SOAP con JAX-WS y clientes en Java y Python, validando el flujo completo
-    publicacion-consumo. El uso de WSDL y contratos formales facilita la integracion, aunque el consumo desde
-    navegador presenta limitaciones practicas por CORS y ausencia de soporte nativo.
+    == CONCLUSIONES
+
+    + SOAP ofrece una arquitectura altamente estructurada y basada en contratos que facilita la interoperabilidad entre diferentes lenguajes (Java y Python en este laboratorio) mediante el uso de WSDL.
+
+    + A pesar de su mayor overhead en comparación con REST, SOAP proporciona capacidades críticas para entornos empresariales, como la seguridad robusta y el soporte para diversos protocolos de transporte.
+
+    + La implementación de servicios SOAP en Java se ha simplificado significativamente con el estándar JAX-WS, permitiendo convertir POJOs en servicios web mediante anotaciones simples.
+
+    == RECOMENDACIONES
+
+    + Se recomienda utilizar herramientas como SOAPUI o Postman para la inspección y depuración de los mensajes XML generados, facilitando la comprensión del flujo de datos.
+
+    + Para aplicaciones web modernas, es aconsejable emplear un patrón de proxy (como se hizo con Node.js) para mediar entre el frontend y el servicio SOAP, evitando problemas de CORS y tipado complejo en el navegador.
+
+    + Es fundamental definir correctamente los espacios de nombres (targetNamespace) en los contratos WSDL para evitar colisiones y asegurar que el servicio sea descubrible de forma estándar.
   ]
 
-  #lab-section("REFERENCIAS Y BIBLIOGRAFIA")[
-    [1] Tanenbaum, A. S. (2008). Sistemas distribuidos: principios y paradigmas. Mexico. Pearson Educacion.
+  #lab-section("REFERENCIAS Y BIBLIOGRAFÍA")[
+    [1] Tanenbaum, A.S. (2008). Sistemas distribuidos: principios y paradigmas. México. Pearson Educación.
 
-    [2] Ceballos, F. J. (2006). Java 2, Curso de programacion. Mexico: Alfaomega, Ra-Ma.
+    [2] Ceballos, F. J. (2006). Java 2, Curso de programación. México: Alfaomega, RaMa.
 
-    [3] Deitel, H. M., & Deitel, P. J. (2004). Como programar en Java. Mexico: Pearson Educacion.
+    [3] Deitel, H. M., & Deitel, P. J. (2004). Cómo programar en Java. México: Pearson Educación.
 
-    [4] DNE Online Calculator WSDL. https://www.dneonline.com/calculator.asmx?WSDL
+    [4] García Tomás, J., Ferrando, S., & Piattini, M. (2001). Redes para procesos distribuidos. México: Alfaomega Ra-Ma.
 
-    [5] Zeep Documentation. https://docs.python-zeep.org/
+    [5] Fielding, R. (2000). Architectural Styles and the Design of Network-based Software Architectures. Dissertation. University of California, Irvine.
   ]
 
   #lab-section("ANEXOS")[
     #set par(justify: true)
 
-    == Servicio SOAP de Suma (Docente)
+    == Ejercicio 1: Conversor de Unidades (Java)
 
-    === Servicio
-    #code-block("l7/snippets/docente/calculadora/CalculadoraSOAP.java", lang: "java")
+    === Interfaz del Conversor (ConversorAPI.java)
+    #code-block("l7/src/main/java/e1/ConversorAPI.java", lang: "java")
 
-    === Publicacion
-    #code-block("l7/snippets/docente/calculadora/Publicador.java", lang: "java")
+    === Implementación del Conversor (ConversorSOAP.java)
+    #code-block("l7/src/main/java/e1/ConversorSOAP.java", lang: "java")
 
-    === Cliente
-    #code-block("l7/snippets/docente/calculadora/ClienteSOAP.java", lang: "java")
+    === Script Cliente Python (client.py)
+    #code-block("l7/src/main/java/e1/cli/client.py", lang: "python")
 
-    == Ejercicio 1: Conversor de Temperatura
+    == Ejercicio 2: Gestión de Tienda (Java + Python + Node.js)
 
-    === Interfaz
-    #code-block("l7/snippets/e1/conversor/ConversorAPI.java", lang: "java")
+    === Interfaz de la Tienda (SOAPI.java)
+    #code-block("l7/src/main/java/e2/servicio/soap/SOAPI.java", lang: "java")
 
-    === Implementacion
-    #code-block("l7/snippets/e1/conversor/ConversorSOAP.java", lang: "java")
+    === Implementación de la Tienda (SOAPImpl.java)
+    #code-block("l7/src/main/java/e2/servicio/soap/SOAPImpl.java", lang: "java")
 
-    === Publicacion
-    #code-block("l7/snippets/e1/conversor/PublishService.java", lang: "java")
+    === Modelo de Datos (Item.java)
+    #code-block("l7/src/main/java/e2/servicio/model/Item.java", lang: "java")
 
-    === Cliente
-    #code-block("l7/snippets/e1/conversor/ConversorClient.java", lang: "java")
+    === Proxy Backend (server.js)
+    #code-block("l7/src/main/java/e2/web/back/server.js", lang: "javascript")
 
-    == Ejercicio 1: Ventas en Linea
-
-    === Modelo Item
-    #code-block("l7/snippets/e1/store/model/Item.java", lang: "java")
-
-    === Interfaz del Servicio
-    #code-block("l7/snippets/e1/store/soap/SOAPI.java", lang: "java")
-
-    === Implementacion del Servicio
-    #code-block("l7/snippets/e1/store/soap/SOAPImpl.java", lang: "java")
-
-    === Publicacion del Servicio
-    #code-block("l7/snippets/e1/store/demo/PublishService.java", lang: "java")
-
-    === Cliente de Pruebas
-    #code-block("l7/snippets/e1/store/client/StoreClient.java", lang: "java")
-
-    == Ejercicio 2: Cliente SOAP con Python
-
-    === Script
-    #code-block("l7/snippets/e2/client.py", lang: "python")
-
+    === Script Cliente Python (client.py)
+    #code-block("l7/src/main/java/e2/cli/client.py", lang: "python")
   ]
 ]

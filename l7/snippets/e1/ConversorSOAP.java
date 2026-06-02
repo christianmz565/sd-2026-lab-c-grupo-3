@@ -2,6 +2,7 @@ package e1;
 
 import javax.jws.WebService;
 
+// START-SNIPPET,implementation
 @WebService(
   endpointInterface = "e1.ConversorAPI",
   serviceName = "ConversorSOAPService",
@@ -40,3 +41,4 @@ public class ConversorSOAP implements ConversorAPI {
     return lb / 2.20462;
   }
 }
+// END-SNIPPET

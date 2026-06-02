@@ -1,11 +1,13 @@
-from zeep import Client
+from typing import Any, Callable
 
+from zeep import Client
 
 WSDL_URL = "http://localhost:1516/WS/Store?wsdl"
 
 
-def obtener_entrada(mensaje, tipo=str, obligatorio=True):
-    """Auxiliar para obtener entrada validada del usuario."""
+def obtener_entrada(
+    mensaje: str, tipo: Callable[[Any], Any] = str, obligatorio: bool = True
+) -> Any:
     while True:
         try:
             valor = input(mensaje).strip()
@@ -14,11 +16,14 @@ def obtener_entrada(mensaje, tipo=str, obligatorio=True):
                 continue
             return tipo(valor)
         except ValueError:
-            etiqueta_tipo = {int: "entero", float: "decimal"}.get(tipo, "válido")
+            etiqueta_tipo = {int: "entero", float: "decimal"}.get(
+                tipo,
+                "válido",
+            )
             print(f"Error: Por favor, ingrese un valor {etiqueta_tipo}.")
 
 
-def main():
+def main() -> None:
     print(f"\nConectando a: {WSDL_URL}")
     try:
         client = Client(WSDL_URL)
@@ -35,7 +40,7 @@ def main():
         print("4. Actualizar producto")
         print("5. Eliminar producto")
         print("6. Salir")
-        
+
         opcion = input("\nSeleccione una opción (1-6): ").strip()
 
         if opcion == "1":
@@ -44,12 +49,26 @@ def main():
                 if not items:
                     print("\nEl inventario está vacío.")
                 else:
-                    print("\n{:<20} | {:>8} | {:>12}".format("Producto", "Stock", "Precio (S/.)"))
+                    print(
+                        "\n{:<20} | {:>8} | {:>12}".format(
+                            "Producto", "Stock", "Precio (S/.)"
+                        )
+                    )
                     print("-" * 46)
                     for item in items:
-                        print("{:<20} | {:>8} | {:>12.2f}".format(
-                            item.nombre, item.cantidad, item.costo
-                        ))
+                        nombre = (
+                            item["nombre"] if isinstance(item, dict) else item.nombre
+                        )
+                        cantidad = (
+                            item["cantidad"]
+                            if isinstance(item, dict)
+                            else item.cantidad
+                        )
+                        costo = item["costo"] if isinstance(item, dict) else item.costo
+
+                        print(
+                            "{:<20} | {:>8} | {:>12.2f}".format(nombre, cantidad, costo)
+                        )
             except Exception as e:
                 print(f"\nError al obtener el inventario: {e}")
             print()
@@ -71,11 +90,15 @@ def main():
             cantidad = obtener_entrada("Stock inicial: ", int)
             costo = obtener_entrada("Precio: ", float)
             try:
-                exito = client.service.addItem({"nombre": nombre, "cantidad": cantidad, "costo": costo})
+                exito = client.service.addItem(
+                    {"nombre": nombre, "cantidad": cantidad, "costo": costo}
+                )
                 if exito:
                     print(f"Producto '{nombre}' agregado correctamente.")
                 else:
-                    print(f"No se pudo agregar '{nombre}'. Verifique si ya existe o si los datos son válidos.")
+                    print(
+                        f"No se pudo agregar '{nombre}'. Verifique si ya existe o si los datos son válidos."
+                    )
             except Exception as e:
                 print(f"Error: {e}")
             print()
@@ -101,7 +124,7 @@ def main():
             try:
                 exito = client.service.deleteItem(nombre)
                 if exito:
-                    print(f"Producto '{nombre}' eliminado (stock puesto en 0).")
+                    print(f"Producto '{nombre}' eliminado correctamente.")
                 else:
                     print(f"Producto '{nombre}' no encontrado.")
             except Exception as e:
