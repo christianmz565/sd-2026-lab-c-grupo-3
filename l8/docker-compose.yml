@@ -1,0 +1,51 @@
+services:
+  postgres_arequipa:
+    image: postgres:16-alpine
+    container_name: farmaandes_arequipa
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: almacen_arequipa
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./init-scripts/01_arequipa.sql:/docker-entrypoint-initdb.d/01_arequipa.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d almacen_arequipa"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres_lima:
+    image: postgres:16-alpine
+    container_name: farmaandes_lima
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: almacen_lima
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./init-scripts/02_lima.sql:/docker-entrypoint-initdb.d/02_lima.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d almacen_lima"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres_cusco:
+    image: postgres:16-alpine
+    container_name: farmaandes_cusco
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: almacen_cusco
+    ports:
+      - "5437:5432"
+    volumes:
+      - ./init-scripts/03_cusco.sql:/docker-entrypoint-initdb.d/03_cusco.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d almacen_cusco"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
