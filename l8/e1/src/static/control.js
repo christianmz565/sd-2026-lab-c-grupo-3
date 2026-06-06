@@ -8,8 +8,7 @@ async function controlNodo(nombre, accion) {
             alert(`Error: ${data.detail || 'Error desconocido'}`);
             return;
         }
-        cargarSalud();
-        cargarInventario();
+        await Promise.all([cargarSalud(), cargarInventario()]);
         cargarProductos();
     } catch (e) {
         alert(`Error de red: ${e.message}`);

@@ -124,8 +124,8 @@ async function ejecutarTransferencia(e) {
                 ${renderTimeline(data.log)}
             </div>
         `;
-        cargarInventario();
-        cargarLog();
+        await Promise.all([cargarInventario(), cargarLog()]);
+        cargarProductos();
     } catch (err) {
         stopCountdown();
         resultDiv.innerHTML = `
