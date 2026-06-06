@@ -119,6 +119,7 @@ def transferir(req: TransferRequest) -> TransferResponse:
             destino=req.destino,
             producto=req.producto,
             cantidad=req.cantidad,
+            delay=req.delay,
         )
     except TransferError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

@@ -12,7 +12,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Deque, Literal
 
-Fase = Literal["START", "VALIDATE", "PREPARE", "PREPARED", "COMMIT", "COMMITTED", "ROLLBACK", "ROLLED_BACK", "FAILED"]
+Fase = Literal["START", "VALIDATE", "PREPARE", "PREPARED", "DELAY", "COMMIT", "COMMITTED", "ROLLBACK", "ROLLED_BACK", "FAILED"]
 Estado = Literal["COMMITTED", "ROLLED_BACK", "FAILED"]
 
 
