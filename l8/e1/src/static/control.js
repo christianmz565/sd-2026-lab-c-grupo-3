@@ -9,6 +9,8 @@ async function controlNodo(nombre, accion) {
             return;
         }
         cargarSalud();
+        cargarInventario();
+        cargarProductos();
     } catch (e) {
         alert(`Error de red: ${e.message}`);
     } finally {
