@@ -104,11 +104,8 @@ def inventario() -> InventarioResponse:
         try:
             with db.nodo_connection(nodo) as conn:
                 items = db.read_inventario(conn)
-        except Exception as e:
-            raise HTTPException(
-                status_code=503,
-                detail=f"No se pudo leer inventario de {nodo}: {e}",
-            ) from e
+        except Exception:
+            continue
         for it in items:
             rows.append(InventarioRow(
                 almacen=nodo,  # type: ignore[arg-type]
