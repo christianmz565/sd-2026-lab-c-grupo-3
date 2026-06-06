@@ -301,5 +301,15 @@
             </div>
         </div>
     </div>
+    <script src="/static/estado.js"></script>
+    <script src="/static/inventario.js"></script>
+    <script src="/static/log.js"></script>
+    <script>
+        cargarSalud();
+        cargarInventario();
+        cargarLog();
+        setInterval(cargarSalud, 5000);
+        setInterval(cargarLog, 5000);
+    </script>
 </body>
 </html>
