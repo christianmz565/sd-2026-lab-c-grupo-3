@@ -1,14 +1,16 @@
+let inventarioCache = [];
+
 async function cargarInventario() {
     try {
         const res = await fetch('/inventario');
         const data = await res.json();
-        const inventario = data.inventario;
-        const productos = [...new Set(inventario.map(r => r.producto))].sort();
+        inventarioCache = data.inventario;
+        const productos = [...new Set(inventarioCache.map(r => r.producto))].sort();
         const tbody = document.getElementById('inventario-body');
         tbody.innerHTML = '';
         for (const prod of productos) {
             const stocks = { arequipa: 0, lima: 0, cusco: 0 };
-            for (const row of inventario) {
+            for (const row of inventarioCache) {
                 if (row.producto === prod) stocks[row.almacen] = row.stock;
             }
             const tr = document.createElement('tr');

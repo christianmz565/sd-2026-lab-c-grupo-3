@@ -304,10 +304,14 @@
     <script src="/static/estado.js"></script>
     <script src="/static/inventario.js"></script>
     <script src="/static/log.js"></script>
+    <script src="/static/transferencia.js"></script>
     <script>
-        cargarSalud();
-        cargarInventario();
-        cargarLog();
+        document.getElementById('origen').addEventListener('change', cargarProductos);
+        document.getElementById('transfer-form').addEventListener('submit', ejecutarTransferencia);
+        (async () => {
+            await Promise.all([cargarSalud(), cargarInventario(), cargarLog()]);
+            cargarProductos();
+        })();
         setInterval(cargarSalud, 5000);
         setInterval(cargarLog, 5000);
     </script>
