@@ -13,6 +13,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -161,7 +162,7 @@ def detener_nodo(nombre: NodoLiteral) -> dict:
 
 @app.post("/nodos/{nombre}/iniciar")
 def iniciar_nodo(nombre: NodoLiteral) -> dict:
-    """Inicia el contenedor Docker de un nodo PostgreSQL."""
+    """Inicia el contenedor Docker de un nodo PostgreSQL y espera a que esté listo."""
     container = f"farmaandes_{nombre}"
     result = subprocess.run(
         ["docker", "start", container],
@@ -169,7 +170,11 @@ def iniciar_nodo(nombre: NodoLiteral) -> dict:
     )
     if result.returncode != 0:
         raise HTTPException(status_code=500, detail=f"Error iniciando {container}: {result.stderr.strip()}")
-    return {"nodo": nombre, "estado": "iniciado"}
+    for _ in range(10):
+        time.sleep(1)
+        if db.health_check(nombre):
+            return {"nodo": nombre, "estado": "iniciado"}
+    return {"nodo": nombre, "estado": "iniciado", "aviso": "Base de datos puede no estar lista aún"}
 
 
 if __name__ == "__main__":
