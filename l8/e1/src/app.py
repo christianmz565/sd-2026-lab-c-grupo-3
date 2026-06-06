@@ -19,6 +19,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 # Permite ejecutar con `uvicorn src.app:app` y `python -m src.app`
 _SRC_DIR = Path(__file__).resolve().parent
@@ -62,6 +63,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+_STATIC_DIR = _SRC_DIR / "static"
+app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 
 def _coord() -> TwoPhaseCommitCoordinator:
