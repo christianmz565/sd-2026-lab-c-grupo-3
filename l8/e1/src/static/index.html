@@ -1,305 +1,406 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FarmaAndes - Coordinador 2PC</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            color: #333;
-            line-height: 1.5;
-        }
-        header {
-            background: #1a237e;
-            color: white;
-            padding: 1rem 2rem;
-        }
-        header h1 { font-size: 1.5rem; }
-        header p { font-size: 0.875rem; opacity: 0.8; }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1.5rem;
-            display: grid;
-            gap: 1.5rem;
-        }
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 1.5rem;
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            color: #1a237e;
-            border-bottom: 2px solid #e8eaf6;
-            padding-bottom: 0.5rem;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        line-height: 1.5;
+      }
+      header {
+        background: #1a237e;
+        color: white;
+        padding: 1rem 2rem;
+      }
+      header h1 {
+        font-size: 1.5rem;
+      }
+      header p {
+        font-size: 0.875rem;
+        opacity: 0.8;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1.5rem;
+        display: grid;
+        gap: 1.5rem;
+      }
+      .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+      }
+      .card h2 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #1a237e;
+        border-bottom: 2px solid #e8eaf6;
+        padding-bottom: 0.5rem;
+      }
 
-        /* Estado del Sistema */
-        .nodes-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-        }
-        .node-card {
-            padding: 1rem;
-            border-radius: 6px;
-            text-align: center;
-            border: 2px solid #e0e0e0;
-        }
-        .node-card.ok { border-color: #4caf50; background: #e8f5e9; }
-        .node-card.down { border-color: #f44336; background: #ffebee; }
-        .node-card .name { font-weight: 600; font-size: 1rem; }
-        .node-card .status { font-size: 0.875rem; margin-top: 0.25rem; }
+      /* Estado del Sistema */
+      .nodes-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+      .node-card {
+        padding: 1rem;
+        border-radius: 6px;
+        text-align: center;
+        border: 2px solid #e0e0e0;
+      }
+      .node-card.ok {
+        border-color: #4caf50;
+        background: #e8f5e9;
+      }
+      .node-card.down {
+        border-color: #f44336;
+        background: #ffebee;
+      }
+      .node-card .name {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+      .node-card .status {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+      }
 
-        /* Inventario */
-        .inv-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .inv-table th, .inv-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        .inv-table th { background: #f5f5f5; font-weight: 600; }
+      /* Inventario */
+      .inv-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .inv-table th,
+      .inv-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .inv-table th {
+        background: #f5f5f5;
+        font-weight: 600;
+      }
 
-        /* Transferencia */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem; }
-        .form-group select, .form-group input {
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 0.875rem;
-        }
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
-        .btn-primary { background: #1a237e; color: white; }
-        .btn-primary:hover { background: #283593; }
-        .btn-danger { background: #f44336; color: white; }
-        .btn-danger:hover { background: #d32f2f; }
-        .btn-success { background: #4caf50; color: white; }
-        .btn-success:hover { background: #388e3c; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      /* Transferencia */
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .form-group label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+      .form-group select,
+      .form-group input {
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 0.875rem;
+      }
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
+      .btn-primary {
+        background: #1a237e;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #283593;
+      }
+      .btn-danger {
+        background: #f44336;
+        color: white;
+      }
+      .btn-danger:hover {
+        background: #d32f2f;
+      }
+      .btn-success {
+        background: #4caf50;
+        color: white;
+      }
+      .btn-success:hover {
+        background: #388e3c;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
 
-        /* Timeline */
-        .timeline { margin-top: 1rem; }
-        .timeline-entry {
-            display: flex;
-            align-items: flex-start;
-            padding: 0.5rem 0;
-            border-left: 3px solid #e0e0e0;
-            margin-left: 0.5rem;
-            padding-left: 1rem;
-        }
-        .timeline-entry.START { border-left-color: #2196f3; }
-        .timeline-entry.VALIDATE { border-left-color: #ff9800; }
-        .timeline-entry.PREPARED { border-left-color: #4caf50; }
-        .timeline-entry.DELAY { border-left-color: #9c27b0; }
-        .timeline-entry.COMMIT { border-left-color: #2196f3; }
-        .timeline-entry.COMMITTED { border-left-color: #4caf50; }
-        .timeline-entry.FAILED { border-left-color: #f44336; }
-        .timeline-entry.ROLLED_BACK { border-left-color: #f44336; }
-        .timeline-entry .fase {
-            font-weight: 600;
-            min-width: 100px;
-            font-size: 0.875rem;
-        }
-        .timeline-entry .detalle {
-            font-size: 0.875rem;
-            color: #666;
-        }
+      /* Timeline */
+      .timeline {
+        margin-top: 1rem;
+      }
+      .timeline-entry {
+        display: flex;
+        align-items: flex-start;
+        padding: 0.5rem 0;
+        border-left: 3px solid #e0e0e0;
+        margin-left: 0.5rem;
+        padding-left: 1rem;
+      }
+      .timeline-entry.START {
+        border-left-color: #2196f3;
+      }
+      .timeline-entry.VALIDATE {
+        border-left-color: #ff9800;
+      }
+      .timeline-entry.PREPARED {
+        border-left-color: #4caf50;
+      }
+      .timeline-entry.DELAY {
+        border-left-color: #9c27b0;
+      }
+      .timeline-entry.COMMIT {
+        border-left-color: #2196f3;
+      }
+      .timeline-entry.COMMITTED {
+        border-left-color: #4caf50;
+      }
+      .timeline-entry.FAILED {
+        border-left-color: #f44336;
+      }
+      .timeline-entry.ROLLED_BACK {
+        border-left-color: #f44336;
+      }
+      .timeline-entry .fase {
+        font-weight: 600;
+        min-width: 100px;
+        font-size: 0.875rem;
+      }
+      .timeline-entry .detalle {
+        font-size: 0.875rem;
+        color: #666;
+      }
 
-        /* Control de Nodos */
+      /* Control de Nodos */
+      .control-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+      .control-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+      }
+      .control-node .name {
+        font-weight: 600;
+      }
+      .control-node .btns {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      /* Log */
+      .log-list {
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 0.8rem;
+      }
+      .log-entry {
+        padding: 0.25rem 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .log-entry .ts {
+        color: #999;
+      }
+      .log-entry .fase {
+        font-weight: 600;
+      }
+
+      /* Status badge */
+      .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
+      .status-badge.committed {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .status-badge.rolled_back {
+        background: #ffebee;
+        color: #c62828;
+      }
+      .status-badge.failed {
+        background: #fff3e0;
+        color: #e65100;
+      }
+
+      @media (max-width: 768px) {
+        .nodes-grid,
+        .form-grid,
         .control-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
+          grid-template-columns: 1fr;
         }
-        .control-node {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 1rem;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-        }
-        .control-node .name { font-weight: 600; }
-        .control-node .btns { display: flex; gap: 0.5rem; }
-
-        /* Log */
-        .log-list {
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.8rem;
-        }
-        .log-entry {
-            padding: 0.25rem 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .log-entry .ts { color: #999; }
-        .log-entry .fase { font-weight: 600; }
-
-        /* Status badge */
-        .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
-        .status-badge.committed { background: #e8f5e9; color: #2e7d32; }
-        .status-badge.rolled_back { background: #ffebee; color: #c62828; }
-        .status-badge.failed { background: #fff3e0; color: #e65100; }
-
-        @media (max-width: 768px) {
-            .nodes-grid, .form-grid, .control-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>FarmaAndes - Coordinador 2PC</h1>
-        <p>Sistema Distribuido de Farmacias - Laboratorio 8</p>
+      <h1>FarmaAndes - Coordinador 2PC</h1>
+      <p>Sistema Distribuido de Farmacias - Laboratorio 8</p>
     </header>
 
     <div class="container">
-        <!-- Estado del Sistema -->
-        <div class="card">
-            <h2>Estado del Sistema</h2>
-            <div class="nodes-grid">
-                <div class="node-card" id="node-arequipa">
-                    <div class="name">Arequipa</div>
-                    <div class="status">Cargando...</div>
-                </div>
-                <div class="node-card" id="node-lima">
-                    <div class="name">Lima</div>
-                    <div class="status">Cargando...</div>
-                </div>
-                <div class="node-card" id="node-cusco">
-                    <div class="name">Cusco</div>
-                    <div class="status">Cargando...</div>
-                </div>
+      <!-- Estado del Sistema -->
+      <div class="card">
+        <h2>Estado del Sistema</h2>
+        <div class="nodes-grid">
+          <div class="node-card" id="node-arequipa">
+            <div class="name">Arequipa</div>
+            <div class="status">Cargando...</div>
+          </div>
+          <div class="node-card" id="node-lima">
+            <div class="name">Lima</div>
+            <div class="status">Cargando...</div>
+          </div>
+          <div class="node-card" id="node-cusco">
+            <div class="name">Cusco</div>
+            <div class="status">Cargando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventario -->
+      <div class="card">
+        <h2>Inventario</h2>
+        <table class="inv-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Arequipa</th>
+              <th>Lima</th>
+              <th>Cusco</th>
+            </tr>
+          </thead>
+          <tbody id="inventario-body">
+            <tr>
+              <td colspan="4">Cargando inventario...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Transferencia -->
+      <div class="card">
+        <h2>Transferencia</h2>
+        <form id="transfer-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="origen">Origen</label>
+              <select id="origen" required>
+                <option value="arequipa">Arequipa</option>
+                <option value="lima">Lima</option>
+                <option value="cusco">Cusco</option>
+              </select>
             </div>
-        </div>
-
-        <!-- Inventario -->
-        <div class="card">
-            <h2>Inventario</h2>
-            <table class="inv-table">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Arequipa</th>
-                        <th>Lima</th>
-                        <th>Cusco</th>
-                    </tr>
-                </thead>
-                <tbody id="inventario-body">
-                    <tr><td colspan="4">Cargando inventario...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Transferencia -->
-        <div class="card">
-            <h2>Transferencia</h2>
-            <form id="transfer-form">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="origen">Origen</label>
-                        <select id="origen" required>
-                            <option value="arequipa">Arequipa</option>
-                            <option value="lima">Lima</option>
-                            <option value="cusco">Cusco</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="destino">Destino</label>
-                        <select id="destino" required>
-                            <option value="lima">Lima</option>
-                            <option value="arequipa">Arequipa</option>
-                            <option value="cusco">Cusco</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="producto">Producto</label>
-                        <select id="producto" required>
-                            <option value="">Seleccionar origen primero</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="cantidad">Cantidad</label>
-                        <input type="number" id="cantidad" min="1" value="10" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="delay">Retraso entre fases (seg)</label>
-                        <input type="number" id="delay" min="0" step="0.5" value="3">
-                    </div>
-                </div>
-                <div style="margin-top: 1rem;">
-                    <button type="submit" class="btn btn-primary" id="btn-transferir">Transferir</button>
-                </div>
-            </form>
-            <div id="transfer-result" style="margin-top: 1rem;"></div>
-        </div>
-
-        <!-- Control de Nodos -->
-        <div class="card">
-            <h2>Control de Nodos</h2>
-            <div class="control-grid">
-                <div class="control-node">
-                    <div class="name">Arequipa</div>
-                    <div class="btns">
-                        <button class="btn btn-danger" onclick="controlNodo('arequipa', 'detener')">Detener</button>
-                        <button class="btn btn-success" onclick="controlNodo('arequipa', 'iniciar')">Iniciar</button>
-                    </div>
-                </div>
-                <div class="control-node">
-                    <div class="name">Lima</div>
-                    <div class="btns">
-                        <button class="btn btn-danger" onclick="controlNodo('lima', 'detener')">Detener</button>
-                        <button class="btn btn-success" onclick="controlNodo('lima', 'iniciar')">Iniciar</button>
-                    </div>
-                </div>
-                <div class="control-node">
-                    <div class="name">Cusco</div>
-                    <div class="btns">
-                        <button class="btn btn-danger" onclick="controlNodo('cusco', 'detener')">Detener</button>
-                        <button class="btn btn-success" onclick="controlNodo('cusco', 'iniciar')">Iniciar</button>
-                    </div>
-                </div>
+            <div class="form-group">
+              <label for="destino">Destino</label>
+              <select id="destino" required>
+                <option value="lima">Lima</option>
+                <option value="arequipa">Arequipa</option>
+                <option value="cusco">Cusco</option>
+              </select>
             </div>
-        </div>
-
-        <!-- Log de Eventos -->
-        <div class="card">
-            <h2>Log de Eventos</h2>
-            <div class="log-list" id="log-list">
-                Cargando log...
+            <div class="form-group">
+              <label for="producto">Producto</label>
+              <select id="producto" required>
+                <option value="">Seleccionar origen primero</option>
+              </select>
             </div>
+            <div class="form-group">
+              <label for="cantidad">Cantidad</label>
+              <input type="number" id="cantidad" min="1" value="10" required />
+            </div>
+            <div class="form-group">
+              <label for="delay">Retraso entre fases (seg)</label>
+              <input type="number" id="delay" min="0" step="0.5" value="3" />
+            </div>
+          </div>
+          <div style="margin-top: 1rem">
+            <button type="submit" class="btn btn-primary" id="btn-transferir">Transferir</button>
+          </div>
+        </form>
+        <div id="transfer-result" style="margin-top: 1rem"></div>
+      </div>
+
+      <!-- Control de Nodos -->
+      <div class="card">
+        <h2>Control de Nodos</h2>
+        <div class="control-grid">
+          <div class="control-node">
+            <div class="name">Arequipa</div>
+            <div class="btns">
+              <button class="btn btn-danger" onclick="controlNodo('arequipa', 'detener')">
+                Detener
+              </button>
+              <button class="btn btn-success" onclick="controlNodo('arequipa', 'iniciar')">
+                Iniciar
+              </button>
+            </div>
+          </div>
+          <div class="control-node">
+            <div class="name">Lima</div>
+            <div class="btns">
+              <button class="btn btn-danger" onclick="controlNodo('lima', 'detener')">
+                Detener
+              </button>
+              <button class="btn btn-success" onclick="controlNodo('lima', 'iniciar')">
+                Iniciar
+              </button>
+            </div>
+          </div>
+          <div class="control-node">
+            <div class="name">Cusco</div>
+            <div class="btns">
+              <button class="btn btn-danger" onclick="controlNodo('cusco', 'detener')">
+                Detener
+              </button>
+              <button class="btn btn-success" onclick="controlNodo('cusco', 'iniciar')">
+                Iniciar
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Log de Eventos -->
+      <div class="card">
+        <h2>Log de Eventos</h2>
+        <div class="log-list" id="log-list">Cargando log...</div>
+      </div>
     </div>
     <script src="/static/estado.js"></script>
     <script src="/static/inventario.js"></script>
@@ -307,14 +408,14 @@
     <script src="/static/transferencia.js"></script>
     <script src="/static/control.js"></script>
     <script>
-        document.getElementById('origen').addEventListener('change', cargarProductos);
-        document.getElementById('transfer-form').addEventListener('submit', ejecutarTransferencia);
-        (async () => {
-            await Promise.all([cargarSalud(), cargarInventario(), cargarLog()]);
-            cargarProductos();
-        })();
-        setInterval(cargarSalud, 5000);
-        setInterval(cargarLog, 5000);
+      document.getElementById("origen").addEventListener("change", cargarProductos);
+      document.getElementById("transfer-form").addEventListener("submit", ejecutarTransferencia);
+      (async () => {
+        await Promise.all([cargarSalud(), cargarInventario(), cargarLog()]);
+        cargarProductos();
+      })();
+      setInterval(cargarSalud, 1000);
+      setInterval(cargarLog, 1000);
     </script>
-</body>
+  </body>
 </html>
