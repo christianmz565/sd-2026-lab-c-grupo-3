@@ -5,10 +5,13 @@ Endpoints:
   GET  /inventario   - vista agregada del stock en los 3 almacenes
   POST /transferir   - ejecuta una transferencia con protocolo 2PC
   GET  /log          - bitácora en memoria de las últimas transacciones
+  POST /nodos/{nombre}/detener  - detiene el contenedor Docker de un nodo
+  POST /nodos/{nombre}/iniciar  - inicia el contenedor Docker de un nodo
 """
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -28,6 +31,7 @@ from src.models import (  # noqa: E402
     HealthResponse,
     InventarioResponse,
     InventarioRow,
+    NodoLiteral,
     TransferRequest,
     TransferResponse,
 )
@@ -131,6 +135,32 @@ def transferir(req: TransferRequest) -> TransferResponse:
 def ver_log() -> dict:
     """Devuelve la bitácora 2PC completa (en memoria)."""
     return {"entries": _log().all()}
+
+
+@app.post("/nodos/{nombre}/detener")
+def detener_nodo(nombre: NodoLiteral) -> dict:
+    """Detiene el contenedor Docker de un nodo PostgreSQL."""
+    container = f"farmaandes_{nombre}"
+    result = subprocess.run(
+        ["docker", "stop", container],
+        capture_output=True, text=True, timeout=30,
+    )
+    if result.returncode != 0:
+        raise HTTPException(status_code=500, detail=f"Error deteniendo {container}: {result.stderr.strip()}")
+    return {"nodo": nombre, "estado": "detenido"}
+
+
+@app.post("/nodos/{nombre}/iniciar")
+def iniciar_nodo(nombre: NodoLiteral) -> dict:
+    """Inicia el contenedor Docker de un nodo PostgreSQL."""
+    container = f"farmaandes_{nombre}"
+    result = subprocess.run(
+        ["docker", "start", container],
+        capture_output=True, text=True, timeout=30,
+    )
+    if result.returncode != 0:
+        raise HTTPException(status_code=500, detail=f"Error iniciando {container}: {result.stderr.strip()}")
+    return {"nodo": nombre, "estado": "iniciado"}
 
 
 if __name__ == "__main__":
