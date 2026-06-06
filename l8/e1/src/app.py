@@ -5,16 +5,22 @@ Endpoints:
   GET  /inventario   - vista agregada del stock en los 3 almacenes
   POST /transferir   - ejecuta una transferencia con protocolo 2PC
   GET  /log          - bitácora en memoria de las últimas transacciones
+  POST /nodos/{nombre}/detener  - detiene el contenedor Docker de un nodo
+  POST /nodos/{nombre}/iniciar  - inicia el contenedor Docker de un nodo
 """
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 # Permite ejecutar con `uvicorn src.app:app` y `python -m src.app`
 _SRC_DIR = Path(__file__).resolve().parent
@@ -28,6 +34,7 @@ from src.models import (  # noqa: E402
     HealthResponse,
     InventarioResponse,
     InventarioRow,
+    NodoLiteral,
     TransferRequest,
     TransferResponse,
 )
@@ -58,6 +65,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_STATIC_DIR = _SRC_DIR / "static"
+app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
 
 def _coord() -> TwoPhaseCommitCoordinator:
     return _state["coordinator"]
@@ -65,6 +75,13 @@ def _coord() -> TwoPhaseCommitCoordinator:
 
 def _log() -> LogStore:
     return _state["log"]
+
+
+@app.get("/", response_class=HTMLResponse)
+def index() -> HTMLResponse:
+    """Sirve la interfaz web."""
+    html_path = _SRC_DIR / "static" / "index.html"
+    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -88,11 +105,8 @@ def inventario() -> InventarioResponse:
         try:
             with db.nodo_connection(nodo) as conn:
                 items = db.read_inventario(conn)
-        except Exception as e:
-            raise HTTPException(
-                status_code=503,
-                detail=f"No se pudo leer inventario de {nodo}: {e}",
-            ) from e
+        except Exception:
+            continue
         for it in items:
             rows.append(InventarioRow(
                 almacen=nodo,  # type: ignore[arg-type]
@@ -119,6 +133,7 @@ def transferir(req: TransferRequest) -> TransferResponse:
             destino=req.destino,
             producto=req.producto,
             cantidad=req.cantidad,
+            delay=req.delay,
         )
     except TransferError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -130,6 +145,36 @@ def transferir(req: TransferRequest) -> TransferResponse:
 def ver_log() -> dict:
     """Devuelve la bitácora 2PC completa (en memoria)."""
     return {"entries": _log().all()}
+
+
+@app.post("/nodos/{nombre}/detener")
+def detener_nodo(nombre: NodoLiteral) -> dict:
+    """Detiene el contenedor Docker de un nodo PostgreSQL."""
+    container = f"farmaandes_{nombre}"
+    result = subprocess.run(
+        ["docker", "stop", container],
+        capture_output=True, text=True, timeout=30,
+    )
+    if result.returncode != 0:
+        raise HTTPException(status_code=500, detail=f"Error deteniendo {container}: {result.stderr.strip()}")
+    return {"nodo": nombre, "estado": "detenido"}
+
+
+@app.post("/nodos/{nombre}/iniciar")
+def iniciar_nodo(nombre: NodoLiteral) -> dict:
+    """Inicia el contenedor Docker de un nodo PostgreSQL y espera a que esté listo."""
+    container = f"farmaandes_{nombre}"
+    result = subprocess.run(
+        ["docker", "start", container],
+        capture_output=True, text=True, timeout=30,
+    )
+    if result.returncode != 0:
+        raise HTTPException(status_code=500, detail=f"Error iniciando {container}: {result.stderr.strip()}")
+    for _ in range(10):
+        time.sleep(1)
+        if db.health_check(nombre):
+            return {"nodo": nombre, "estado": "iniciado"}
+    return {"nodo": nombre, "estado": "iniciado", "aviso": "Base de datos puede no estar lista aún"}
 
 
 if __name__ == "__main__":

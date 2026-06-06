@@ -14,8 +14,10 @@ consiste en hacer commit() en cada nodo secuencialmente. Si el commit de
 uno falla tras haber commiteado los anteriores, la transacción queda en
 estado in-doubt (limitación conocida del 2PC, fuera del alcance del Ej.1).
 """
+
 from __future__ import annotations
 
+import time
 import uuid
 from dataclasses import dataclass
 
@@ -33,6 +35,7 @@ class TransferError(Exception):
 @dataclass
 class _PreparedTxn:
     """Estado interno de una transacción 2PC que pasó la Fase 1."""
+
     txn_id: str
     conn_origen: psycopg.Connection
     conn_destino: psycopg.Connection
@@ -45,19 +48,37 @@ class TwoPhaseCommitCoordinator:
         self.log = log or LogStore()
 
     def transferir(
-        self, origen: str, destino: str, producto: str, cantidad: int
+        self,
+        origen: str,
+        destino: str,
+        producto: str,
+        cantidad: int,
+        delay: float = 0.0,
     ) -> dict:
         if origen == destino:
             raise TransferError("origen y destino deben ser distintos")
 
         txn_id = uuid.uuid4().hex
-        self.log.append(txn_id, "START", None,
-                        f"{origen}->{destino} {cantidad} und. de {producto}")
+        self.log.append(
+            txn_id, "START", None, f"{origen}->{destino} {cantidad} und. de {producto}"
+        )
 
         # ------------------------------------------------------------------
         # FASE 1: PREPARE en cada nodo participante
         # ------------------------------------------------------------------
         prepared = self._phase_one(txn_id, origen, destino, producto, cantidad)
+
+        # ------------------------------------------------------------------
+        # Espera configurable entre fases (para simular fallos)
+        # ------------------------------------------------------------------
+        if delay > 0:
+            self.log.append(
+                txn_id,
+                "DELAY",
+                None,
+                f"esperando {delay}s — puede detener un nodo ahora",
+            )
+            time.sleep(delay)
 
         # ------------------------------------------------------------------
         # FASE 2A: COMMIT en cada nodo (todos ya están "preparados")
@@ -90,7 +111,9 @@ class TwoPhaseCommitCoordinator:
         try:
             stock_origen_pre = db.lock_and_debit(conn_origen, producto, cantidad)
             self.log.append(
-                txn_id, "PREPARED", origen,
+                txn_id,
+                "PREPARED",
+                origen,
                 f"debited {cantidad} (stock pre={stock_origen_pre + cantidad})",
             )
         except (LookupError, ValueError) as e:
@@ -108,7 +131,9 @@ class TwoPhaseCommitCoordinator:
         try:
             stock_destino_pre = db.lock_and_credit(conn_destino, producto, cantidad)
             self.log.append(
-                txn_id, "PREPARED", destino,
+                txn_id,
+                "PREPARED",
+                destino,
                 f"credited {cantidad} (stock pre={stock_destino_pre - cantidad})",
             )
         except LookupError as e:
@@ -153,9 +178,7 @@ class TwoPhaseCommitCoordinator:
                 conn.commit()
                 self.log.append(txn_id, "COMMITTED", nodo, "commit OK")
             except (pg_errors.Error, psycopg.OperationalError) as e:
-                self.log.append(
-                    txn_id, "FAILED", nodo, f"commit falló: {e}"
-                )
+                self.log.append(txn_id, "FAILED", nodo, f"commit falló: {e}")
                 fallos_commit.append(f"{nodo}: {e}")
                 continue
 
@@ -174,14 +197,18 @@ class TwoPhaseCommitCoordinator:
 
         if fallos_commit:
             self.log.append(
-                txn_id, "FAILED", None,
+                txn_id,
+                "FAILED",
+                None,
                 f"estado in-doubt: {fallos_commit}",
             )
             return _build_response(
                 txn_id=txn_id,
                 status="FAILED",
-                origen=origen, destino=destino,
-                producto=producto, cantidad=cantidad,
+                origen=origen,
+                destino=destino,
+                producto=producto,
+                cantidad=cantidad,
                 stock_origen_despues=stock_origen_despues,
                 stock_destino_despues=stock_destino_despues,
                 log_entries=self.log.all(),
@@ -191,8 +218,10 @@ class TwoPhaseCommitCoordinator:
         return _build_response(
             txn_id=txn_id,
             status="COMMITTED",
-            origen=origen, destino=destino,
-            producto=producto, cantidad=cantidad,
+            origen=origen,
+            destino=destino,
+            producto=producto,
+            cantidad=cantidad,
             stock_origen_despues=stock_origen_despues,
             stock_destino_despues=stock_destino_despues,
             log_entries=self.log.all(),
