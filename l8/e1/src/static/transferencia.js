@@ -36,21 +36,55 @@ function renderStatusBadge(status) {
     return `<span class="status-badge ${cls}">${status}</span>`;
 }
 
+let countdownInterval = null;
+
+function startCountdown(seconds, resultDiv) {
+    let remaining = seconds;
+    const msg = document.createElement('div');
+    msg.id = 'countdown-msg';
+    msg.style.cssText = 'padding:1rem; background:#e8eaf6; border-radius:6px; margin-top:0.5rem; text-align:center; font-size:1.1rem;';
+    msg.innerHTML = `Puede detener un nodo ahora — <strong>${remaining}s</strong> restantes`;
+    resultDiv.appendChild(msg);
+    countdownInterval = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+            clearInterval(countdownInterval);
+            msg.innerHTML = 'Reanudando...';
+            return;
+        }
+        msg.innerHTML = `Puede detener un nodo ahora — <strong>${remaining}s</strong> restantes`;
+    }, 1000);
+}
+
+function stopCountdown() {
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+    const msg = document.getElementById('countdown-msg');
+    if (msg) msg.remove();
+}
+
 async function ejecutarTransferencia(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-transferir');
     const resultDiv = document.getElementById('transfer-result');
     btn.disabled = true;
     btn.textContent = 'Transfiriendo...';
-    resultDiv.innerHTML = '<p> Ejecutando protocolo 2PC...</p>';
+    resultDiv.innerHTML = '<p>Ejecutando protocolo 2PC...</p>';
 
+    const delay = parseFloat(document.getElementById('delay').value) || 0;
     const payload = {
         origen: document.getElementById('origen').value,
         destino: document.getElementById('destino').value,
         producto: document.getElementById('producto').value,
         cantidad: parseInt(document.getElementById('cantidad').value, 10),
-        delay: parseFloat(document.getElementById('delay').value) || 0,
+        delay: delay,
     };
+
+    if (delay > 0) {
+        startCountdown(delay, resultDiv);
+    }
 
     try {
         const res = await fetch('/transferir', {
@@ -58,6 +92,7 @@ async function ejecutarTransferencia(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
+        stopCountdown();
         const data = await res.json();
 
         if (!res.ok) {
@@ -92,6 +127,7 @@ async function ejecutarTransferencia(e) {
         cargarInventario();
         cargarLog();
     } catch (err) {
+        stopCountdown();
         resultDiv.innerHTML = `
             <div style="padding: 1rem; background: #ffebee; border-radius: 6px;">
                 <strong>Error de red:</strong> ${err.message}
