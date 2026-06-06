@@ -18,6 +18,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 
 # Permite ejecutar con `uvicorn src.app:app` y `python -m src.app`
 _SRC_DIR = Path(__file__).resolve().parent
@@ -69,6 +70,13 @@ def _coord() -> TwoPhaseCommitCoordinator:
 
 def _log() -> LogStore:
     return _state["log"]
+
+
+@app.get("/", response_class=HTMLResponse)
+def index() -> HTMLResponse:
+    """Sirve la interfaz web."""
+    html_path = _SRC_DIR / "static" / "index.html"
+    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
 
 
 @app.get("/health", response_model=HealthResponse)
