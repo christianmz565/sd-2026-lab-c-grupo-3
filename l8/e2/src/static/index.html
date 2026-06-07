@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BNC - Sistema de Banco Cooperativo Nacional (2PC)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo-area">
+                <svg class="bank-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 22h18M6 18v-7M10 18v-7M14 18v-7M18 18v-7M3 11h18M12 2L3 11h18z" />
+                </svg>
+                <div class="logo-text">
+                    <h1>BNC <span>Cooperativo</span></h1>
+                    <p>Módulo de Transacciones Distribuidas (2PC)</p>
+                </div>
+            </div>
+            <div class="global-metrics">
+                <div class="metric-card">
+                    <span class="metric-label">Consistencia Global</span>
+                    <span class="metric-value text-success" id="consistencia-status">100% ACID</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Transacciones (Éxito/Total)</span>
+                    <span class="metric-value" id="tx-stats">0 / 0</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Coordinador Logs</span>
+                    <span class="metric-value text-pink" id="coord-log-count">0 entradas</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <main class="app-body">
+            <!-- PANEL DE CONTROL IZQUIERDO -->
+            <section class="panel control-panel">
+                <div class="panel-header">
+                    <h2>Controles del Sistema</h2>
+                </div>
+                <div class="panel-content">
+                    <!-- 1. Gestión de Recursos -->
+                    <div class="section-group">
+                        <h3>1. Gestión de Recursos</h3>
+                        <div class="scenarios-grid">
+                            <button class="btn btn-outline" onclick="openModal('modal-account')">
+                                <span class="icon">+</span>
+                                <div class="btn-text" style="text-align: left;">
+                                    <strong>Crear Cuenta Bancaria</strong>
+                                    <span>Asignar cuenta a un nodo</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Nueva Transferencia -->
+                    <div class="section-group">
+                        <h3>2. Nueva Transferencia</h3>
+                        <form id="transfer-form" onsubmit="event.preventDefault();">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="source-select">Nodo Origen</label>
+                                    <select id="source-select" class="styled-select"
+                                        onchange="populateAccountDropdown('source')">
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="source-acc-select">Cuenta Origen</label>
+                                    <select id="source-acc-select" class="styled-select">
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="dest-select">Nodo Destino</label>
+                                    <select id="dest-select" class="styled-select"
+                                        onchange="populateAccountDropdown('dest')">
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="dest-acc-select">Cuenta Destino</label>
+                                    <select id="dest-acc-select" class="styled-select">
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="amount-input">Monto (S/)</label>
+                                    <input type="number" id="amount-input" value="25000" class="styled-input" min="1">
+                                </div>
+                                <div class="input-group">
+                                    <label for="step-delay-input">Retraso de red (ms)</label>
+                                    <input type="number" id="step-delay-input" value="500" class="styled-input"
+                                        min="100" step="50">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 3. Parámetros de Ejecución -->
+                    <div class="section-group">
+                        <h3>3. Parámetros de Ejecución</h3>
+                        <div class="execution-modes">
+                            <label class="toggle-container">
+                                <input type="checkbox" id="step-by-step-toggle" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Modo Paso a Paso</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 4. Escenarios de Prueba -->
+                    <div class="section-group">
+                        <h3>4. Escenarios de Prueba</h3>
+                        <div class="scenarios-grid">
+                            <button class="btn btn-secondary" onclick="loadScenario('normal')">
+                                <span class="icon">✓</span>
+                                <div class="btn-text">
+                                    <strong>Normal: Éxito</strong>
+                                    <span>Transf. S/ 25K AQ → CU</span>
+                                </div>
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadScenario('insufficient_funds')">
+                                <span class="icon">💸</span>
+                                <div class="btn-text">
+                                    <strong>Fondos Insufic.</strong>
+                                    <span>Transf. S/ 80K (Rechazo Fase 1)</span>
+                                </div>
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadScenario('node_crash')">
+                                <span class="icon">⚡</span>
+                                <div class="btn-text">
+                                    <strong>Nodo Caído</strong>
+                                    <span>Cusco Offline en Fase 1</span>
+                                </div>
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadScenario('in_doubt_recovery')">
+                                <span class="icon">🔄</span>
+                                <div class="btn-text">
+                                    <strong>In-Doubt & Recuperación</strong>
+                                    <span>Cusco cae en Fase 2 (Commit)</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="action-buttons">
+                        <button id="btn-start" class="btn btn-primary btn-block">
+                            Iniciar Transacción (2PC)
+                        </button>
+                        <button id="btn-next" class="btn btn-accent btn-block" disabled>
+                            Siguiente Paso 2PC →
+                        </button>
+                        <button id="btn-reset" class="btn btn-outline btn-block">
+                            Restablecer Nodos y Balances
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL CENTRAL: VISUALIZACIÓN DE RED Y NODOS -->
+            <section class="panel network-panel">
+                <div class="panel-header">
+                    <h2>Simulador de Procesamiento de Nodos y Red</h2>
+                    <div class="phase-badge" id="current-phase-badge">Estado: Inactivo</div>
+                </div>
+                <div class="panel-content network-content">
+
+                    <!-- CONTENEDOR DEL DIAGRAMA DE RED -->
+                    <div class="network-diagram-container" id="network-diagram-container">
+                        <svg class="network-svg" id="network-svg">
+                            <defs>
+                                <linearGradient id="grad-active" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#FF2E93" />
+                                    <stop offset="100%" stop-color="#00E676" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+
+                        <!-- Elemento Coordinator (Fijo arriba en el centro) -->
+                        <div class="network-node node-coordinator" id="node-coord-el" style="left: 50%; top: 25%;">
+                            <div class="node-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                                    <line x1="6" y1="6" x2="6.01" y2="6" />
+                                    <line x1="6" y1="18" x2="6.01" y2="18" />
+                                </svg>
+                            </div>
+                            <div class="node-label">
+                                <strong>COORDINADOR 2PC</strong>
+                                <span class="node-sub">Gestión Central</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ESTADO DE LAS BASES DE DATOS REGIONALES -->
+                    <div class="databases-container" id="databases-container">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- SECCIÓN DE BITÁCORA Y LOG DE CONSOLA (TERMINAL) -->
+        <footer class="app-footer-console">
+            <div class="console-box">
+                <div class="console-header">
+                    <div class="console-title-container">
+                        <span class="pulse-red"></span>
+                        <h3>Terminal de logs del Coordinador y Nodos 2PC</h3>
+                    </div>
+                    <div class="console-controls">
+                        <button class="console-btn" onclick="clearConsole()">Limpiar Consola</button>
+                        <button class="console-btn" onclick="copyConsoleLogs()">Copiar Logs</button>
+                    </div>
+                </div>
+                <div class="console-body" id="console-output">
+                    <div class="console-line system">[SISTEMA] Bienvenido a la terminal de simulación 2PC de BNC.</div>
+                    <div class="console-line system">[SISTEMA] Selecciona una transferencia o un escenario para
+                        comenzar.</div>
+                </div>
+            </div>
+
+            <div class="wal-box">
+                <div class="wal-header">
+                    <h3>Bitácora del Coordinador (WAL)</h3>
+                </div>
+                <div class="wal-content">
+                    <table class="wal-table">
+                        <thead>
+                            <tr>
+                                <th>TX ID</th>
+                                <th>Estado</th>
+                                <th>Nodo</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wal-tbody">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Sin registros</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- MODAL: CREACIÓN DE CUENTA BANCARIA -->
+    <div class="modal-overlay" id="modal-account">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Crear Nueva Cuenta Bancaria</h3>
+                <button class="modal-close" onclick="closeModal('modal-account')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-account-form" onsubmit="submitCreateAccount(event)">
+                    <div class="input-group" style="margin-bottom:0.75rem;">
+                        <label for="acc-node-select">Nodo de Almacenamiento</label>
+                        <select id="acc-node-select" class="styled-select" required>
+                        </select>
+                    </div>
+                    <div class="form-row" style="margin-bottom:0.75rem;">
+                        <div class="input-group">
+                            <label for="acc-new-id">Número de Cuenta</label>
+                            <input type="text" id="acc-new-id" class="styled-input" placeholder="ej. AQ-103 o LI-401"
+                                required>
+                        </div>
+                        <div class="input-group">
+                            <label for="acc-new-balance">Saldo Inicial (S/)</label>
+                            <input type="number" id="acc-new-balance" class="styled-input" value="15000" min="0"
+                                required>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-bottom:1rem;">
+                        <label for="acc-new-owner">Titular de la Cuenta</label>
+                        <input type="text" id="acc-new-owner" class="styled-input" placeholder="ej. María Rojas"
+                            required>
+                    </div>
+                    <button type="submit" class="btn btn-accent btn-block">Registrar Cuenta</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDITAR CUENTA -->
+    <div class="modal-overlay" id="modal-edit-account">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Editar Cuenta Bancaria</h3>
+                <button class="modal-close" onclick="closeModal('modal-edit-account')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-account-form" onsubmit="submitEditAccount(event)">
+                    <input type="hidden" id="edit-acc-key">
+                    <input type="hidden" id="edit-acc-id">
+                    <div class="form-row" style="margin-bottom:0.75rem;">
+                        <div class="input-group">
+                            <label>Titular</label>
+                            <input type="text" id="edit-acc-owner" class="styled-input" placeholder="Nombre del titular"
+                                required>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-bottom:1rem;">
+                        <label for="edit-acc-balance">Saldo (S/)</label>
+                        <input type="number" id="edit-acc-balance" class="styled-input" min="0" required>
+                    </div>
+                    <button type="submit" class="btn btn-accent btn-block">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ELIMINAR CUENTA -->
+    <div class="modal-overlay" id="modal-delete-account">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Eliminar Cuenta</h3>
+                <button class="modal-close" onclick="closeModal('modal-delete-account')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-confirm" id="delete-confirm-msg">
+                    ¿Estás seguro de eliminar esta cuenta?
+                </div>
+                <div class="delete-actions">
+                    <button class="btn btn-danger btn-block" onclick="confirmDeleteAccount()">Sí, Eliminar</button>
+                    <button class="btn btn-outline btn-block"
+                        onclick="closeModal('modal-delete-account')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
