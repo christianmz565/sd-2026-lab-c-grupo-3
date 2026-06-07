@@ -1,7 +1,17 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "mpi"
 version = "0.1.0"
-description = "Add your description here"
+description = "Sistema distribuido para análisis de datos meteorológicos con MPI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+generate-data = "mpi.generate_data:main"
