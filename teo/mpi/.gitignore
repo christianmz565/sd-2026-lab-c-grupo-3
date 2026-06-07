@@ -177,6 +177,7 @@ pyrightconfig.json
 
 # Generated data
 data/input.csv
+data/output/
 
 # uv lock file
 uv.lock
