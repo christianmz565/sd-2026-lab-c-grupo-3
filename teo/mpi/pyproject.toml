@@ -1,7 +1,3 @@
-[build-system]
-requires = ["setuptools>=68.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "mpi-analysis"
 version = "0.1.0"
@@ -13,10 +9,10 @@ dependencies = [
     "scikit-learn",
     "joblib",
     "pandas",
+    "dash>=4.2.0",
+    "dash-bootstrap-components>=2.0.4",
+    "plotly>=6.8.0",
 ]
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [project.scripts]
 generate-data = "mpi_analysis.scripts.generate_data:main"

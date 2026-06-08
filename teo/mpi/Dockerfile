@@ -30,8 +30,7 @@ WORKDIR /app
 
 COPY pyproject.toml .
 COPY uv.lock .
-
-RUN uv pip install --system mpi4py pandas scikit-learn joblib
+RUN uv sync
 
 COPY . .
 

@@ -18,6 +18,7 @@ done
 echo "Running MPI with $NP processes on hosts: $HOSTS"
 
 mpirun --allow-run-as-root \
+       --oversubscribe \
        -np $NP \
        --host $HOSTS \
        uv run src/mpi_analysis/distributed/entrypoint.py

@@ -3,27 +3,49 @@ services:
     build: .
     image: mpi-app
     container_name: mpi_master
-    shm_size: '2gb'
+    shm_size: "2gb"
     volumes:
-      - .:/app
+      - ./data:/app/data
       - shm_data:/data
     networks:
       - mpi_net
     environment:
       - OMPI_ALLOW_RUN_AS_ROOT=1
       - OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+      - UV_SYSTEM_PYTHON=1
+      - UV_LINK_MODE=copy
 
   worker:
     image: mpi-app
-    shm_size: '2gb'
+    shm_size: "2gb"
     volumes:
-      - .:/app
+      - ./data:/app/data
       - shm_data:/data
     networks:
       - mpi_net
     environment:
       - OMPI_ALLOW_RUN_AS_ROOT=1
       - OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+      - UV_SYSTEM_PYTHON=1
+      - UV_LINK_MODE=copy
+
+  dashboard:
+    image: mpi-app
+    container_name: mpi_dashboard
+    volumes:
+      - ./data:/app/data
+      - shm_data:/data
+    ports:
+      - "8050:8050"
+    networks:
+      - mpi_net
+    environment:
+      - OMPI_ALLOW_RUN_AS_ROOT=1
+      - OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+      - UV_SYSTEM_PYTHON=1
+      - UV_LINK_MODE=copy
+    command:
+      ["sh", "-c", "/usr/sbin/sshd && uv run python src/dashboard/dashboard.py"]
 
 volumes:
   shm_data:

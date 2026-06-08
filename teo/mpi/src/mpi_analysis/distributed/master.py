@@ -2,12 +2,14 @@ import csv
 import json
 import os
 import statistics
+
+import pandas as pd
+
 from mpi_analysis.core import calculate_metrics
 
-
-INPUT_PATH = "/data/input.csv"
-OUTPUT_DIR = "/data/output"
-OUTPUT_PATH = f"{OUTPUT_DIR}/results.json"
+INPUT_PATH = os.getenv("INPUT_PATH", "/data/input.csv")
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "/data/output")
+OUTPUT_PATH = os.path.join(OUTPUT_DIR, "results.json")
 
 
 def read_csv(path):
@@ -32,11 +34,20 @@ def combine_metrics(all_results):
 
     variables = ["temperature", "humidity", "wind_speed", "precipitation"]
     for var in variables:
-        var_data = [r["metrics"][var] for r in all_results if r["metrics"][var]["avg"] is not None]
+        var_data = [
+            r["metrics"][var]
+            for r in all_results
+            if r["metrics"][var]["avg"] is not None
+        ]
         if not var_data:
-            combined["metrics"][var] = {"global_avg": 0, "global_min": 0, "global_max": 0, "global_std": 0}
+            combined["metrics"][var] = {
+                "global_avg": 0,
+                "global_min": 0,
+                "global_max": 0,
+                "global_std": 0,
+            }
             continue
-            
+
         combined["metrics"][var] = {
             "global_avg": round(statistics.mean([d["avg"] for d in var_data]), 2),
             "global_min": round(min(d["min"] for d in var_data), 2),
@@ -50,12 +61,36 @@ def combine_metrics(all_results):
             all_stations[station] = all_stations.get(station, 0) + count
     combined["metrics"]["stations"] = all_stations
 
-    pred_temps = [r["metrics"]["predictions"]["temperature"] for r in all_results if "temperature" in r["metrics"]["predictions"] and r["metrics"]["predictions"]["temperature"] is not None]
+    combined["metrics"]["predictions"] = {}
 
-    combined["metrics"]["predictions"] = {
-        "temperature": round(statistics.mean(pred_temps), 2) if pred_temps else None,
-    }
+    all_results_sorted = sorted(all_results, key=lambda x: x["worker_rank"])
+    latest_worker_results = all_results_sorted[-1]
 
+    for var in variables:
+        if var in latest_worker_results["metrics"]["predictions"]:
+            combined["metrics"]["predictions"][var] = latest_worker_results["metrics"][
+                "predictions"
+            ][var]
+        else:
+            combined["metrics"]["predictions"][var] = []
+
+    merged_station_metrics = {}
+    for var in variables:
+        merged_station_metrics[var] = {}
+        for r in all_results:
+            worker_stations = r["metrics"].get("station_metrics", {}).get(var, {})
+            for station, value in worker_stations.items():
+                if station not in merged_station_metrics[var]:
+                    merged_station_metrics[var][station] = []
+                merged_station_metrics[var][station].append(value)
+
+        # Average the collected values
+        for station in merged_station_metrics[var]:
+            merged_station_metrics[var][station] = round(
+                statistics.mean(merged_station_metrics[var][station]), 2
+            )
+
+    combined["metrics"]["station_metrics"] = merged_station_metrics
     combined["worker_details"] = all_results
     return combined
 
@@ -67,13 +102,18 @@ def master_main(comm):
     rows = read_csv(INPUT_PATH)
     print(f"[Master] Read {len(rows)} rows from {INPUT_PATH}")
 
+    global_hist = {}
+    variables = ["temperature", "humidity", "wind_speed", "precipitation"]
+    df_full = pd.DataFrame(rows)
+    for var in variables:
+        df_full[var] = pd.to_numeric(df_full[var])
+        global_hist[var] = df_full[var].tail(100).tolist()
+
     chunks = split_data(rows, size)
     print(f"[Master] Split into {size} chunks: {[len(c) for c in chunks]}")
 
-    # Root also receives its own chunk
     my_chunk = comm.scatter(chunks, root=0)
 
-    # Master processes its chunk too
     my_metrics = calculate_metrics(my_chunk)
     my_result = {
         "worker_rank": rank,
@@ -84,6 +124,7 @@ def master_main(comm):
     all_results = comm.gather(my_result, root=0)
 
     combined = combine_metrics(all_results)
+    combined["metrics"]["historical_sample"] = global_hist
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     output = {

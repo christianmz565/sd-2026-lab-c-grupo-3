@@ -39,6 +39,7 @@
               glib
               libxcb
               libglvnd
+              mpi
             ];
 
           packages =
@@ -55,6 +56,9 @@
               uv
               bun
               just
+              plantuml
+              dig
+              mpi
               nixd
             ]
             ++ fonts
