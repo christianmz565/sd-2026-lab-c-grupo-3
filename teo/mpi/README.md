@@ -1,4 +1,4 @@
-# MPI Analysis - Meteorological Data System
+# MPI
 
 Este repositorio contiene un sistema distribuido para el análisis de datos meteorológicos utilizando MPI (Message Passing Interface) a través de la librería `mpi4py`. El proyecto está diseñado para demostrar cómo se puede realizar procesamiento en paralelo y distribuido en un entorno escalable.
 
@@ -6,9 +6,9 @@ Este repositorio contiene un sistema distribuido para el análisis de datos mete
 
 El sistema procesa grandes volúmenes de datos meteorológicos (temperatura, humedad, velocidad del viento, etc.) recolectados de diversas estaciones. Utiliza un modelo Maestro Trabajador:
 
-1.**Master:** Divide el conjunto de datos en fragmentos y los distribuye a los trabajadores.
-2.**Workers:** Realizan cálculos estadísticos (promedios, máximos, mínimos, predicciones) sobre su fragmento de datos.
-3.**Master:** Recolecta los resultados parciales, los agrega y genera un informe final.
+1. **Master:** Divide el conjunto de datos en fragmentos y los distribuye a los trabajadores.
+2. **Workers:** Realizan cálculos estadísticos (promedios, máximos, mínimos, predicciones) sobre su fragmento de datos.
+3. **Master:** Recolecta los resultados parciales, los agrega y genera un informe final.
 
 ---
 
