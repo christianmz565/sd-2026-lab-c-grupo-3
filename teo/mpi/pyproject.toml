@@ -3,17 +3,21 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mpi"
+name = "mpi-analysis"
 version = "0.1.0"
 description = "Sistema distribuido para análisis de datos meteorológicos con MPI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "mpi4py>=4.1.2",
+    "scikit-learn",
+    "joblib",
+    "pandas",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [project.scripts]
-generate-data = "mpi.generate_data:main"
+generate-data = "mpi_analysis.scripts.generate_data:main"
+run-mpi = "mpi_analysis.distributed.entrypoint:main"

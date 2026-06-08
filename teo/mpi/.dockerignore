@@ -1,0 +1,39 @@
+# Version Control
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.python-version
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Local data and output
+data/
+data/input.csv
+data/output/
+
+# Logs
+*.log
+
+# Docker/System
+.dockerignore
+docker-compose.yml
+Dockerfile
+.DS_Store
+*.swp
+
+# Temporary/Project specific
+benchmark.sh
+guia/
+*.deb

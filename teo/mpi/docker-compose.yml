@@ -1,0 +1,38 @@
+services:
+  master:
+    build: .
+    image: mpi-app
+    container_name: mpi_master
+    shm_size: '2gb'
+    volumes:
+      - .:/app
+      - shm_data:/data
+    networks:
+      - mpi_net
+    environment:
+      - OMPI_ALLOW_RUN_AS_ROOT=1
+      - OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
+  worker:
+    image: mpi-app
+    shm_size: '2gb'
+    volumes:
+      - .:/app
+      - shm_data:/data
+    networks:
+      - mpi_net
+    environment:
+      - OMPI_ALLOW_RUN_AS_ROOT=1
+      - OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
+volumes:
+  shm_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=2g"
+
+networks:
+  mpi_net:
+    driver: bridge

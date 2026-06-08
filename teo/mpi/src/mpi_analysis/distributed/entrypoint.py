@@ -1,7 +1,7 @@
 from mpi4py import MPI
 
-from mpi.master import master_main
-from mpi.worker import worker_main
+from mpi_analysis.distributed.master import master_main
+from mpi_analysis.distributed.worker import worker_main
 
 
 def main():
