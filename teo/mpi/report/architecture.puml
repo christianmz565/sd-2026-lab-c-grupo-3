@@ -1,0 +1,45 @@
+@startuml
+package "Cluster Docker" {
+    node "Nodo Maestro (Contenedor)" as Master {
+        component "Particionador de Datos" as Partitioner
+        component "Proceso Maestro MPI" as MasterProc
+        component "Agregador de Resultados" as Aggregator
+        component "Servidor Plotly Dash" as Dash
+    }
+
+    node "Nodo Trabajador 1 (Contenedor)" as Worker1 {
+        component "Proceso Trabajador MPI 1" as WorkerProc1
+        component "Análisis Estadístico (Sklearn)" as Sklearn1
+    }
+
+    node "Nodo Trabajador 2 (Contenedor)" as Worker2 {
+        component "Proceso Trabajador MPI 2" as WorkerProc2
+        component "Análisis Estadístico (Sklearn)" as Sklearn2
+    }
+
+    node "Nodo Trabajador N (Contenedor)" as WorkerN {
+        component "Proceso Trabajador MPI N" as WorkerProcN
+        component "Análisis Estadístico (Sklearn)" as SklearnN
+    }
+
+    database "Volumen Compartido (/data)" as DataVol
+}
+
+Partitioner --> DataVol : "Genera/Lee CSV"
+MasterProc --> Partitioner : "Solicita fragmentos"
+MasterProc ..> WorkerProc1 : "MPI Enviar/Recibir"
+MasterProc ..> WorkerProc2 : "MPI Enviar/Recibir"
+MasterProc ..> WorkerProcN : "MPI Enviar/Recibir"
+
+WorkerProc1 --> Sklearn1 : "Calcula estadísticas"
+WorkerProc2 --> Sklearn2 : "Calcula estadísticas"
+WorkerProcN --> SklearnN : "Calcula estadísticas"
+
+WorkerProc1 --> Aggregator : "Envía resultados parciales"
+WorkerProc2 --> Aggregator : "Envía resultados parciales"
+WorkerProcN --> Aggregator : "Envía resultados parciales"
+
+Aggregator --> Dash : "Provee datos finales"
+Dash --> "Navegador del Usuario" : "Visualiza Dashboard"
+
+@enduml
