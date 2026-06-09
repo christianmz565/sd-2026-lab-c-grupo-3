@@ -67,6 +67,23 @@ def get_sucursal(nombre: str) -> Sucursal:
     return SUCURSALES[nombre]
 
 
+def simplify_db_error(e: Exception) -> str:
+    """Simplifica mensajes de error verbosos de psycopg para la UI."""
+    msg = str(e).strip()
+    if "Connection refused" in msg or "Can't assign requested address" in msg:
+        return "Conexión rechazada: el servidor no responde. Verifique que el contenedor Docker esté iniciado."
+    if "password authentication failed" in msg:
+        return "Fallo de autenticación en la base de datos."
+    if "database" in msg and "does not exist" in msg:
+        return "La base de datos no existe."
+    if "terminating connection due to administrator command" in msg:
+        return "Conexión terminada (el nodo fue detenido manualmente)."
+
+    # Si hay múltiples líneas (como en fallos de conexión de psycopg), tomar la primera relevante
+    lines = [l.strip() for l in msg.split("\n") if l.strip()]
+    return lines[0] if lines else msg
+
+
 @contextmanager
 def sucursal_connection(nombre: str) -> Iterator[psycopg.Connection]:
     """Abre una conexión a una sucursal en modo transacción explícita (autocommit=False).
@@ -170,3 +187,34 @@ def health_check(nombre: str) -> bool:
         return False
     except pg_errors.Error:
         return False
+
+
+def create_cuenta(conn: psycopg.Connection, numero_cuenta: str, titular: str, saldo: float) -> None:
+    """Crea una nueva cuenta en la sucursal."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO cuentas (numero_cuenta, titular, saldo) VALUES (%s, %s, %s)",
+            (numero_cuenta, titular, Decimal(str(saldo))),
+        )
+
+
+def update_cuenta(conn: psycopg.Connection, numero_cuenta: str, titular: str, saldo: float) -> None:
+    """Actualiza los datos de una cuenta existente."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE cuentas SET titular = %s, saldo = %s WHERE numero_cuenta = %s",
+            (titular, Decimal(str(saldo)), numero_cuenta),
+        )
+        if cur.rowcount == 0:
+            raise LookupError(f"Cuenta '{numero_cuenta}' no existe")
+
+
+def delete_cuenta(conn: psycopg.Connection, numero_cuenta: str) -> None:
+    """Elimina una cuenta de la sucursal."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM cuentas WHERE numero_cuenta = %s",
+            (numero_cuenta,),
+        )
+        if cur.rowcount == 0:
+            raise LookupError(f"Cuenta '{numero_cuenta}' no existe")

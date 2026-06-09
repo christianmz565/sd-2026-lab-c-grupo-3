@@ -60,6 +60,8 @@
               dig
               mpi
               nixd
+              ruff
+              biome
             ]
             ++ fonts
             ++ [

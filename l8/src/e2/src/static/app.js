@@ -6,140 +6,160 @@
 // DOM READY
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
+  // 1. Register callbacks so client-api.js can push events to us
+  BNC_ClientAPI.registerCallbacks({
+    onLog: appendConsole,
+    onStateChange: () => {
+      renderAccounts();
+      populateAccountDropdown("source");
+      populateAccountDropdown("dest");
+    },
+    onAnimate: animatePacket,
+    onPhaseChange: updatePhaseBadge,
+    onWALUpdate: renderWAL,
+    onStatsUpdate: renderStats,
+    onTxEnd: onTransactionEnd,
+    onRestoreLine: restoreLineState,
+  });
 
-    // 1. Register callbacks so client-api.js can push events to us
-    BNC_ClientAPI.registerCallbacks({
-        onLog: appendConsole,
-        onStateChange: renderAccounts,
-        onAnimate: animatePacket,
-        onPhaseChange: updatePhaseBadge,
-        onWALUpdate: renderWAL,
-        onStatsUpdate: renderStats,
-        onTxEnd: onTransactionEnd,
-        onRestoreLine: restoreLineState
-    });
+  // 2. Initial render
+  populateNodeSelectors();
+  renderNetworkDiagram();
+  renderAccounts();
+  renderStats();
 
-    // 2. Initial render
+  // 3. Button bindings
+  document
+    .getElementById("btn-start")
+    .addEventListener("click", startTransactionUI);
+  document.getElementById("btn-reset").addEventListener("click", () => {
+    BNC_ClientAPI.resetSystem();
     populateNodeSelectors();
     renderNetworkDiagram();
-    renderAccounts();
-    renderStats();
+    document.getElementById("btn-start").disabled = false;
+  });
 
-    // 3. Button bindings
-    document.getElementById("btn-start").addEventListener("click", startTransactionUI);
-    document.getElementById("btn-next").addEventListener("click", () => BNC_ClientAPI.executeNextStep());
-    document.getElementById("btn-reset").addEventListener("click", () => {
-        BNC_ClientAPI.resetSystem();
-        populateNodeSelectors();
-        renderNetworkDiagram();
-        document.getElementById("btn-start").disabled = false;
-        document.getElementById("btn-next").disabled = true;
-    });
-
-    appendConsole("system", "[SISTEMA] Front-end inicializado. Nodos: Arequipa, Lima, Cusco.");
+  appendConsole(
+    "system",
+    "[SISTEMA] Front-end inicializado. Nodos: Arequipa, Cusco, Trujillo.",
+  );
 });
 
 // ============================================================
 // NODE SELECTORS (dropdowns)
 // ============================================================
 function populateNodeSelectors() {
-    const sourceSel = document.getElementById("source-select");
-    const destSel   = document.getElementById("dest-select");
+  const sourceSel = document.getElementById("source-select");
+  const destSel = document.getElementById("dest-select");
 
-    [sourceSel, destSel].forEach(sel => {
-        sel.innerHTML = "";
-        Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
-            const opt = document.createElement("option");
-            opt.value = key;
-            opt.textContent = node.name;
-            sel.appendChild(opt);
-        });
+  [sourceSel, destSel].forEach((sel) => {
+    sel.innerHTML = "";
+    Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = node.name;
+      sel.appendChild(opt);
     });
+  });
 
-    // Default: source=arequipa, dest=cusco (if available)
-    if (BNC_ClientAPI.nodes.arequipa) sourceSel.value = "arequipa";
-    if (BNC_ClientAPI.nodes.cusco) destSel.value = "cusco";
+  // Default: source=arequipa, dest=cusco (if available)
+  if (BNC_ClientAPI.nodes.arequipa) sourceSel.value = "arequipa";
+  if (BNC_ClientAPI.nodes.cusco) destSel.value = "cusco";
 
-    populateAccountDropdown("source");
-    populateAccountDropdown("dest");
+  populateAccountDropdown("source");
+  populateAccountDropdown("dest");
 
-    // Also fill the account creation modal dropdown
-    const accNodeSel = document.getElementById("acc-node-select");
-    if (accNodeSel) {
-        accNodeSel.innerHTML = "";
-        Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
-            const opt = document.createElement("option");
-            opt.value = key;
-            opt.textContent = node.name;
-            accNodeSel.appendChild(opt);
-        });
-    }
+  // Also fill the account creation modal dropdown
+  const accNodeSel = document.getElementById("acc-node-select");
+  if (accNodeSel) {
+    accNodeSel.innerHTML = "";
+    Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = node.name;
+      accNodeSel.appendChild(opt);
+    });
+  }
 }
 
 function populateAccountDropdown(side) {
-    const nodeSel = document.getElementById(side === "source" ? "source-select" : "dest-select");
-    const accSel  = document.getElementById(side === "source" ? "source-acc-select" : "dest-acc-select");
-    const nodeKey = nodeSel.value;
-    accSel.innerHTML = "";
+  const nodeSel = document.getElementById(
+    side === "source" ? "source-select" : "dest-select",
+  );
+  const accSel = document.getElementById(
+    side === "source" ? "source-acc-select" : "dest-acc-select",
+  );
 
-    const accounts = BNC_ClientAPI.dbState[nodeKey] || {};
-    Object.entries(accounts).forEach(([accId, acc]) => {
-        const opt = document.createElement("option");
-        opt.value = accId;
-        opt.textContent = `${accId} — ${acc.owner} (S/ ${acc.balance.toLocaleString()})`;
-        accSel.appendChild(opt);
-    });
+  if (!nodeSel || !accSel) return;
+  const nodeKey = nodeSel.value;
+  if (!nodeKey) return;
 
-    if (Object.keys(accounts).length === 0) {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "— Sin cuentas —";
-        opt.disabled = true;
-        accSel.appendChild(opt);
-    }
+  // Save current selection to restore it if possible
+  const currentVal = accSel.value;
+  accSel.innerHTML = "";
+
+  const accounts = BNC_ClientAPI.dbState[nodeKey] || {};
+  Object.entries(accounts).forEach(([accId, acc]) => {
+    const opt = document.createElement("option");
+    opt.value = accId;
+    opt.textContent = `${accId} — ${acc.owner} (S/ ${acc.balance.toLocaleString()})`;
+    accSel.appendChild(opt);
+  });
+
+  if (Object.keys(accounts).length === 0) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "— Sin cuentas —";
+    opt.disabled = true;
+    accSel.appendChild(opt);
+  } else if (currentVal && accounts[currentVal]) {
+    accSel.value = currentVal;
+  }
 }
 
 // ============================================================
 // NETWORK DIAGRAM (SVG lines + node elements)
 // ============================================================
 const nodePositions = {
-    coordinator: { x: 50, y: 22 },
-    arequipa:    { x: 15, y: 75 },
-    cusco:        { x: 50, y: 75 },
-    trujillo:       { x: 85, y: 75 }
+  coordinator: { x: 50, y: 22 },
+  arequipa: { x: 15, y: 75 },
+  cusco: { x: 50, y: 75 },
+  trujillo: { x: 85, y: 75 },
 };
 
 function renderNetworkDiagram() {
-    const container = document.getElementById("network-diagram-container");
-    const svg = document.getElementById("network-svg");
+  const container = document.getElementById("network-diagram-container");
+  const svg = document.getElementById("network-svg");
 
-    // Remove old node elements (except coordinator + svg)
-    container.querySelectorAll(".network-node:not(.node-coordinator)").forEach(el => el.remove());
+  // Remove old node elements (except coordinator + svg)
+  container
+    .querySelectorAll(".network-node:not(.node-coordinator)")
+    .forEach((el) => el.remove());
 
-    // Remove old lines
-    svg.querySelectorAll("line, .packet-group").forEach(el => el.remove());
+  // Remove old lines
+  svg.querySelectorAll("line, .packet-group").forEach((el) => el.remove());
 
-    Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
-        const pos = nodePositions[key];
-        if (!pos) return;
+  Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
+    const pos = nodePositions[key];
+    if (!pos) return;
 
-        // Draw SVG line from coordinator to this node
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", `${nodePositions.coordinator.x}%`);
-        line.setAttribute("y1", `${nodePositions.coordinator.y}%`);
-        line.setAttribute("x2", `${pos.x}%`);
-        line.setAttribute("y2", `${pos.y}%`);
-        line.setAttribute("class", "network-line line-off");
-        line.setAttribute("data-node", key);
-        svg.appendChild(line);
+    // Draw SVG line from coordinator to this node
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", `${nodePositions.coordinator.x}%`);
+    line.setAttribute("y1", `${nodePositions.coordinator.y}%`);
+    line.setAttribute("x2", `${pos.x}%`);
+    line.setAttribute("y2", `${pos.y}%`);
+    line.setAttribute("class", "network-line line-off");
+    line.setAttribute("data-node", key);
+    svg.appendChild(line);
 
-        // Node element
-        const el = document.createElement("div");
-        el.className = `network-node node-participant`;
-        el.id = `node-el-${key}`;
-        el.style.left = `${pos.x}%`;
-        el.style.top = `${pos.y}%`;
-        el.innerHTML = `
+    // Node element
+    const el = document.createElement("div");
+    el.className = `network-node node-participant`;
+    el.id = `node-el-${key}`;
+    el.style.left = `${pos.x}%`;
+    el.style.top = `${pos.y}%`;
+    el.innerHTML = `
             <div class="node-icon" style="position:relative;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
@@ -147,7 +167,7 @@ function renderNetworkDiagram() {
                     <line x1="6" y1="6" x2="6.01" y2="6"/>
                     <line x1="6" y1="18" x2="6.01" y2="18"/>
                 </svg>
-                <span class="status-dot ${node.status === 'online' ? 'online' : 'offline'}"></span>
+                <span class="status-dot ${node.status === "online" ? "online" : "offline"}"></span>
             </div>
             <div class="node-label">
                 <strong>${node.name.toUpperCase()}</strong>
@@ -158,34 +178,32 @@ function renderNetworkDiagram() {
                 <button class="nbtn off" title="Offline" onclick="setNodeUI('${key}','offline')">OFF</button>
             </div>
         `;
-        container.appendChild(el);
-    });
+    container.appendChild(el);
+  });
 }
 
 function setNodeUI(nodeKey, status) {
-    BNC_ClientAPI.setNodeStatus(nodeKey, status);
-    const statusText = document.getElementById(`status-text-${nodeKey}`);
-    if (statusText) statusText.textContent = status;
-    const dot = document.querySelector(`#node-el-${nodeKey} .status-dot`);
-    if (dot) dot.className = `status-dot ${status}`;
-    populateAccountDropdown("source");
-    populateAccountDropdown("dest");
+  BNC_ClientAPI.setNodeStatus(nodeKey, status);
+  const statusText = document.getElementById(`status-text-${nodeKey}`);
+  if (statusText) statusText.textContent = status;
+  const dot = document.querySelector(`#node-el-${nodeKey} .status-dot`);
+  if (dot) dot.className = `status-dot ${status}`;
 }
 
 // ============================================================
 // DATABASE RENDERING
 // ============================================================
 function renderAccounts() {
-    const container = document.getElementById("databases-container");
-    container.innerHTML = "";
+  const container = document.getElementById("databases-container");
+  container.innerHTML = "";
 
-    Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
-        const code = node.code;
-        const accounts = BNC_ClientAPI.dbState[key] || {};
+  Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
+    const code = node.code;
+    const accounts = BNC_ClientAPI.dbState[key] || {};
 
-        const card = document.createElement("div");
-        card.className = `db-card ${node.status !== 'online' ? 'node-offline' : ''}`;
-        card.innerHTML = `
+    const card = document.createElement("div");
+    card.className = `db-card ${node.status !== "online" ? "node-offline" : ""}`;
+    card.innerHTML = `
             <div class="db-card-header">
                 <div class="db-card-header-left">
                     <svg class="db-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -204,18 +222,18 @@ function renderAccounts() {
                 </tbody>
             </table>
         `;
-        container.appendChild(card);
+    container.appendChild(card);
 
-        const tbody = card.querySelector(`#db-${code}-tbody`);
-        const entries = Object.entries(accounts);
-        if (entries.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Sin cuentas</td></tr>`;
-        } else {
-            entries.forEach(([accId, acc]) => {
-                const lockClass = acc.locked ? "locked" : "free";
-                const lockText = acc.locked ? "Bloqueado" : "Libre";
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
+    const tbody = card.querySelector(`#db-${code}-tbody`);
+    const entries = Object.entries(accounts);
+    if (entries.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Sin cuentas</td></tr>`;
+    } else {
+      entries.forEach(([accId, acc]) => {
+        const lockClass = acc.locked ? "locked" : "free";
+        const lockText = acc.locked ? "Bloqueado" : "Libre";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
                     <td><strong>${accId}</strong></td>
                     <td>${acc.owner}</td>
                     <td>S/ ${acc.balance.toLocaleString()}</td>
@@ -237,297 +255,269 @@ function renderAccounts() {
                         </button>
                     </td>
                 `;
-                tbody.appendChild(tr);
-            });
-        }
-    });
+        tbody.appendChild(tr);
+      });
+    }
+  });
 
-    // Also update the dot indicators on the network diagram
-    Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
-        const dot = document.querySelector(`#node-el-${key} .status-dot`);
-        if (dot) dot.className = `status-dot ${node.status}`;
-        const statusText = document.getElementById(`status-text-${key}`);
-        if (statusText) statusText.textContent = node.status;
-    });
+  // Also update the dot indicators on the network diagram
+  Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
+    const dot = document.querySelector(`#node-el-${key} .status-dot`);
+    if (dot) dot.className = `status-dot ${node.status}`;
+    const statusText = document.getElementById(`status-text-${key}`);
+    if (statusText) statusText.textContent = node.status;
+  });
 }
 
 // ============================================================
 // CONSOLE / LOG
 // ============================================================
 function appendConsole(type, msg) {
-    const con = document.getElementById("console-output");
-    const line = document.createElement("div");
-    line.className = `console-line ${type}`;
-    const time = new Date().toLocaleTimeString();
-    line.textContent = `[${time}] ${msg}`;
-    con.appendChild(line);
-    con.scrollTop = con.scrollHeight;
+  const con = document.getElementById("console-output");
+  const line = document.createElement("div");
+  line.className = `console-line ${type}`;
+  const time = new Date().toLocaleTimeString();
+  line.textContent = `[${time}] ${msg}`;
+  con.appendChild(line);
+  con.scrollTop = con.scrollHeight;
 }
 
 function clearConsole() {
-    document.getElementById("console-output").innerHTML =
-        '<div class="console-line system">[SISTEMA] Consola limpiada.</div>';
+  document.getElementById("console-output").innerHTML =
+    '<div class="console-line system">[SISTEMA] Consola limpiada.</div>';
 }
 
 function copyConsoleLogs() {
-    const lines = document.querySelectorAll("#console-output .console-line");
-    const text = Array.from(lines).map(l => l.textContent).join("\n");
-    navigator.clipboard.writeText(text).then(() => {
-        appendConsole("success", "[SISTEMA] Logs copiados al portapapeles.");
-    });
+  const lines = document.querySelectorAll("#console-output .console-line");
+  const text = Array.from(lines)
+    .map((l) => l.textContent)
+    .join("\n");
+  navigator.clipboard.writeText(text).then(() => {
+    appendConsole("success", "[SISTEMA] Logs copiados al portapapeles.");
+  });
 }
 
 // ============================================================
 // WAL TABLE
 // ============================================================
 function renderWAL() {
-    const tbody = document.getElementById("wal-tbody");
-    if (!tbody) return;
-    const wal = BNC_ClientAPI.coordinatorWAL;
-    if (wal.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin registros</td></tr>';
-        return;
-    }
-    tbody.innerHTML = "";
-    wal.forEach(entry => {
-        const tr = document.createElement("tr");
-        const nodeName = entry.node ? (BNC_ClientAPI.nodes[entry.node] ? BNC_ClientAPI.nodes[entry.node].name : entry.node) : "—";
-        const stateClass = entry.state === "COMMITTED" ? "text-success" :
-                           entry.state === "ABORT" || entry.state === "IN_DOUBT" ? "text-error" : "";
-        tr.innerHTML = `
+  const tbody = document.getElementById("wal-tbody");
+  if (!tbody) return;
+  const wal = BNC_ClientAPI.coordinatorWAL;
+  if (wal.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="4" class="text-center text-muted">Sin registros</td></tr>';
+    return;
+  }
+  tbody.innerHTML = "";
+  wal.forEach((entry) => {
+    const tr = document.createElement("tr");
+    const nodeName = entry.node
+      ? BNC_ClientAPI.nodes[entry.node]
+        ? BNC_ClientAPI.nodes[entry.node].name
+        : entry.node
+      : "—";
+    const stateClass = entry.state === "COMMITTED" ? "text-success" :
+                       ["ABORT", "IN_DOUBT", "ROLLBACK", "ROLLED_BACK", "FAILED"].includes(entry.state) ? "text-error" : "";
+
+    tr.innerHTML = `
             <td>${entry.txId.substring(0, 10)}</td>
             <td class="${stateClass}">${entry.state}</td>
             <td>${nodeName}</td>
             <td>${entry.message}</td>
         `;
-        tbody.appendChild(tr);
-    });
+    tbody.appendChild(tr);
+  });
 }
 
 // ============================================================
 // STATS
 // ============================================================
 function renderStats() {
-    const stats = BNC_ClientAPI.stats;
-    document.getElementById("tx-stats").textContent = `${stats.success} / ${stats.total}`;
-    document.getElementById("coord-log-count").textContent = `${BNC_ClientAPI.coordinatorWAL.length} entradas`;
+  const stats = BNC_ClientAPI.stats;
+  document.getElementById("tx-stats").textContent =
+    `${stats.success} / ${stats.failed}`;
+  document.getElementById("coord-log-count").textContent =
+    `${BNC_ClientAPI.coordinatorWAL.length} entradas`;
 }
 
 // ============================================================
 // PHASE BADGE
 // ============================================================
 function updatePhaseBadge(text, className) {
-    const badge = document.getElementById("current-phase-badge");
-    if (badge) {
-        badge.textContent = text;
-        badge.className = className || "phase-badge";
-    }
+  const badge = document.getElementById("current-phase-badge");
+  if (badge) {
+    badge.textContent = text;
+    badge.className = className || "phase-badge";
+  }
 }
 
 // ============================================================
 // PACKET ANIMATION (line glow)
 // ============================================================
 function animatePacket(from, to, type, callback) {
-    const nodeKey = to === "coordinator" ? from : to;
-    const line = document.querySelector(`.network-line[data-node="${nodeKey}"]`);
+  const nodeKey = to === "coordinator" ? from : to;
+  const line = document.querySelector(`.network-line[data-node="${nodeKey}"]`);
 
-    if (line) {
-        line.classList.add("line-active");
-    }
-    if (callback) callback();
+  if (line) {
+    line.classList.add("line-active");
+  }
+  if (callback) callback();
 }
 
 function restoreLineState(nodeKey) {
-    const line = document.querySelector(`.network-line[data-node="${nodeKey}"]`);
-    if (line) {
-        line.classList.remove("line-active");
-        line.classList.add("line-off");
-    }
+  const line = document.querySelector(`.network-line[data-node="${nodeKey}"]`);
+  if (line) {
+    line.classList.remove("line-active");
+    line.classList.add("line-off");
+  }
 }
 
 // ============================================================
 // START TRANSACTION (UI → Client)
 // ============================================================
 function startTransactionUI() {
-    const sourceNode = document.getElementById("source-select").value;
-    const destNode   = document.getElementById("dest-select").value;
-    const sourceAcc  = document.getElementById("source-acc-select").value;
-    const destAcc    = document.getElementById("dest-acc-select").value;
-    const amount     = parseFloat(document.getElementById("amount-input").value) || 0;
-    const isStep     = document.getElementById("step-by-step-toggle").checked;
-    const stepDelay  = parseInt(document.getElementById("step-delay-input").value) || 500;
+  const sourceNode = document.getElementById("source-select").value;
+  const destNode = document.getElementById("dest-select").value;
+  const sourceAcc = document.getElementById("source-acc-select").value;
+  const destAcc = document.getElementById("dest-acc-select").value;
+  const amount = parseFloat(document.getElementById("amount-input").value) || 0;
+  const delay =
+    parseFloat(document.getElementById("step-delay-input").value) || 0;
 
-    if (!sourceAcc || !destAcc) {
-        appendConsole("error", "[SISTEMA] Selecciona cuentas válidas de origen y destino.");
-        return;
-    }
-    if (sourceNode === destNode && sourceAcc === destAcc) {
-        appendConsole("error", "[SISTEMA] La cuenta de origen y destino no pueden ser la misma.");
-        return;
-    }
-    if (amount <= 0) {
-        appendConsole("error", "[SISTEMA] El monto debe ser mayor a 0.");
-        return;
-    }
+  if (!sourceAcc || !destAcc) {
+    appendConsole(
+      "error",
+      "[SISTEMA] Selecciona cuentas válidas de origen y destino.",
+    );
+    return;
+  }
+  if (sourceNode === destNode) {
+    appendConsole(
+      "error",
+      "[SISTEMA] Las sucursales origen y destino deben ser distintas.",
+    );
+    return;
+  }
+  if (amount <= 0) {
+    appendConsole("error", "[SISTEMA] El monto debe ser mayor a 0.");
+    return;
+  }
 
-    document.getElementById("btn-start").disabled = true;
-    document.getElementById("btn-next").disabled = !isStep;
+  document.getElementById("btn-start").disabled = true;
 
-    const ok = BNC_ClientAPI.startTransaction(sourceNode, sourceAcc, destNode, destAcc, amount, isStep, stepDelay);
-    if (!ok) {
-        document.getElementById("btn-start").disabled = false;
-        document.getElementById("btn-next").disabled = true;
-    }
+  const ok = BNC_ClientAPI.startTransaction(
+    sourceNode,
+    sourceAcc,
+    destNode,
+    destAcc,
+    amount,
+    delay,
+  );
+  if (!ok) {
+    document.getElementById("btn-start").disabled = false;
+  }
 }
 
 function openEditAccountModal(nodeKey, accId) {
-    const acc = BNC_ClientAPI.dbState[nodeKey][accId];
-    document.getElementById("edit-acc-key").value = nodeKey;
-    document.getElementById("edit-acc-id").value = accId;
-    document.getElementById("edit-acc-owner").value = acc.owner;
-    document.getElementById("edit-acc-balance").value = acc.balance;
-    openModal("modal-edit-account");
+  const acc = BNC_ClientAPI.dbState[nodeKey][accId];
+  document.getElementById("edit-acc-key").value = nodeKey;
+  document.getElementById("edit-acc-id").value = accId;
+  document.getElementById("edit-acc-owner").value = acc.owner;
+  document.getElementById("edit-acc-balance").value = acc.balance;
+  openModal("modal-edit-account");
 }
 
 function submitEditAccount(e) {
-    e.preventDefault();
-    const nodeKey = document.getElementById("edit-acc-key").value;
-    const accId = document.getElementById("edit-acc-id").value;
-    const owner = document.getElementById("edit-acc-owner").value;
-    const balance = parseFloat(document.getElementById("edit-acc-balance").value);
+  e.preventDefault();
+  const nodeKey = document.getElementById("edit-acc-key").value;
+  const accId = document.getElementById("edit-acc-id").value;
+  const owner = document.getElementById("edit-acc-owner").value;
+  const balance = parseFloat(document.getElementById("edit-acc-balance").value);
 
-    const result = BNC_ClientAPI.updateAccount(nodeKey, accId, owner, balance);
-    if (result.success) {
-        closeModal("modal-edit-account");
-        renderAccounts();
-        populateAccountDropdown("source");
-        populateAccountDropdown("dest");
-    } else {
-        appendConsole("error", `[SISTEMA] ${result.msg}`);
-    }
+  const result = BNC_ClientAPI.updateAccount(nodeKey, accId, owner, balance);
+  if (result.success) {
+    closeModal("modal-edit-account");
+    renderAccounts();
+    populateAccountDropdown("source");
+    populateAccountDropdown("dest");
+  } else {
+    appendConsole("error", `[SISTEMA] ${result.msg}`);
+  }
 }
 
 let pendingDeleteNode = null;
 let pendingDeleteAcc = null;
 
 function openDeleteAccountModal(nodeKey, accId) {
-    pendingDeleteNode = nodeKey;
-    pendingDeleteAcc = accId;
-    const acc = BNC_ClientAPI.dbState[nodeKey][accId];
-    document.getElementById("delete-confirm-msg").innerHTML =
-        `¿Estás seguro de eliminar la cuenta <strong>${accId}</strong> de <strong>${acc.owner}</strong> en <strong>${BNC_ClientAPI.nodes[nodeKey].name}</strong>?`;
-    openModal("modal-delete-account");
+  pendingDeleteNode = nodeKey;
+  pendingDeleteAcc = accId;
+  const acc = BNC_ClientAPI.dbState[nodeKey][accId];
+  document.getElementById("delete-confirm-msg").innerHTML =
+    `¿Estás seguro de eliminar la cuenta <strong>${accId}</strong> de <strong>${acc.owner}</strong> en <strong>${BNC_ClientAPI.nodes[nodeKey].name}</strong>?`;
+  openModal("modal-delete-account");
 }
 
 function confirmDeleteAccount() {
-    if (!pendingDeleteNode || !pendingDeleteAcc) return;
+  if (!pendingDeleteNode || !pendingDeleteAcc) return;
 
-    const result = BNC_ClientAPI.deleteAccount(pendingDeleteNode, pendingDeleteAcc);
-    if (result.success) {
-        closeModal("modal-delete-account");
-        renderAccounts();
-        populateAccountDropdown("source");
-        populateAccountDropdown("dest");
-    } else {
-        appendConsole("error", `[SISTEMA] ${result.msg}`);
-        closeModal("modal-delete-account");
-    }
-    pendingDeleteNode = null;
-    pendingDeleteAcc = null;
+  const result = BNC_ClientAPI.deleteAccount(
+    pendingDeleteNode,
+    pendingDeleteAcc,
+  );
+  if (result.success) {
+    closeModal("modal-delete-account");
+    renderAccounts();
+    populateAccountDropdown("source");
+    populateAccountDropdown("dest");
+  } else {
+    appendConsole("error", `[SISTEMA] ${result.msg}`);
+    closeModal("modal-delete-account");
+  }
+  pendingDeleteNode = null;
+  pendingDeleteAcc = null;
 }
 
 function onTransactionEnd() {
-    document.getElementById("btn-start").disabled = false;
-    document.getElementById("btn-next").disabled = true;
-    populateAccountDropdown("source");
-    populateAccountDropdown("dest");
-    Object.keys(BNC_ClientAPI.nodes).forEach(key => restoreLineState(key));
-}
-
-// ============================================================
-// SCENARIOS
-// ============================================================
-function loadScenario(name) {
-    // Reset first
-    BNC_ClientAPI.resetSystem();
-    populateNodeSelectors();
-    renderNetworkDiagram();
-
-    const srcSel  = document.getElementById("source-select");
-    const dstSel  = document.getElementById("dest-select");
-    const amtInp  = document.getElementById("amount-input");
-
-    switch (name) {
-        case "normal":
-            srcSel.value = "arequipa"; populateAccountDropdown("source");
-            dstSel.value = "cusco";    populateAccountDropdown("dest");
-            document.getElementById("source-acc-select").value = "AQ-101";
-            document.getElementById("dest-acc-select").value = "CU-201";
-            amtInp.value = 25000;
-            appendConsole("system", "[ESCENARIO] Normal: Transferencia S/ 25,000 de AQ-101 (Arequipa) → CU-201 (Cusco). Se espera COMMIT exitoso.");
-            break;
-
-        case "insufficient_funds":
-            srcSel.value = "arequipa"; populateAccountDropdown("source");
-            dstSel.value = "cusco";    populateAccountDropdown("dest");
-            document.getElementById("source-acc-select").value = "AQ-101";
-            document.getElementById("dest-acc-select").value = "CU-201";
-            amtInp.value = 80000;
-            appendConsole("system", "[ESCENARIO] Fondos Insuficientes: Transferencia S/ 80,000 (saldo AQ-101 = S/ 50,000). Se espera ABORT en Fase 1.");
-            break;
-
-        case "node_crash":
-            BNC_ClientAPI.setNodeStatus("cusco", "offline");
-            renderNetworkDiagram();
-            srcSel.value = "arequipa"; populateAccountDropdown("source");
-            dstSel.value = "cusco";    populateAccountDropdown("dest");
-            document.getElementById("source-acc-select").value = "AQ-101";
-            document.getElementById("dest-acc-select").value = "CU-201";
-            amtInp.value = 25000;
-            appendConsole("system", "[ESCENARIO] Nodo Caído: Cusco desconectado. Transferencia S/ 25,000 AQ → CU. Se espera ABORT (timeout Fase 1).");
-            break;
-
-        case "in_doubt_recovery":
-            srcSel.value = "arequipa"; populateAccountDropdown("source");
-            dstSel.value = "cusco";    populateAccountDropdown("dest");
-            document.getElementById("source-acc-select").value = "AQ-101";
-            document.getElementById("dest-acc-select").value = "CU-201";
-            amtInp.value = 25000;
-            // Set the crash flag on activeTx (we'll inject it before the transaction starts)
-            BNC_ClientAPI.activeTx = { injectPhase2Crash: true };
-            appendConsole("system", "[ESCENARIO] In-Doubt & Recovery: Cusco caerá durante Fase 2. COMMIT parcial → IN-DOUBT. Recuperar cambiando Cusco a ONLINE.");
-            break;
-    }
+  document.getElementById("btn-start").disabled = false;
+  populateAccountDropdown("source");
+  populateAccountDropdown("dest");
+  Object.keys(BNC_ClientAPI.nodes).forEach((key) => restoreLineState(key));
 }
 
 // ============================================================
 // MODAL: Create Account
 // ============================================================
 function openModal(id) {
-    const modal = document.getElementById(id);
-    if (modal) modal.classList.add("visible");
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.add("visible");
 }
 
 function closeModal(id) {
-    const modal = document.getElementById(id);
-    if (modal) modal.classList.remove("visible");
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.remove("visible");
 }
 
 function submitCreateAccount(e) {
-    e.preventDefault();
-    const nodeKey = document.getElementById("acc-node-select").value;
-    const accId   = document.getElementById("acc-new-id").value;
-    const balance = document.getElementById("acc-new-balance").value;
-    const owner   = document.getElementById("acc-new-owner").value;
+  e.preventDefault();
+  const nodeKey = document.getElementById("acc-node-select").value;
+  const accId = document.getElementById("acc-new-id").value;
+  const balance = document.getElementById("acc-new-balance").value;
+  const owner = document.getElementById("acc-new-owner").value;
 
-    const result = BNC_ClientAPI.createAccount(nodeKey, accId, owner, parseFloat(balance));
-    if (result.success) {
-        closeModal("modal-account");
-        renderAccounts();
-        populateAccountDropdown("source");
-        populateAccountDropdown("dest");
-        document.getElementById("create-account-form").reset();
-    } else {
-        appendConsole("error", `[SISTEMA] ${result.msg}`);
-    }
+  const result = BNC_ClientAPI.createAccount(
+    nodeKey,
+    accId,
+    owner,
+    parseFloat(balance),
+  );
+  if (result.success) {
+    closeModal("modal-account");
+    renderAccounts();
+    populateAccountDropdown("source");
+    populateAccountDropdown("dest");
+    document.getElementById("create-account-form").reset();
+  } else {
+    appendConsole("error", `[SISTEMA] ${result.msg}`);
+  }
 }

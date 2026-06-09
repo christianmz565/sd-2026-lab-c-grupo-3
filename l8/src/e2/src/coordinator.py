@@ -73,28 +73,67 @@ class TwoPhaseCommitCoordinator:
             txn_id, cuenta_origen, cuenta_destino, ciudad_origen, ciudad_destino, monto
         )
 
-        # ------------------------------------------------------------------
-        # Espera configurable entre fases (para simular fallos)
-        # ------------------------------------------------------------------
-        if delay > 0:
-            self.log.append(
-                txn_id,
-                "DELAY",
-                None,
-                f"esperando {delay}s — puede detener una sucursal ahora",
-            )
-            time.sleep(delay)
+        try:
+            # ------------------------------------------------------------------
+            # Espera configurable entre fases (para simular fallos)
+            # ------------------------------------------------------------------
+            if delay > 0:
+                self.log.append(
+                    txn_id,
+                    "DELAY",
+                    None,
+                    f"esperando {delay}s — puede detener una sucursal ahora",
+                )
+                time.sleep(delay)
 
-        # ------------------------------------------------------------------
-        # FASE 2A: COMMIT en cada sucursal (todos ya están "preparados")
-        # ------------------------------------------------------------------
-        return self._phase_two_commit(
-            prepared, cuenta_origen, cuenta_destino, ciudad_origen, ciudad_destino, monto
-        )
+            # ------------------------------------------------------------------
+            # VALIDACIÓN PRE-COMMIT: verificamos que todos sigan vivos
+            # ------------------------------------------------------------------
+            self._validate_prepared_connections(prepared)
+
+            # ------------------------------------------------------------------
+            # FASE 2A: COMMIT en cada sucursal (todos ya están "preparados")
+            # ------------------------------------------------------------------
+            return self._phase_two_commit(
+                prepared, cuenta_origen, cuenta_destino, ciudad_origen, ciudad_destino, monto
+            )
+
+        except (Exception, KeyboardInterrupt) as e:
+            # Si algo falla antes o durante el inicio de la fase 2,
+            # intentamos abortar todo lo que esté "preparado".
+            self.log.append(txn_id, "FAILED", None, f"error detectado: {e}")
+            self._phase_two_rollback(prepared, ciudad_origen, ciudad_destino)
+            
+            # Devolvemos una respuesta de error para la UI
+            return _build_response(
+                txn_id=txn_id,
+                status="ROLLED_BACK",
+                cuenta_origen=cuenta_origen,
+                cuenta_destino=cuenta_destino,
+                ciudad_origen=ciudad_origen,
+                ciudad_destino=ciudad_destino,
+                monto=monto,
+                saldo_origen_despues=None,
+                saldo_destino_despues=None,
+                log_entries=self.log.all(),
+            )
 
     # ----------------------------------------------------------------------
     # Fase 1
     # ----------------------------------------------------------------------
+    def _validate_prepared_connections(self, prepared: _PreparedTxn) -> None:
+        """Verifica que las conexiones sigan activas antes de decidir el COMMIT."""
+        for name, conn in [
+            ("origen", prepared.conn_origen),
+            ("destino", prepared.conn_destino),
+        ]:
+            try:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT 1")
+            except (pg_errors.Error, psycopg.OperationalError) as e:
+                clean_err = db.simplify_db_error(e)
+                raise TransferError(f"Sucursal {name} no responde tras el retraso: {clean_err}") from e
+
     def _phase_one(
         self,
         txn_id: str,
@@ -116,7 +155,13 @@ class TwoPhaseCommitCoordinator:
 
         # Abrimos conexiones explícitamente para poder hacer rollback
         # nosotros mismos si algo falla a mitad del PREPARE.
-        conn_origen = _open(ciudad_origen)
+        try:
+            conn_origen = _open(ciudad_origen)
+        except (pg_errors.Error, psycopg.OperationalError) as e:
+            clean_err = db.simplify_db_error(e)
+            self.log.append(txn_id, "FAILED", ciudad_origen, f"error de conexión: {clean_err}")
+            raise TransferError(f"No se pudo conectar a la sucursal {ciudad_origen}: {clean_err}") from e
+            
         opened.append((ciudad_origen, conn_origen))
 
         try:
@@ -132,11 +177,19 @@ class TwoPhaseCommitCoordinator:
             self._rollback_all(opened)
             raise TransferError(str(e)) from e
         except (pg_errors.Error, psycopg.OperationalError) as e:
-            self.log.append(txn_id, "FAILED", ciudad_origen, f"error BD: {e}")
+            clean_err = db.simplify_db_error(e)
+            self.log.append(txn_id, "FAILED", ciudad_origen, f"error DB: {clean_err}")
             self._rollback_all(opened)
-            raise TransferError(f"Fallo de BD en sucursal {ciudad_origen}: {e}") from e
+            raise TransferError(f"Fallo de BD en sucursal {ciudad_origen}: {clean_err}") from e
 
-        conn_destino = _open(ciudad_destino)
+        try:
+            conn_destino = _open(ciudad_destino)
+        except (pg_errors.Error, psycopg.OperationalError) as e:
+            clean_err = db.simplify_db_error(e)
+            self.log.append(txn_id, "FAILED", ciudad_destino, f"error de conexión: {clean_err}")
+            self._rollback_all(opened)
+            raise TransferError(f"No se pudo conectar a la sucursal {ciudad_destino}: {clean_err}") from e
+            
         opened.append((ciudad_destino, conn_destino))
 
         try:
@@ -152,9 +205,10 @@ class TwoPhaseCommitCoordinator:
             self._rollback_all(opened)
             raise TransferError(str(e)) from e
         except (pg_errors.Error, psycopg.OperationalError) as e:
-            self.log.append(txn_id, "FAILED", ciudad_destino, f"error BD: {e}")
+            clean_err = db.simplify_db_error(e)
+            self.log.append(txn_id, "FAILED", ciudad_destino, f"error DB: {clean_err}")
             self._rollback_all(opened)
-            raise TransferError(f"Fallo de BD en sucursal {ciudad_destino}: {e}") from e
+            raise TransferError(f"Fallo de BD en sucursal {ciudad_destino}: {clean_err}") from e
 
         return _PreparedTxn(
             txn_id=txn_id,
@@ -179,21 +233,64 @@ class TwoPhaseCommitCoordinator:
 
         saldo_origen_despues: float | None = None
         saldo_destino_despues: float | None = None
-        fallos_commit: list[str] = []
-
-        for ciudad, conn, key in (
+        
+        # Guardamos conexiones en una lista para iterar
+        plan = [
             (ciudad_origen, prepared.conn_origen, "origen"),
             (ciudad_destino, prepared.conn_destino, "destino"),
-        ):
+        ]
+        
+        commits_exitosos = 0
+        fallos_commit: list[str] = []
+
+        for i, (ciudad, conn, key) in enumerate(plan):
             try:
                 self.log.append(txn_id, "COMMIT", ciudad, "orden de commit enviada")
                 conn.commit()
                 self.log.append(txn_id, "COMMITTED", ciudad, "commit OK")
-            except (pg_errors.Error, psycopg.OperationalError) as e:
-                self.log.append(txn_id, "FAILED", ciudad, f"commit falló: {e}")
-                fallos_commit.append(f"{ciudad}: {e}")
+                commits_exitosos += 1
+            except (pg_errors.Error, psycopg.OperationalError, Exception) as e:
+                clean_err = db.simplify_db_error(e)
+                self.log.append(txn_id, "FAILED", ciudad, f"commit falló: {clean_err}")
+                fallos_commit.append(f"{ciudad}: {clean_err}")
+                
+                # Si falla el PRIMER commit, aún podemos intentar rollback en el resto
+                # para mantener la atomicidad.
+                if commits_exitosos == 0:
+                    self.log.append(txn_id, "ROLLBACK", None, "abortando tras fallo en primer commit")
+                    # Cerramos esta conexión fallida
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
+                    
+                    # Hacemos rollback en los demás que siguen en el plan
+                    pendientes = plan[i+1:]
+                    for p_ciudad, p_conn, _ in pendientes:
+                        try:
+                            self.log.append(txn_id, "ROLLBACK", p_ciudad, "abortando transacción preparada")
+                            p_conn.rollback()
+                            p_conn.close()
+                        except Exception:
+                            pass
+                    
+                    return _build_response(
+                        txn_id=txn_id,
+                        status="ROLLED_BACK",
+                        cuenta_origen=cuenta_origen,
+                        cuenta_destino=cuenta_destino,
+                        ciudad_origen=ciudad_origen,
+                        ciudad_destino=ciudad_destino,
+                        monto=monto,
+                        saldo_origen_despues=None,
+                        saldo_destino_despues=None,
+                        log_entries=self.log.all(),
+                    )
+                
+                # Si ya hubo algún commit exitoso, estamos en estado "in-doubt"
                 continue
 
+            # Consultar saldo final para la UI
             try:
                 with psycopg.connect(db.get_sucursal(ciudad).dsn, autocommit=True) as c2:
                     saldo = db.read_saldo(c2, cuenta_origen if key == "origen" else cuenta_destino)
@@ -203,16 +300,18 @@ class TwoPhaseCommitCoordinator:
                         saldo_destino_despues = saldo
             except Exception:
                 pass
-
             finally:
-                conn.close()
+                try:
+                    conn.close()
+                except Exception:
+                    pass
 
         if fallos_commit:
             self.log.append(
                 txn_id,
                 "FAILED",
                 None,
-                f"estado in-doubt: {fallos_commit}",
+                f"estado in-doubt (consistencia parcial): {fallos_commit}",
             )
             return _build_response(
                 txn_id=txn_id,
@@ -240,6 +339,28 @@ class TwoPhaseCommitCoordinator:
             saldo_destino_despues=saldo_destino_despues,
             log_entries=self.log.all(),
         )
+
+    # ----------------------------------------------------------------------
+    # Fase 2B (Abortar)
+    # ----------------------------------------------------------------------
+    def _phase_two_rollback(self, prepared: _PreparedTxn, ciudad_origen: str, ciudad_destino: str) -> None:
+        """Fase de rollback cuando se decide no commitear."""
+        txn_id = prepared.txn_id
+        for ciudad, conn in [
+            (ciudad_origen, prepared.conn_origen),
+            (ciudad_destino, prepared.conn_destino),
+        ]:
+            try:
+                self.log.append(txn_id, "ROLLBACK", ciudad, "abortando transacción")
+                conn.rollback()
+            except Exception as e:
+                self.log.append(txn_id, "FAILED", ciudad, f"error en rollback: {e}")
+            finally:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+        self.log.append(txn_id, "ROLLED_BACK", None, "transacción abortada")
 
     # ----------------------------------------------------------------------
     # Helpers

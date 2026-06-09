@@ -8,6 +8,7 @@ Endpoints:
   POST /sucursales/{nombre}/detener  - detiene el contenedor Docker de una sucursal
   POST /sucursales/{nombre}/iniciar  - inicia el contenedor Docker de una sucursal
 """
+
 from __future__ import annotations
 
 import os
@@ -19,25 +20,29 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+
 # Permite ejecutar con `uvicorn src.app:app` y `python -m src.app`
 _SRC_DIR = Path(__file__).resolve().parent
 if str(_SRC_DIR.parent) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR.parent))
 
-from src import db  # noqa: E402
-from src.coordinator import TwoPhaseCommitCoordinator, TransferError  # noqa: E402
+from src.coordinator import TransferError, TwoPhaseCommitCoordinator  # noqa: E402
 from src.log_store import LogStore  # noqa: E402
 from src.models import (  # noqa: E402
-    HealthResponse,
-    CuentasResponse,
-    CuentaRow,
     CiudadLiteral,
+    CuentaCreate,
+    CuentaRow,
+    CuentaUpdate,
+    CuentasResponse,
+    HealthResponse,
     TransferRequest,
     TransferResponse,
 )
+
+from src import db  # noqa: E402
 
 load_dotenv()
 
@@ -75,7 +80,13 @@ app.add_middleware(
 )
 
 _STATIC_DIR = _SRC_DIR / "static"
-app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
+
+@app.get("/")
+def index() -> HTMLResponse:
+    """Sirve la interfaz web principal."""
+    index_path = _STATIC_DIR / "index.html"
+    return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
 
 
 def _coord() -> TwoPhaseCommitCoordinator:
@@ -86,16 +97,10 @@ def _log() -> LogStore:
     return _state["log"]
 
 
-@app.get("/", response_class=HTMLResponse)
-def index() -> HTMLResponse:
-    """Sirve la interfaz web."""
-    html_path = _SRC_DIR / "static" / "index.html"
-    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
-
-
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     """Ping a las 3 sucursales. Devuelve 'ok' o 'down' por sucursal."""
+
     def status(nombre: str) -> str:
         return "ok" if db.health_check(nombre) else "down"
 
@@ -117,13 +122,55 @@ def cuentas() -> CuentasResponse:
         except Exception:
             continue
         for it in items:
-            rows.append(CuentaRow(
-                ciudad=ciudad,  # type: ignore[arg-type]
-                numero_cuenta=it["numero_cuenta"],
-                titular=it["titular"],
-                saldo=it["saldo"],
-            ))
+            rows.append(
+                CuentaRow(
+                    ciudad=ciudad,  # type: ignore[arg-type]
+                    numero_cuenta=it["numero_cuenta"],
+                    titular=it["titular"],
+                    saldo=it["saldo"],
+                )
+            )
     return CuentasResponse(cuentas=rows)
+
+
+@app.post("/cuentas", status_code=201)
+def crear_cuenta(req: CuentaCreate) -> dict:
+    """Crea una nueva cuenta en la sucursal especificada."""
+    try:
+        with db.sucursal_connection(req.ciudad) as conn:
+            db.create_cuenta(conn, req.numero_cuenta, req.titular, req.saldo)
+            conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=db.simplify_db_error(e)) from e
+    return {"message": "Cuenta creada", "numero_cuenta": req.numero_cuenta}
+
+
+@app.put("/cuentas/{ciudad}/{numero_cuenta}")
+def actualizar_cuenta(ciudad: CiudadLiteral, numero_cuenta: str, req: CuentaUpdate) -> dict:
+    """Actualiza los datos de una cuenta existente."""
+    try:
+        with db.sucursal_connection(ciudad) as conn:
+            db.update_cuenta(conn, numero_cuenta, req.titular, req.saldo)
+            conn.commit()
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=db.simplify_db_error(e)) from e
+    return {"message": "Cuenta actualizada", "numero_cuenta": numero_cuenta}
+
+
+@app.delete("/cuentas/{ciudad}/{numero_cuenta}")
+def eliminar_cuenta(ciudad: CiudadLiteral, numero_cuenta: str) -> dict:
+    """Elimina una cuenta de la sucursal especificada."""
+    try:
+        with db.sucursal_connection(ciudad) as conn:
+            db.delete_cuenta(conn, numero_cuenta)
+            conn.commit()
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=db.simplify_db_error(e)) from e
+    return {"message": "Cuenta eliminada", "numero_cuenta": numero_cuenta}
 
 
 @app.post("/transferir", response_model=TransferResponse)
@@ -164,12 +211,14 @@ def detener_sucursal(nombre: CiudadLiteral) -> dict:
     container = f"red_financiera_{nombre}"
     result = subprocess.run(
         ["docker", "stop", container],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     if result.returncode != 0:
         raise HTTPException(
             status_code=500,
-            detail=f"Error deteniendo {container}: {result.stderr.strip()}"
+            detail=f"Error deteniendo {container}: {result.stderr.strip()}",
         )
     return {"sucursal": nombre, "estado": "detenido"}
 
@@ -180,12 +229,14 @@ def iniciar_sucursal(nombre: CiudadLiteral) -> dict:
     container = f"red_financiera_{nombre}"
     result = subprocess.run(
         ["docker", "start", container],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     if result.returncode != 0:
         raise HTTPException(
             status_code=500,
-            detail=f"Error iniciando {container}: {result.stderr.strip()}"
+            detail=f"Error iniciando {container}: {result.stderr.strip()}",
         )
     for _ in range(10):
         time.sleep(1)
@@ -194,8 +245,11 @@ def iniciar_sucursal(nombre: CiudadLiteral) -> dict:
     return {
         "sucursal": nombre,
         "estado": "iniciado",
-        "aviso": "Base de datos puede no estar lista aún"
+        "aviso": "Base de datos puede no estar lista aún",
     }
+
+
+app.mount("/", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 
 if __name__ == "__main__":
@@ -204,6 +258,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "src.app:app",
         host="0.0.0.0",
-        port=int(os.getenv("PORT", "8000")),
+        port=int(os.getenv("PORT", "9000")),
         reload=True,
     )

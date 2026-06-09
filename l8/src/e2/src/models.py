@@ -46,6 +46,18 @@ class CuentasResponse(BaseModel):
     cuentas: list[CuentaRow]
 
 
+class CuentaCreate(BaseModel):
+    ciudad: CiudadLiteral
+    numero_cuenta: str = Field(..., min_length=1, max_length=50)
+    titular: str = Field(..., min_length=1, max_length=100)
+    saldo: float = Field(..., ge=0)
+
+
+class CuentaUpdate(BaseModel):
+    titular: str = Field(..., min_length=1, max_length=100)
+    saldo: float = Field(..., ge=0)
+
+
 class HealthResponse(BaseModel):
     arequipa: str
     cusco: str

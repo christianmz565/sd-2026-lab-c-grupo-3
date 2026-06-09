@@ -1,7 +1,7 @@
 // client-api.js – Cliente Real que se conecta a la API FastAPI
 // Mantiene la misma interfaz de callbacks que client.js pero con llamadas HTTP reales
 
-const API_BASE = "http://localhost:8000";
+window.API_BASE = "";
 
 window.BNC_ClientAPI = {
     // ------------------------------------------
@@ -18,7 +18,7 @@ window.BNC_ClientAPI = {
     
     stats: {
         success: 0,
-        total: 0
+        failed: 0
     },
     
     activeTx: null,
@@ -43,6 +43,28 @@ window.BNC_ClientAPI = {
     // ------------------------------------------
     // MÉTODOS DE APOYO
     // ------------------------------------------
+    async _safeFetch(url, options = {}) {
+        try {
+            const resp = await fetch(url, options);
+            const contentType = resp.headers.get("content-type");
+            let data = null;
+
+            if (contentType && contentType.includes("application/json")) {
+                data = await resp.json();
+            } else {
+                const text = await resp.text();
+                if (!resp.ok) {
+                    throw new Error(text || `Error del servidor (${resp.status})`);
+                }
+                return { ok: true, status: resp.status, data: text };
+            }
+
+            return { ok: resp.ok, status: resp.status, data };
+        } catch (err) {
+            throw err;
+        }
+    },
+
     _log(type, msg) {
         if (this.uiCallbacks.onLog) this.uiCallbacks.onLog(type, msg);
     },
@@ -95,12 +117,12 @@ window.BNC_ClientAPI = {
     // INICIALIZACIÓN: Traer datos reales de la API
     // ------------------------------------------
     async init() {
-        this._log("system", "Conectando a API en " + API_BASE + "...");
+        this._log("system", "Conectando a API en " + window.API_BASE + "...");
         try {
             // 1. Verificar health de nodos
-            const healthResp = await fetch(`${API_BASE}/health`);
-            if (!healthResp.ok) throw new Error("Health check falló");
-            const health = await healthResp.json();
+            const result = await this._safeFetch(`${window.API_BASE}/health`);
+            if (!result.ok) throw new Error("Health check falló");
+            const health = result.data;
             
             Object.keys(this.nodes).forEach(key => {
                 const status = health[key]; // "ok" o "down"
@@ -112,6 +134,9 @@ window.BNC_ClientAPI = {
             // 2. Cargar inventario/cuentas actuales
             await this.loadAccountsFromAPI();
             
+            // 3. Cargar logs y stats
+            await this.loadLogFromAPI();
+            
             this._triggerStateChange();
             this._triggerPhaseChange("Listo: En línea", "phase-badge");
         } catch (err) {
@@ -121,9 +146,9 @@ window.BNC_ClientAPI = {
 
     async loadAccountsFromAPI() {
         try {
-            const resp = await fetch(`${API_BASE}/cuentas`);
-            if (!resp.ok) throw new Error("GET /cuentas falló");
-            const data = await resp.json();
+            const result = await this._safeFetch(`${window.API_BASE}/cuentas`);
+            if (!result.ok) throw new Error("GET /cuentas falló");
+            const data = result.data;
 
             // Reorganizar respuesta en estructura local
             this.dbState = {};
@@ -150,9 +175,9 @@ window.BNC_ClientAPI = {
 
     async loadLogFromAPI() {
         try {
-            const resp = await fetch(`${API_BASE}/log`);
-            if (!resp.ok) throw new Error("GET /log falló");
-            const data = await resp.json();
+            const result = await this._safeFetch(`${window.API_BASE}/log`);
+            if (!result.ok) throw new Error("GET /log falló");
+            const data = result.data;
 
             this.coordinatorWAL = data.entries.map(entry => ({
                 txId: entry.txn_id || entry.txId,
@@ -162,7 +187,31 @@ window.BNC_ClientAPI = {
                 timestamp: new Date(entry.timestamp * 1000).toISOString()
             }));
 
+            // Calcular estadísticas sin duplicar transacciones fallidas
+            const seenTxIds = new Set();
+            this.stats.success = 0;
+            this.stats.failed = 0;
+            
+            // Recorremos de más reciente a más antiguo para tomar el último estado de cada TX
+            const reversedEntries = [...data.entries].reverse();
+            for (const e of reversedEntries) {
+                const txId = e.txn_id || e.txId;
+                if (!txId || seenTxIds.has(txId)) continue;
+                
+                // Solo nos interesan estados finales globales (sin ciudad/nodo)
+                if ((e.fase === "COMMITTED" || e.fase === "ROLLED_BACK" || e.fase === "FAILED") && !e.ciudad && !e.nodo) {
+                    seenTxIds.add(txId);
+                    if (e.fase === "COMMITTED") {
+                        this.stats.success++;
+                    } else {
+                        this.stats.failed++;
+                    }
+                }
+            }
+            this.stats.inDoubt = data.entries.some(e => e.fase === "FAILED");
+
             this._triggerWALUpdate();
+            this._triggerStatsUpdate();
         } catch (err) {
             this._log("error", "Error cargando log: " + err.message);
         }
@@ -177,8 +226,8 @@ window.BNC_ClientAPI = {
             // Reiniciar todos los nodos
             for (const nodeKey of Object.keys(this.nodes)) {
                 try {
-                    const resp = await fetch(`${API_BASE}/sucursales/${nodeKey}/iniciar`, { method: "POST" });
-                    if (resp.ok) {
+                    const result = await this._safeFetch(`${window.API_BASE}/sucursales/${nodeKey}/iniciar`, { method: "POST" });
+                    if (result.ok) {
                         this.nodes[nodeKey].status = "online";
                         this._log("success", `✓ Nodo ${nodeKey} reiniciado`);
                     }
@@ -190,6 +239,9 @@ window.BNC_ClientAPI = {
             this.coordinatorWAL = [];
             this.activeTx = null;
             this.stepExecutor = null;
+            this.stats.success = 0;
+            this.stats.failed = 0;
+            this.stats.inDoubt = false;
 
             await this.loadAccountsFromAPI();
             this._triggerWALUpdate();
@@ -208,15 +260,14 @@ window.BNC_ClientAPI = {
         this._log("system", `Cambiando estado de [${nodeKey}] a [${status}]...`);
         try {
             const endpoint = status === "online" ? "iniciar" : "detener";
-            const resp = await fetch(`${API_BASE}/sucursales/${nodeKey}/${endpoint}`, { method: "POST" });
+            const result = await this._safeFetch(`${window.API_BASE}/sucursales/${nodeKey}/${endpoint}`, { method: "POST" });
             
-            if (resp.ok) {
+            if (result.ok) {
                 this.nodes[nodeKey].status = status;
                 this._log("success", `✓ Nodo ${nodeKey} ahora está ${status}`);
                 await this.loadAccountsFromAPI();
             } else {
-                const errData = await resp.json();
-                throw new Error(errData.detail || "Error cambiando estado");
+                throw new Error(result.data?.detail || "Error cambiando estado");
             }
         } catch (err) {
             this._log("error", "Error: " + err.message);
@@ -226,7 +277,7 @@ window.BNC_ClientAPI = {
     // ------------------------------------------
     // TRANSFERENCIA 2PC REAL
     // ------------------------------------------
-    async startTransaction(sourceNode, sourceAcc, destNode, destAcc, amount, isStepByStep, stepDelay) {
+    async startTransaction(sourceNode, sourceAcc, destNode, destAcc, amount, delay) {
         if (sourceNode === destNode) {
             this._log("error", "Las sucursales origen y destino deben ser distintas");
             return false;
@@ -239,29 +290,27 @@ window.BNC_ClientAPI = {
             destNode,
             destAcc,
             amount,
-            isStepByStep,
-            stepDelay: stepDelay || 500,
-            phase: "PREPARE",
-            prepareResults: { source: null, dest: null },
-            commitResults: { source: null, dest: null }
+            stepDelay: delay || 0,
+            phase: "PREPARE"
         };
 
         this._log("system", `Iniciando transacción ${this.activeTx.txId}`);
         this._appendWAL(this.activeTx.txId, "START", null, 
             `Transferencia S/ ${amount} de ${sourceNode} (${sourceAcc}) a ${destNode} (${destAcc})`);
 
-        // Si NO es paso a paso, ejecutar todo de una vez
-        if (!isStepByStep) {
-            return await this.executeFullTransaction();
-        }
-
-        // Si es paso a paso, habilitar botón "Siguiente"
-        this._triggerPhaseChange("Fase 1: PREPARE (esperando siguiente paso)", "phase-phase1");
-        return true;
+        return await this.executeFullTransaction();
     },
 
     // Ejecutar transacción completa
     async executeFullTransaction() {
+        const cleanup = async () => {
+            await this.loadAccountsFromAPI();
+            await this.loadLogFromAPI();
+            this._triggerStateChange();
+            this._triggerPhaseChange("Estado: Inactivo", "phase-badge");
+            if (this.uiCallbacks.onTxEnd) this.uiCallbacks.onTxEnd();
+        };
+
         try {
             const payload = {
                 cuenta_origen: this.activeTx.sourceAcc,
@@ -269,108 +318,128 @@ window.BNC_ClientAPI = {
                 ciudad_origen: this.activeTx.sourceNode,
                 ciudad_destino: this.activeTx.destNode,
                 monto: this.activeTx.amount,
-                delay: this.activeTx.stepDelay / 1000 // convertir a segundos
+                delay: this.activeTx.stepDelay
             };
 
             this._log("system", "Enviando transferencia a coordinador...");
             this._animate(this.activeTx.sourceNode, "coordinator", "PREPARE", async () => {
-                const resp = await fetch(`${API_BASE}/transferir`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+                try {
+                    const result = await this._safeFetch(`${window.API_BASE}/transferir`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
 
-                if (!resp.ok) {
-                    const errData = await resp.json();
-                    this._log("error", "Error en transferencia: " + errData.detail);
-                    this._appendWAL(this.activeTx.txId, "FAILED", null, errData.detail);
-                    await this.loadAccountsFromAPI();
-                    await this.loadLogFromAPI();
+                    if (!result.ok) {
+                        const errorMsg = result.data?.detail || result.data || "Error desconocido";
+                        this._log("error", "Error en transferencia: " + errorMsg);
+                        this._appendWAL(this.activeTx.txId, "FAILED", null, errorMsg);
+                        await cleanup();
+                        return false;
+                    }
+
+                    const data = result.data;
+                    this._appendWAL(this.activeTx.txId, data.status, null, `Resultado: ${data.status}`);
+
+                    // Registrar cada paso del log de la API
+                    if (data.log && Array.isArray(data.log)) {
+                        data.log.forEach(entry => {
+                            this._appendWAL(entry.txn_id, entry.fase, entry.ciudad || entry.nodo, entry.detalle);
+                        });
+                    }
+
+                    if (data.status === "COMMITTED") {
+                        this._log("success", `✓ Transacción ${data.status}`);
+                    } else {
+                        this._log("warning", `⚠ Transacción ${data.status}`);
+                    }
+
+                    await cleanup();
+                    return true;
+                } catch (err) {
+                    this._log("error", "Error de red: " + err.message);
+                    this._appendWAL(this.activeTx.txId, "FAILED", null, err.message);
+                    await cleanup();
                     return false;
                 }
-
-                const result = await resp.json();
-                this._appendWAL(this.activeTx.txId, result.status, null, `Resultado: ${result.status}`);
-
-                // Registrar cada paso del log de la API
-                if (result.log && Array.isArray(result.log)) {
-                    result.log.forEach(entry => {
-                        this._appendWAL(entry.txn_id, entry.fase, entry.nodo, entry.detalle);
-                    });
-                }
-
-                this.stats.total++;
-                if (result.status === "COMMITTED") {
-                    this.stats.success++;
-                    this._log("success", `✓ Transacción ${result.status}`);
-                } else {
-                    this._log("warning", `⚠ Transacción ${result.status}`);
-                }
-
-                await this.loadAccountsFromAPI();
-                this._triggerStateChange();
-                this._triggerPhaseChange("Estado: Inactivo", "phase-badge");
-                
-                if (this.uiCallbacks.onTxEnd) this.uiCallbacks.onTxEnd();
-                return true;
             });
 
         } catch (err) {
             this._log("error", "Error ejecutando transferencia: " + err.message);
+            await cleanup();
             return false;
         }
     },
 
-    // Ejecutar paso a paso (por ahora, ejecutar todo)
-    async executeNextStep() {
-        if (!this.activeTx) {
-            this._log("warning", "No hay transacción activa");
-            return;
-        }
+    // ------------------------------------------
+    // GESTIÓN DE CUENTAS
+    // ------------------------------------------
+    async createAccount(nodeKey, accId, owner, balance) {
+        try {
+            const payload = {
+                ciudad: nodeKey,
+                numero_cuenta: accId,
+                titular: owner,
+                saldo: balance
+            };
+            const result = await this._safeFetch(`${window.API_BASE}/cuentas`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
 
-        await this.executeFullTransaction();
+            if (result.ok) {
+                this._log("success", `Cuenta ${accId} (${owner}) creada exitosamente.`);
+                await this.loadAccountsFromAPI();
+                return { success: true };
+            } else {
+                return { success: false, msg: result.data?.detail || "Error creando cuenta" };
+            }
+        } catch (err) {
+            return { success: false, msg: err.message };
+        }
     },
 
-    // ------------------------------------------
-    // CARGAR ESCENARIOS (para debug/demo)
-    // ------------------------------------------
-    loadScenario(scenarioName) {
-        const scenarios = {
-            normal: {
-                sourceNode: "arequipa",
-                destNode: "cusco",
-                amount: 25000
-            },
-            insufficient_funds: {
-                sourceNode: "arequipa",
-                destNode: "cusco",
-                amount: 100000
-            },
-            node_crash: {
-                sourceNode: "arequipa",
-                destNode: "cusco",
-                amount: 15000,
-                crashNode: "cusco",
-                crashPhase: "PREPARE"
+    async updateAccount(nodeKey, accId, owner, balance) {
+        try {
+            const payload = {
+                titular: owner,
+                saldo: balance
+            };
+            const result = await this._safeFetch(`${window.API_BASE}/cuentas/${nodeKey}/${accId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (result.ok) {
+                this._log("success", `Cuenta ${accId} actualizada exitosamente.`);
+                await this.loadAccountsFromAPI();
+                return { success: true };
+            } else {
+                return { success: false, msg: result.data?.detail || "Error actualizando cuenta" };
             }
-        };
-
-        const scenario = scenarios[scenarioName];
-        if (!scenario) {
-            this._log("warning", "Escenario desconocido: " + scenarioName);
-            return;
+        } catch (err) {
+            return { success: false, msg: err.message };
         }
+    },
 
-        // Llenar formulario con valores del escenario
-        document.getElementById("amount-input").value = scenario.amount;
-        document.getElementById("source-select").value = scenario.sourceNode;
-        document.getElementById("dest-select").value = scenario.destNode;
+    async deleteAccount(nodeKey, accId) {
+        try {
+            const result = await this._safeFetch(`${window.API_BASE}/cuentas/${nodeKey}/${accId}`, {
+                method: "DELETE"
+            });
 
-        // Disparar cambio de selectores para actualizar cuentas
-        document.getElementById("source-select").dispatchEvent(new Event("change"));
-        document.getElementById("dest-select").dispatchEvent(new Event("change"));
-
-        this._log("system", `Escenario "${scenarioName}" cargado`);
+            if (result.ok) {
+                this._log("success", `Cuenta ${accId} eliminada exitosamente.`);
+                await this.loadAccountsFromAPI();
+                return { success: true };
+            } else {
+                return { success: false, msg: result.data?.detail || "Error eliminando cuenta" };
+            }
+        } catch (err) {
+            return { success: false, msg: err.message };
+        }
     }
 };
 

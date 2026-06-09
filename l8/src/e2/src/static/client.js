@@ -3,8 +3,8 @@
 
 const NODES_CONFIG = {
     arequipa: { name: "Arequipa", code: "AQ", status: "online" },
-    lima: { name: "Lima", code: "LI", status: "online" },
-    cusco: { name: "Cusco", code: "CU", status: "online" }
+    cusco: { name: "Cusco", code: "CU", status: "online" },
+    trujillo: { name: "Trujillo", code: "TR", status: "online" }
 };
 
 const DEFAULT_ACCOUNTS = {
@@ -12,13 +12,13 @@ const DEFAULT_ACCOUNTS = {
         "AQ-101": { owner: "Juan Pérez", balance: 50000, locked: false },
         "AQ-102": { owner: "Sofía Málaga", balance: 12000, locked: false }
     },
-    lima: {
-        "LI-301": { owner: "Pedro Castillo", balance: 15000, locked: false },
-        "LI-302": { owner: "Lucía Díaz", balance: 22000, locked: false }
-    },
     cusco: {
         "CU-201": { owner: "Carlos Quispe", balance: 5000, locked: false },
         "CU-202": { owner: "Ana Flores", balance: 30000, locked: false }
+    },
+    trujillo: {
+        "TR-301": { owner: "Pedro Castillo", balance: 15000, locked: false },
+        "TR-302": { owner: "Lucía Díaz", balance: 22000, locked: false }
     }
 };
 
@@ -33,7 +33,7 @@ window.BNC_Client = {
     
     stats: {
         success: 0,
-        total: 0
+        failed: 0
     },
     
     activeTx: null,
@@ -358,8 +358,6 @@ window.BNC_Client = {
         const participants = [tx.sourceNode, tx.destNode];
         const allAcked = participants.every(p => tx.acks[p]);
         
-        this.stats.total++;
-        
         if (allAcked) {
             tx.status = tx.decision === "COMMIT" ? "COMMITTED" : "ABORTED";
             this._appendWAL(tx.txId, tx.status, null, `Transacción finalizada como ${tx.status}`);
@@ -370,10 +368,12 @@ window.BNC_Client = {
                 this.stats.success++;
                 this._log("success", `[COORDINATOR] [TX-${tx.txId.substring(0,6)}] Transacción confirmada en todos los nodos (COMMITTED). Propiedades ACID garantizadas.`);
             } else {
+                this.stats.failed++;
                 this._log("error", `[COORDINATOR] [TX-${tx.txId.substring(0,6)}] Transacción revertida globalmente (ROLLBACK). Consistencia de datos preservada.`);
             }
         } else {
             tx.status = "IN_DOUBT";
+            this.stats.failed++;
             this._appendWAL(tx.txId, "IN_DOUBT", null, `Fase 2 incompleta. Pendiente de confirmación.`);
             this._triggerPhaseChange("IN-DOUBT (Bloqueado)", "phase-badge active-abort");
             
@@ -495,7 +495,6 @@ this.nodes.cusco.status = "offline";
                     this._triggerStateChange();
                     
                     // Cierre
-                    this.stats.total++;
                     const participants = [tx.sourceNode, tx.destNode];
                     const allAcked = participants.every(p => tx.acks[p]);
                     
@@ -508,10 +507,12 @@ this.nodes.cusco.status = "offline";
                             this.stats.success++;
                             this._log("success", `[COORDINATOR] [TX-${tx.txId.substring(0,6)}] Auto-Transacción exitosa (COMMITTED).`);
                         } else {
+                            this.stats.failed++;
                             this._log("error", `[COORDINATOR] [TX-${tx.txId.substring(0,6)}] Auto-Transacción fallida y revertida.`);
                         }
                     } else {
                         tx.status = "IN_DOUBT";
+                        this.stats.failed++;
                         this._appendWAL(tx.txId, "IN_DOUBT", null, `Fase 2 automática incompleta.`);
                         this._triggerPhaseChange("IN-DOUBT (Bloqueado)", "phase-badge active-abort");
                         
@@ -574,6 +575,7 @@ this.nodes.cusco.status = "offline";
                 this._log("coord", `[COORDINATOR] [TX-${rec.txId.substring(0,6)}] Recibido ACK de nodo recuperado. Estado consistente restablecido.`);
                 
                 this.stats.success++;
+                this.stats.failed--;
                 this.inDoubtRecovery = null;
                 
                 this._triggerStateChange();
