@@ -3,407 +3,338 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FarmaAndes - Coordinador 2PC</title>
+    <title>FarmaAndes — 2PC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <script>window.API_BASE = "";</script>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+      :root {
+        --bg: #0a0c10;
+        --surface: #12151d;
+        --card: #181c26;
+        --hover: #1f2433;
+        --input: #0e1118;
+        --border: rgba(255,255,255,0.06);
+        --border-hi: rgba(255,255,255,0.12);
+        --text: #e6eaf2;
+        --text2: #8a94a8;
+        --muted: #4a5568;
+        --green: #34d399; --green-bg: rgba(52,211,153,0.07); --green-b: rgba(52,211,153,0.2);
+        --red: #f87171;   --red-bg: rgba(248,113,113,0.07);   --red-b: rgba(248,113,113,0.2);
+        --amber: #fbbf24; --amber-bg: rgba(251,191,36,0.07);  --amber-b: rgba(251,191,36,0.2);
+        --blue: #60a5fa;  --blue-bg: rgba(96,165,250,0.07);   --blue-b: rgba(96,165,250,0.2);
+        --purple: #a78bfa;
+        --accent: #818cf8; --accent-bg: rgba(129,140,248,0.08); --accent-b: rgba(129,140,248,0.25);
+        --font: 'DM Sans', sans-serif;
+        --mono: 'JetBrains Mono', monospace;
+        --r: 14px;
       }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #f5f5f5;
-        color: #333;
-        line-height: 1.5;
-      }
-      header {
-        background: #1a237e;
-        color: white;
-        padding: 1rem 2rem;
-      }
-      header h1 {
-        font-size: 1.5rem;
-      }
-      header p {
-        font-size: 0.875rem;
-        opacity: 0.8;
-      }
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 1.5rem;
-        display: grid;
-        gap: 1.5rem;
-      }
-      .card {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
-      }
-      .card h2 {
-        font-size: 1.1rem;
-        margin-bottom: 1rem;
-        color: #1a237e;
-        border-bottom: 2px solid #e8eaf6;
-        padding-bottom: 0.5rem;
-      }
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 
-      /* Estado del Sistema */
-      .nodes-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-      }
-      .node-card {
-        padding: 1rem;
-        border-radius: 6px;
-        text-align: center;
-        border: 2px solid #e0e0e0;
-      }
-      .node-card.ok {
-        border-color: #4caf50;
-        background: #e8f5e9;
-      }
-      .node-card.down {
-        border-color: #f44336;
-        background: #ffebee;
-      }
-      .node-card .name {
-        font-weight: 600;
-        font-size: 1rem;
-      }
-      .node-card .status {
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-      }
+      /* HEADER */
+      .hdr{padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(10,12,16,0.85);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+      .hdr-l{display:flex;align-items:center;gap:0.75rem}
+      .logo{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--blue));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;color:#fff;box-shadow:0 4px 16px rgba(129,140,248,0.2)}
+      .hdr h1{font-size:0.95rem;font-weight:700}
+      .hdr-r{display:flex;align-items:center;gap:1rem}
+      .live{display:flex;align-items:center;gap:0.35rem;font-size:0.65rem;font-family:var(--mono);color:var(--green);text-transform:uppercase;letter-spacing:0.5px}
+      .live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:lp 2s ease-in-out infinite}
+      @keyframes lp{0%,100%{opacity:1;box-shadow:0 0 6px var(--green)}50%{opacity:.5;box-shadow:0 0 14px var(--green)}}
+      .clk{font-family:var(--mono);font-size:0.75rem;color:var(--muted)}
 
-      /* Inventario */
-      .inv-table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .inv-table th,
-      .inv-table td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid #e0e0e0;
-      }
-      .inv-table th {
-        background: #f5f5f5;
-        font-weight: 600;
-      }
+      /* BENTO */
+      .bento{max-width:1280px;margin:1.25rem auto;padding:0 1.5rem;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(80px,auto);gap:1rem}
 
-      /* Transferencia */
-      .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-      }
-      .form-group {
-        display: flex;
-        flex-direction: column;
-      }
-      .form-group label {
-        font-size: 0.875rem;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-      }
-      .form-group select,
-      .form-group input {
-        padding: 0.5rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 0.875rem;
-      }
-      .btn {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.875rem;
-        font-weight: 600;
-      }
-      .btn-primary {
-        background: #1a237e;
-        color: white;
-      }
-      .btn-primary:hover {
-        background: #283593;
-      }
-      .btn-danger {
-        background: #f44336;
-        color: white;
-      }
-      .btn-danger:hover {
-        background: #d32f2f;
-      }
-      .btn-success {
-        background: #4caf50;
-        color: white;
-      }
-      .btn-success:hover {
-        background: #388e3c;
-      }
-      .btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
+      /* TILE BASE */
+      .tile{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.15rem;transition:all .2s;position:relative;overflow:hidden;display:flex;flex-direction:column}
+      .tile.clickable{cursor:pointer}
+      .tile.clickable:hover{border-color:var(--border-hi);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.25)}
+      .tile.clickable:active{transform:translateY(0)}
+      .tile-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.65rem}
+      .tile-lbl{font-size:0.58rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
+      .tile-more{font-size:0.6rem;font-family:var(--mono);color:var(--accent);opacity:0;transition:opacity .2s;display:flex;align-items:center;gap:0.25rem}
+      .tile.clickable:hover .tile-more{opacity:1}
 
-      /* Timeline */
-      .timeline {
-        margin-top: 1rem;
-      }
-      .timeline-entry {
-        display: flex;
-        align-items: flex-start;
-        padding: 0.5rem 0;
-        border-left: 3px solid #e0e0e0;
-        margin-left: 0.5rem;
-        padding-left: 1rem;
-      }
-      .timeline-entry.START {
-        border-left-color: #2196f3;
-      }
-      .timeline-entry.VALIDATE {
-        border-left-color: #ff9800;
-      }
-      .timeline-entry.PREPARED {
-        border-left-color: #4caf50;
-      }
-      .timeline-entry.DELAY {
-        border-left-color: #9c27b0;
-      }
-      .timeline-entry.COMMIT {
-        border-left-color: #2196f3;
-      }
-      .timeline-entry.COMMITTED {
-        border-left-color: #4caf50;
-      }
-      .timeline-entry.ROLLED_BACK {
-        border-left-color: #f44336;
-      }
-      .timeline-entry.ROLLBACK {
-        border-left-color: #ff5722;
-      }
+      /* KPI */
+      .kpi-row{display:flex;align-items:center;gap:0.65rem;flex:1}
+      .kpi-val{font-size:1.6rem;font-weight:700;line-height:1}
+      .kpi-sub{font-size:0.7rem;color:var(--muted);margin-top:0.15rem}
+      .kpi-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
 
-      .timeline-entry .fase {
-        font-weight: 600;
-        min-width: 100px;
-        font-size: 0.875rem;
-      }
-      .timeline-entry .detalle {
-        font-size: 0.875rem;
-        color: #666;
-      }
+      /* SIZES */
+      .t-nodes{grid-column:span 2}
+      .t-inv{grid-column:span 2}
+      .t-transfer{grid-column:span 2}
+      .t-log{grid-column:span 2}
+      .t-log .log-scroll{min-height:180px}
+      .t-inv .inv-scroll{min-height:180px}
 
-      /* Control de Nodos */
-      .control-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-      }
-      .control-node {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1rem;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-      }
-      .control-node .name {
-        font-weight: 600;
-      }
-      .control-node .btns {
-        display: flex;
-        gap: 0.5rem;
-      }
+      /* NODES + CONTROL COMBINED */
+      .nodes-col{display:flex;flex-direction:column;gap:0.6rem;flex:1}
+      .node-card{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 0.85rem;border-radius:10px;border:1px solid var(--border);background:var(--surface);transition:all .3s}
+      .node-card.ok{border-color:var(--green-b);border-left:3px solid var(--green)}
+      .node-card.down{border-color:var(--red-b);border-left:3px solid var(--red)}
+      .node-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0}
+      .node-card.ok .node-icon{background:var(--green-bg);border:1px solid var(--green-b)}
+      .node-card.down .node-icon{background:var(--red-bg);border:1px solid var(--red-b)}
+      .node-info{flex:1;min-width:0}
+      .node-nm{font-weight:600;font-size:0.8rem;line-height:1.2}
+      .node-st{font-size:0.6rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.8px}
+      .node-card.ok .node-st{color:var(--green)}
+      .node-card.down .node-st{color:var(--red)}
+      .node-btns{display:flex;gap:0.3rem;flex-shrink:0}
 
-      /* Log */
-      .log-list {
-        max-height: 300px;
-        overflow-y: auto;
-        font-family: monospace;
-        font-size: 0.8rem;
-      }
-      .log-entry {
-        padding: 0.25rem 0;
-        border-bottom: 1px solid #f0f0f0;
-      }
-      .log-entry .ts {
-        color: #999;
-      }
-      .log-entry .fase {
-        font-weight: 600;
-      }
+      /* BUTTONS */
+      .btn{padding:0.3rem 0.55rem;border:none;border-radius:6px;cursor:pointer;font-size:0.55rem;font-family:var(--font);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;transition:all .15s}
+      .btn-sm{padding:0.25rem 0.45rem;font-size:0.5rem}
+      .btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-b)}
+      .btn-danger:hover{background:var(--red-b);transform:translateY(-1px)}
+      .btn-success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-b)}
+      .btn-success:hover{background:var(--green-b);transform:translateY(-1px)}
+      .btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(129,140,248,0.2)}
+      .btn-primary:hover{background:#a5b4fc;transform:translateY(-1px)}
+      .btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
 
-      /* Status badge */
-      .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        font-size: 0.875rem;
-        font-weight: 600;
-      }
-      .status-badge.committed {
-        background: #e8f5e9;
-        color: #2e7d32;
-      }
-      .status-badge.rolled_back {
-        background: #ffebee;
-        color: #c62828;
-      }
-      .status-badge.failed {
-        background: #fff3e0;
-        color: #e65100;
-      }
+      /* TABLE */
+      .inv-scroll{overflow:auto;flex:1;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.06) transparent}
+      .inv-scroll::-webkit-scrollbar{width:4px}
+      .inv-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+      .inv-table{width:100%;border-collapse:separate;border-spacing:0}
+      .inv-table th,.inv-table td{padding:0.5rem 0.6rem;text-align:left;border-bottom:1px solid var(--border)}
+      .inv-table th{font-size:0.5rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-weight:500;position:sticky;top:0;background:var(--card);z-index:2}
+      .inv-table td{font-family:var(--mono);font-size:0.7rem;transition:background .15s}
+      .inv-table tbody tr:hover td{background:var(--hover)}
+      .inv-table td:not(:first-child){text-align:center;font-weight:500}
+      .sp{display:inline-block;padding:0.12rem 0.45rem;border-radius:100px;font-size:0.65rem;background:var(--surface);border:1px solid var(--border);min-width:36px}
+      .sp.lo{color:var(--amber);border-color:var(--amber-b);background:var(--amber-bg)}
 
-      @media (max-width: 768px) {
-        .nodes-grid,
-        .form-grid,
-        .control-grid {
-          grid-template-columns: 1fr;
-        }
+      /* FORM */
+      .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem}
+      .fg{display:flex;flex-direction:column;gap:0.2rem}
+      .fg label{font-size:0.5rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+      .fg select,.fg input{padding:0.45rem 0.6rem;background:var(--input);border:1px solid var(--border);border-radius:7px;font-size:0.75rem;font-family:var(--font);color:var(--text);outline:none;transition:all .2s}
+      .fg select:focus,.fg input:focus{border-color:var(--accent-b);box-shadow:0 0 0 2px var(--accent-bg)}
+      .fg select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%234a5568' d='M5 7L1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.5rem center;padding-right:1.6rem}
+      .form-act{grid-column:1/-1;margin-top:0.1rem}
+
+      /* TRANSFER RESULT */
+      .res{margin-top:0.75rem;padding:0.85rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;animation:rup .3s ease}
+      .res.error{border-color:var(--red-b);background:var(--red-bg)}
+      @keyframes rup{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+      .res-meta{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem}
+      .res-det{font-size:0.75rem;color:var(--text2);margin-bottom:0.35rem}
+      .res-det strong{color:var(--text)}
+      .res-stk{font-size:0.65rem;font-family:var(--mono);color:var(--muted);padding:0.35rem 0.5rem;background:var(--card);border-radius:6px;border:1px solid var(--border)}
+
+      /* BADGE */
+      .badge{display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.55rem;border-radius:100px;font-size:0.55rem;font-family:var(--mono);font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+      .badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor}
+      .badge.green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-b)}
+      .badge.red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-b)}
+      .badge.amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-b)}
+
+      /* TIMELINE */
+      .timeline{margin-top:0.6rem;position:relative;padding-left:1.15rem}
+      .timeline::before{content:'';position:absolute;left:3px;top:0;bottom:0;width:2px;background:var(--border)}
+      .tl{display:flex;gap:0.5rem;padding:0.25rem 0;position:relative;animation:rup .2s ease both}
+      .tl::before{content:'';position:absolute;left:-1.15rem;top:0.4rem;width:6px;height:6px;border-radius:50%;background:var(--card);border:2px solid var(--muted);z-index:1}
+      .tl.START::before{border-color:var(--blue);background:var(--blue)}
+      .tl.VALIDATE::before{border-color:var(--amber);background:var(--amber)}
+      .tl.PREPARED::before{border-color:var(--green);background:var(--green)}
+      .tl.DELAY::before{border-color:var(--purple);background:var(--purple)}
+      .tl.COMMIT::before{border-color:var(--blue);background:var(--blue)}
+      .tl.COMMITTED::before{border-color:var(--green);background:var(--green)}
+      .tl.ROLLED_BACK::before,.tl.ROLLBACK::before{border-color:var(--red);background:var(--red)}
+      .tl-f{font-weight:600;min-width:68px;font-size:0.6rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.2px;color:var(--text)}
+      .tl-d{font-size:0.7rem;color:var(--text2)}
+      .tl-d .tl-n{color:var(--amber)}
+
+      /* LOG */
+      .log-scroll{overflow-y:auto;flex:1;font-family:var(--mono);font-size:0.6rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.06) transparent}
+      .log-scroll::-webkit-scrollbar{width:4px}
+      .log-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+      .log-row{padding:0.3rem 0.45rem;border-bottom:1px solid var(--border);display:flex;gap:0.4rem;align-items:baseline;transition:background .15s;border-radius:5px}
+      .log-row:hover{background:var(--hover)}
+      .log-ts{color:var(--muted);font-size:0.55rem;flex-shrink:0}
+      .log-fa{font-weight:600;color:var(--green);flex-shrink:0;min-width:55px}
+      .log-no{color:var(--amber);flex-shrink:0}
+      .log-de{color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+      /* COUNTDOWN */
+      .countdown{padding:0.6rem 0.75rem;background:var(--amber-bg);border:1px solid var(--amber-b);border-radius:8px;margin-top:0.5rem;text-align:center;font-size:0.75rem;color:var(--amber);animation:cdp 1s ease-in-out infinite}
+      .countdown strong{font-family:var(--mono);font-size:0.85rem}
+      @keyframes cdp{0%,100%{opacity:1}50%{opacity:.6}}
+
+      /* SHIMMER */
+      .shimmer{background:linear-gradient(90deg,var(--surface) 0%,var(--card) 50%,var(--surface) 100%);background-size:200% 100%;animation:shm 1.5s ease-in-out infinite;border-radius:5px}
+      @keyframes shm{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+      /* MODAL */
+      .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;animation:mf .2s ease}
+      .modal-overlay.open{display:flex}
+      @keyframes mf{from{opacity:0}to{opacity:1}}
+      .modal{background:var(--card);border:1px solid var(--border-hi);border-radius:16px;width:90%;max-width:700px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;animation:ms .3s cubic-bezier(.16,1,.3,1)}
+      @keyframes ms{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+      .modal-hd{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+      .modal-hd h3{font-size:0.9rem;font-weight:600}
+      .modal-x{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:all .15s}
+      .modal-x:hover{background:var(--hover);color:var(--text)}
+      .modal-bd{padding:1.25rem;overflow-y:auto;flex:1}
+
+      /* MODAL DETAIL */
+      .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;margin-top:0.6rem}
+      .detail-stat{padding:0.7rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-align:center}
+      .detail-stat .val{font-size:1.1rem;font-weight:700;font-family:var(--mono)}
+      .detail-stat .lbl{font-size:0.55rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:0.1rem}
+      .detail-inv{width:100%;border-collapse:separate;border-spacing:0;margin-top:0.6rem}
+      .detail-inv th,.detail-inv td{padding:0.4rem 0.55rem;text-align:left;border-bottom:1px solid var(--border)}
+      .detail-inv th{font-size:0.5rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+      .detail-inv td{font-family:var(--mono);font-size:0.7rem}
+      .detail-inv td:not(:first-child){text-align:center}
+
+      @media(max-width:1100px){.t-nodes,.t-inv,.t-transfer,.t-log{grid-column:span 4}}
+      @media(max-width:768px){
+        .bento{grid-template-columns:1fr;padding:0 0.75rem}
+        .t-nodes,.t-inv,.t-transfer,.t-log{grid-column:span 1}
+        .nodes-col{flex-direction:column}
+        .form-grid{grid-template-columns:1fr}
+        .hdr{padding:0.65rem 1rem}
       }
     </style>
   </head>
   <body>
-    <header>
-      <h1>FarmaAndes - Coordinador 2PC</h1>
-      <p>Sistema Distribuido de Farmacias - Laboratorio 8</p>
-    </header>
 
-    <div class="container">
-      <!-- Estado del Sistema -->
-      <div class="card">
-        <h2>Estado del Sistema</h2>
-        <div class="nodes-grid">
-          <div class="node-card" id="node-arequipa">
-            <div class="name">Arequipa</div>
-            <div class="status">Cargando...</div>
-          </div>
-          <div class="node-card" id="node-lima">
-            <div class="name">Lima</div>
-            <div class="status">Cargando...</div>
-          </div>
-          <div class="node-card" id="node-cusco">
-            <div class="name">Cusco</div>
-            <div class="status">Cargando...</div>
-          </div>
+    <div class="hdr">
+      <div class="hdr-l"><div class="logo">FA</div><h1>FarmaAndes · 2PC</h1></div>
+      <div class="hdr-r"><div class="live">Online</div><div class="clk" id="clock"></div></div>
+    </div>
+
+    <div class="bento">
+
+      <!-- KPI: Nodos -->
+      <div class="tile clickable" style="grid-column:span 1" onclick="openModal('modal-nodos')">
+        <div class="tile-head"><span class="tile-lbl">Nodos</span><span class="tile-more">Detalle ↗</span></div>
+        <div class="kpi-row"><div class="kpi-ico" style="background:var(--green-bg);border:1px solid var(--green-b)">⬡</div><div><div class="kpi-val" id="kpi-nodos-val">—</div><div class="kpi-sub">de 3 activos</div></div></div>
+      </div>
+
+      <!-- KPI: Productos -->
+      <div class="tile clickable" style="grid-column:span 1" onclick="openModal('modal-inv')">
+        <div class="tile-head"><span class="tile-lbl">Productos</span><span class="tile-more">Ver todo ↗</span></div>
+        <div class="kpi-row"><div class="kpi-ico" style="background:var(--blue-bg);border:1px solid var(--blue-b)">⊞</div><div><div class="kpi-val" id="kpi-prod-val">—</div><div class="kpi-sub">en inventario</div></div></div>
+      </div>
+
+      <!-- KPI: Stock -->
+      <div class="tile clickable" style="grid-column:span 1" onclick="openModal('modal-inv')">
+        <div class="tile-head"><span class="tile-lbl">Stock Total</span><span class="tile-more">Detalle ↗</span></div>
+        <div class="kpi-row"><div class="kpi-ico" style="background:var(--amber-bg);border:1px solid var(--amber-b)">▦</div><div><div class="kpi-val" id="kpi-stock-val">—</div><div class="kpi-sub">unidades</div></div></div>
+      </div>
+
+      <!-- KPI: Eventos -->
+      <div class="tile clickable" style="grid-column:span 1" onclick="openModal('modal-log')">
+        <div class="tile-head"><span class="tile-lbl">Eventos</span><span class="tile-more">Ver log ↗</span></div>
+        <div class="kpi-row"><div class="kpi-ico" style="background:var(--accent-bg);border:1px solid var(--accent-b)">≡</div><div><div class="kpi-val" id="kpi-events-val">—</div><div class="kpi-sub">en bitácora</div></div></div>
+      </div>
+
+      <!-- INVENTARIO -->
+      <div class="tile t-inv clickable" onclick="openModal('modal-inv')">
+        <div class="tile-head"><span class="tile-lbl">Inventario</span><span class="tile-more">Ver detalle ↗</span></div>
+        <div class="inv-scroll" style="flex:1">
+          <table class="inv-table">
+            <thead><tr><th>Producto</th><th>Arequipa</th><th>Lima</th><th>Cusco</th></tr></thead>
+            <tbody id="inventario-body"><tr><td colspan="4"><div class="shimmer" style="height:28px"></div></td></tr></tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Inventario -->
-      <div class="card">
-        <h2>Inventario</h2>
-        <table class="inv-table">
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Arequipa</th>
-              <th>Lima</th>
-              <th>Cusco</th>
-            </tr>
-          </thead>
-          <tbody id="inventario-body">
-            <tr>
-              <td colspan="4">Cargando inventario...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Transferencia -->
-      <div class="card">
-        <h2>Transferencia</h2>
-        <form id="transfer-form">
+      <!-- TRANSFERENCIA -->
+      <div class="tile t-transfer">
+        <div class="tile-head"><span class="tile-lbl">Transferencia 2PC</span></div>
+        <form id="transfer-form" style="flex:1;display:flex;flex-direction:column">
           <div class="form-grid">
-            <div class="form-group">
-              <label for="origen">Origen</label>
-              <select id="origen" required>
-                <option value="arequipa">Arequipa</option>
-                <option value="lima">Lima</option>
-                <option value="cusco">Cusco</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="destino">Destino</label>
-              <select id="destino" required>
-                <option value="lima">Lima</option>
-                <option value="arequipa">Arequipa</option>
-                <option value="cusco">Cusco</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="producto">Producto</label>
-              <select id="producto" required>
-                <option value="">Seleccionar origen primero</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="cantidad">Cantidad</label>
-              <input type="number" id="cantidad" min="1" value="10" required />
-            </div>
-            <div class="form-group">
-              <label for="delay">Retraso entre fases (seg)</label>
-              <input type="number" id="delay" min="0" step="0.5" value="3" />
-            </div>
-          </div>
-          <div style="margin-top: 1rem">
-            <button type="submit" class="btn btn-primary" id="btn-transferir">Transferir</button>
+            <div class="fg"><label for="origen">Origen</label><select id="origen" required><option value="arequipa">Arequipa</option><option value="lima">Lima</option><option value="cusco">Cusco</option></select></div>
+            <div class="fg"><label for="destino">Destino</label><select id="destino" required><option value="lima">Lima</option><option value="arequipa">Arequipa</option><option value="cusco">Cusco</option></select></div>
+            <div class="fg"><label for="producto">Producto</label><select id="producto" required><option value="">Seleccionar origen</option></select></div>
+            <div class="fg"><label for="cantidad">Cantidad</label><input type="number" id="cantidad" min="1" value="10" required /></div>
+            <div class="fg"><label for="delay">Retraso (s)</label><input type="number" id="delay" min="0" step="0.5" value="3" /></div>
+            <div class="form-act"><button type="submit" class="btn btn-primary" id="btn-transferir" style="width:100%">Ejecutar Transferencia</button></div>
           </div>
         </form>
-        <div id="transfer-result" style="margin-top: 1rem"></div>
+        <div id="transfer-result"></div>
       </div>
 
-      <!-- Control de Nodos -->
-      <div class="card">
-        <h2>Control de Nodos</h2>
-        <div class="control-grid">
-          <div class="control-node">
-            <div class="name">Arequipa</div>
-            <div class="btns">
-              <button class="btn btn-danger" onclick="controlNodo('arequipa', 'detener')">
-                Detener
-              </button>
-              <button class="btn btn-success" onclick="controlNodo('arequipa', 'iniciar')">
-                Iniciar
-              </button>
+      <!-- NODOS + CONTROL (merged) -->
+      <div class="tile t-nodes clickable" onclick="openModal('modal-nodos')">
+        <div class="tile-head"><span class="tile-lbl">Nodos · Estado y Control</span><span class="tile-more">Ver detalle ↗</span></div>
+        <div class="nodes-col">
+          <div class="node-card" id="node-arequipa">
+            <div class="node-icon">🏥</div>
+            <div class="node-info"><div class="node-nm">Arequipa</div><div class="node-st">Cargando...</div></div>
+            <div class="node-btns">
+              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();controlNodo('arequipa','detener')">Detener</button>
+              <button class="btn btn-success btn-sm" onclick="event.stopPropagation();controlNodo('arequipa','iniciar')">Iniciar</button>
             </div>
           </div>
-          <div class="control-node">
-            <div class="name">Lima</div>
-            <div class="btns">
-              <button class="btn btn-danger" onclick="controlNodo('lima', 'detener')">
-                Detener
-              </button>
-              <button class="btn btn-success" onclick="controlNodo('lima', 'iniciar')">
-                Iniciar
-              </button>
+          <div class="node-card" id="node-lima">
+            <div class="node-icon">🏥</div>
+            <div class="node-info"><div class="node-nm">Lima</div><div class="node-st">Cargando...</div></div>
+            <div class="node-btns">
+              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();controlNodo('lima','detener')">Detener</button>
+              <button class="btn btn-success btn-sm" onclick="event.stopPropagation();controlNodo('lima','iniciar')">Iniciar</button>
             </div>
           </div>
-          <div class="control-node">
-            <div class="name">Cusco</div>
-            <div class="btns">
-              <button class="btn btn-danger" onclick="controlNodo('cusco', 'detener')">
-                Detener
-              </button>
-              <button class="btn btn-success" onclick="controlNodo('cusco', 'iniciar')">
-                Iniciar
-              </button>
+          <div class="node-card" id="node-cusco">
+            <div class="node-icon">🏥</div>
+            <div class="node-info"><div class="node-nm">Cusco</div><div class="node-st">Cargando...</div></div>
+            <div class="node-btns">
+              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();controlNodo('cusco','detener')">Detener</button>
+              <button class="btn btn-success btn-sm" onclick="event.stopPropagation();controlNodo('cusco','iniciar')">Iniciar</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Log de Eventos -->
-      <div class="card">
-        <h2>Log de Eventos</h2>
-        <div class="log-list" id="log-list">Cargando log...</div>
+      <!-- LOG -->
+      <div class="tile t-log clickable" onclick="openModal('modal-log')">
+        <div class="tile-head"><span class="tile-lbl">Log de Eventos</span><span class="tile-more">Ver completo ↗</span></div>
+        <div class="log-scroll" id="log-list" style="flex:1">
+          <div class="shimmer" style="height:28px;margin-bottom:0.3rem"></div>
+          <div class="shimmer" style="height:28px;margin-bottom:0.3rem"></div>
+          <div class="shimmer" style="height:28px"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MODAL: Nodos -->
+    <div class="modal-overlay" id="modal-nodos" onclick="if(event.target===this)closeModal('modal-nodos')">
+      <div class="modal">
+        <div class="modal-hd"><h3>Detalle de Nodos</h3><button class="modal-x" onclick="closeModal('modal-nodos')">×</button></div>
+        <div class="modal-bd" id="modal-nodos-body">
+          <p style="color:var(--text2);font-size:0.8rem;margin-bottom:0.75rem">Selecciona un nodo para ver su inventario.</p>
+          <div class="detail-grid" id="modal-nodes-grid"></div>
+          <div id="modal-node-detail" style="margin-top:1rem"></div>
+        </div>
       </div>
     </div>
+
+    <!-- MODAL: Inventario -->
+    <div class="modal-overlay" id="modal-inv" onclick="if(event.target===this)closeModal('modal-inv')">
+      <div class="modal">
+        <div class="modal-hd"><h3>Inventario Completo</h3><button class="modal-x" onclick="closeModal('modal-inv')">×</button></div>
+        <div class="modal-bd"><table class="detail-inv"><thead><tr><th>Producto</th><th>Arequipa</th><th>Lima</th><th>Cusco</th><th>Total</th></tr></thead><tbody id="modal-inv-body"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- MODAL: Log -->
+    <div class="modal-overlay" id="modal-log" onclick="if(event.target===this)closeModal('modal-log')">
+      <div class="modal">
+        <div class="modal-hd"><h3>Bitácora Completa</h3><button class="modal-x" onclick="closeModal('modal-log')">×</button></div>
+        <div class="modal-bd"><div id="modal-log-body" style="font-family:var(--mono);font-size:0.65rem"></div></div>
+      </div>
+    </div>
+
     <script src="utils.js"></script>
     <script src="estado.js"></script>
     <script src="inventario.js"></script>
@@ -411,14 +342,16 @@
     <script src="transferencia.js"></script>
     <script src="control.js"></script>
     <script>
-      document.getElementById("origen").addEventListener("change", cargarProductos);
-      document.getElementById("transfer-form").addEventListener("submit", ejecutarTransferencia);
-      (async () => {
-        await Promise.all([cargarSalud(), cargarInventario(), cargarLog()]);
-        cargarProductos();
-      })();
-      setInterval(cargarSalud, 1000);
-      setInterval(cargarLog, 1000);
+      function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('es-PE',{hour12:false})}
+      updateClock();setInterval(updateClock,1000);
+      function openModal(id){document.getElementById(id).classList.add('open')}
+      function closeModal(id){document.getElementById(id).classList.remove('open')}
+      document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'))});
+      document.getElementById("origen").addEventListener("change",cargarProductos);
+      document.getElementById("transfer-form").addEventListener("submit",ejecutarTransferencia);
+      (async()=>{await Promise.all([cargarSalud(),cargarInventario(),cargarLog()]);cargarProductos()})();
+      setInterval(cargarSalud,1000);
+      setInterval(cargarLog,1000);
     </script>
   </body>
 </html>
