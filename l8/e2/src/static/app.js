@@ -7,8 +7,8 @@
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
 
-    // 1. Register callbacks so client.js can push events to us
-    BNC_Client.registerCallbacks({
+    // 1. Register callbacks so client-api.js can push events to us
+    BNC_ClientAPI.registerCallbacks({
         onLog: appendConsole,
         onStateChange: renderAccounts,
         onAnimate: animatePacket,
@@ -27,9 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 3. Button bindings
     document.getElementById("btn-start").addEventListener("click", startTransactionUI);
-    document.getElementById("btn-next").addEventListener("click", () => BNC_Client.executeNextStep());
+    document.getElementById("btn-next").addEventListener("click", () => BNC_ClientAPI.executeNextStep());
     document.getElementById("btn-reset").addEventListener("click", () => {
-        BNC_Client.resetSystem();
+        BNC_ClientAPI.resetSystem();
         populateNodeSelectors();
         renderNetworkDiagram();
         document.getElementById("btn-start").disabled = false;
@@ -48,7 +48,7 @@ function populateNodeSelectors() {
 
     [sourceSel, destSel].forEach(sel => {
         sel.innerHTML = "";
-        Object.entries(BNC_Client.nodes).forEach(([key, node]) => {
+        Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
             const opt = document.createElement("option");
             opt.value = key;
             opt.textContent = node.name;
@@ -57,8 +57,8 @@ function populateNodeSelectors() {
     });
 
     // Default: source=arequipa, dest=cusco (if available)
-    if (BNC_Client.nodes.arequipa) sourceSel.value = "arequipa";
-    if (BNC_Client.nodes.cusco) destSel.value = "cusco";
+    if (BNC_ClientAPI.nodes.arequipa) sourceSel.value = "arequipa";
+    if (BNC_ClientAPI.nodes.cusco) destSel.value = "cusco";
 
     populateAccountDropdown("source");
     populateAccountDropdown("dest");
@@ -67,7 +67,7 @@ function populateNodeSelectors() {
     const accNodeSel = document.getElementById("acc-node-select");
     if (accNodeSel) {
         accNodeSel.innerHTML = "";
-        Object.entries(BNC_Client.nodes).forEach(([key, node]) => {
+        Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
             const opt = document.createElement("option");
             opt.value = key;
             opt.textContent = node.name;
@@ -82,7 +82,7 @@ function populateAccountDropdown(side) {
     const nodeKey = nodeSel.value;
     accSel.innerHTML = "";
 
-    const accounts = BNC_Client.dbState[nodeKey] || {};
+    const accounts = BNC_ClientAPI.dbState[nodeKey] || {};
     Object.entries(accounts).forEach(([accId, acc]) => {
         const opt = document.createElement("option");
         opt.value = accId;
@@ -105,8 +105,8 @@ function populateAccountDropdown(side) {
 const nodePositions = {
     coordinator: { x: 50, y: 22 },
     arequipa:    { x: 15, y: 75 },
-    lima:        { x: 50, y: 75 },
-    cusco:       { x: 85, y: 75 }
+    cusco:        { x: 50, y: 75 },
+    trujillo:       { x: 85, y: 75 }
 };
 
 function renderNetworkDiagram() {
@@ -119,7 +119,7 @@ function renderNetworkDiagram() {
     // Remove old lines
     svg.querySelectorAll("line, .packet-group").forEach(el => el.remove());
 
-    Object.entries(BNC_Client.nodes).forEach(([key, node]) => {
+    Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
         const pos = nodePositions[key];
         if (!pos) return;
 
@@ -163,7 +163,7 @@ function renderNetworkDiagram() {
 }
 
 function setNodeUI(nodeKey, status) {
-    BNC_Client.setNodeStatus(nodeKey, status);
+    BNC_ClientAPI.setNodeStatus(nodeKey, status);
     const statusText = document.getElementById(`status-text-${nodeKey}`);
     if (statusText) statusText.textContent = status;
     const dot = document.querySelector(`#node-el-${nodeKey} .status-dot`);
@@ -179,9 +179,9 @@ function renderAccounts() {
     const container = document.getElementById("databases-container");
     container.innerHTML = "";
 
-    Object.entries(BNC_Client.nodes).forEach(([key, node]) => {
+    Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
         const code = node.code;
-        const accounts = BNC_Client.dbState[key] || {};
+        const accounts = BNC_ClientAPI.dbState[key] || {};
 
         const card = document.createElement("div");
         card.className = `db-card ${node.status !== 'online' ? 'node-offline' : ''}`;
@@ -243,7 +243,7 @@ function renderAccounts() {
     });
 
     // Also update the dot indicators on the network diagram
-    Object.entries(BNC_Client.nodes).forEach(([key, node]) => {
+    Object.entries(BNC_ClientAPI.nodes).forEach(([key, node]) => {
         const dot = document.querySelector(`#node-el-${key} .status-dot`);
         if (dot) dot.className = `status-dot ${node.status}`;
         const statusText = document.getElementById(`status-text-${key}`);
@@ -283,7 +283,7 @@ function copyConsoleLogs() {
 function renderWAL() {
     const tbody = document.getElementById("wal-tbody");
     if (!tbody) return;
-    const wal = BNC_Client.coordinatorWAL;
+    const wal = BNC_ClientAPI.coordinatorWAL;
     if (wal.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin registros</td></tr>';
         return;
@@ -291,7 +291,7 @@ function renderWAL() {
     tbody.innerHTML = "";
     wal.forEach(entry => {
         const tr = document.createElement("tr");
-        const nodeName = entry.node ? (BNC_Client.nodes[entry.node] ? BNC_Client.nodes[entry.node].name : entry.node) : "—";
+        const nodeName = entry.node ? (BNC_ClientAPI.nodes[entry.node] ? BNC_ClientAPI.nodes[entry.node].name : entry.node) : "—";
         const stateClass = entry.state === "COMMITTED" ? "text-success" :
                            entry.state === "ABORT" || entry.state === "IN_DOUBT" ? "text-error" : "";
         tr.innerHTML = `
@@ -308,9 +308,9 @@ function renderWAL() {
 // STATS
 // ============================================================
 function renderStats() {
-    const stats = BNC_Client.stats;
+    const stats = BNC_ClientAPI.stats;
     document.getElementById("tx-stats").textContent = `${stats.success} / ${stats.total}`;
-    document.getElementById("coord-log-count").textContent = `${BNC_Client.coordinatorWAL.length} entradas`;
+    document.getElementById("coord-log-count").textContent = `${BNC_ClientAPI.coordinatorWAL.length} entradas`;
 }
 
 // ============================================================
@@ -373,7 +373,7 @@ function startTransactionUI() {
     document.getElementById("btn-start").disabled = true;
     document.getElementById("btn-next").disabled = !isStep;
 
-    const ok = BNC_Client.startTransaction(sourceNode, sourceAcc, destNode, destAcc, amount, isStep, stepDelay);
+    const ok = BNC_ClientAPI.startTransaction(sourceNode, sourceAcc, destNode, destAcc, amount, isStep, stepDelay);
     if (!ok) {
         document.getElementById("btn-start").disabled = false;
         document.getElementById("btn-next").disabled = true;
@@ -381,7 +381,7 @@ function startTransactionUI() {
 }
 
 function openEditAccountModal(nodeKey, accId) {
-    const acc = BNC_Client.dbState[nodeKey][accId];
+    const acc = BNC_ClientAPI.dbState[nodeKey][accId];
     document.getElementById("edit-acc-key").value = nodeKey;
     document.getElementById("edit-acc-id").value = accId;
     document.getElementById("edit-acc-owner").value = acc.owner;
@@ -396,7 +396,7 @@ function submitEditAccount(e) {
     const owner = document.getElementById("edit-acc-owner").value;
     const balance = parseFloat(document.getElementById("edit-acc-balance").value);
 
-    const result = BNC_Client.updateAccount(nodeKey, accId, owner, balance);
+    const result = BNC_ClientAPI.updateAccount(nodeKey, accId, owner, balance);
     if (result.success) {
         closeModal("modal-edit-account");
         renderAccounts();
@@ -413,16 +413,16 @@ let pendingDeleteAcc = null;
 function openDeleteAccountModal(nodeKey, accId) {
     pendingDeleteNode = nodeKey;
     pendingDeleteAcc = accId;
-    const acc = BNC_Client.dbState[nodeKey][accId];
+    const acc = BNC_ClientAPI.dbState[nodeKey][accId];
     document.getElementById("delete-confirm-msg").innerHTML =
-        `¿Estás seguro de eliminar la cuenta <strong>${accId}</strong> de <strong>${acc.owner}</strong> en <strong>${BNC_Client.nodes[nodeKey].name}</strong>?`;
+        `¿Estás seguro de eliminar la cuenta <strong>${accId}</strong> de <strong>${acc.owner}</strong> en <strong>${BNC_ClientAPI.nodes[nodeKey].name}</strong>?`;
     openModal("modal-delete-account");
 }
 
 function confirmDeleteAccount() {
     if (!pendingDeleteNode || !pendingDeleteAcc) return;
 
-    const result = BNC_Client.deleteAccount(pendingDeleteNode, pendingDeleteAcc);
+    const result = BNC_ClientAPI.deleteAccount(pendingDeleteNode, pendingDeleteAcc);
     if (result.success) {
         closeModal("modal-delete-account");
         renderAccounts();
@@ -441,7 +441,7 @@ function onTransactionEnd() {
     document.getElementById("btn-next").disabled = true;
     populateAccountDropdown("source");
     populateAccountDropdown("dest");
-    Object.keys(BNC_Client.nodes).forEach(key => restoreLineState(key));
+    Object.keys(BNC_ClientAPI.nodes).forEach(key => restoreLineState(key));
 }
 
 // ============================================================
@@ -449,7 +449,7 @@ function onTransactionEnd() {
 // ============================================================
 function loadScenario(name) {
     // Reset first
-    BNC_Client.resetSystem();
+    BNC_ClientAPI.resetSystem();
     populateNodeSelectors();
     renderNetworkDiagram();
 
@@ -477,7 +477,7 @@ function loadScenario(name) {
             break;
 
         case "node_crash":
-            BNC_Client.setNodeStatus("cusco", "offline");
+            BNC_ClientAPI.setNodeStatus("cusco", "offline");
             renderNetworkDiagram();
             srcSel.value = "arequipa"; populateAccountDropdown("source");
             dstSel.value = "cusco";    populateAccountDropdown("dest");
@@ -494,7 +494,7 @@ function loadScenario(name) {
             document.getElementById("dest-acc-select").value = "CU-201";
             amtInp.value = 25000;
             // Set the crash flag on activeTx (we'll inject it before the transaction starts)
-            BNC_Client.activeTx = { injectPhase2Crash: true };
+            BNC_ClientAPI.activeTx = { injectPhase2Crash: true };
             appendConsole("system", "[ESCENARIO] In-Doubt & Recovery: Cusco caerá durante Fase 2. COMMIT parcial → IN-DOUBT. Recuperar cambiando Cusco a ONLINE.");
             break;
     }
@@ -520,7 +520,7 @@ function submitCreateAccount(e) {
     const balance = document.getElementById("acc-new-balance").value;
     const owner   = document.getElementById("acc-new-owner").value;
 
-    const result = BNC_Client.createAccount(nodeKey, accId, owner, parseFloat(balance));
+    const result = BNC_ClientAPI.createAccount(nodeKey, accId, owner, parseFloat(balance));
     if (result.success) {
         closeModal("modal-account");
         renderAccounts();

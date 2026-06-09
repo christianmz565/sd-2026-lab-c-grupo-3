@@ -1,0 +1,51 @@
+services:
+  postgres_arequipa:
+    image: postgres:16-alpine
+    container_name: red_financiera_arequipa
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sucursal_arequipa
+    ports:
+      - "5438:5432"
+    volumes:
+      - ./init-scripts/01_arequipa.sql:/docker-entrypoint-initdb.d/01_arequipa.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sucursal_arequipa"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres_cusco:
+    image: postgres:16-alpine
+    container_name: red_financiera_cusco
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sucursal_cusco
+    ports:
+      - "5439:5432"
+    volumes:
+      - ./init-scripts/02_cusco.sql:/docker-entrypoint-initdb.d/02_cusco.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sucursal_cusco"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres_trujillo:
+    image: postgres:16-alpine
+    container_name: red_financiera_trujillo
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sucursal_trujillo
+    ports:
+      - "5440:5432"
+    volumes:
+      - ./init-scripts/03_trujillo.sql:/docker-entrypoint-initdb.d/03_trujillo.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sucursal_trujillo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
