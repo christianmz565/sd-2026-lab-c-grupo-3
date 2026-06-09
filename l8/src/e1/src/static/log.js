@@ -1,7 +1,8 @@
 async function cargarLog() {
     try {
-        const res = await fetch('/log');
-        const data = await res.json();
+        const result = await safeFetch(`${window.API_BASE}/log`);
+        if (!result.ok) throw new Error(result.data?.detail || result.data || 'Error desconocido');
+        const data = result.data;
         const list = document.getElementById('log-list');
         if (data.entries.length === 0) {
             list.innerHTML = 'Sin eventos registrados.';

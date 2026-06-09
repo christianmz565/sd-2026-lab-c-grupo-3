@@ -2,8 +2,9 @@ let inventarioCache = [];
 
 async function cargarInventario() {
     try {
-        const res = await fetch('/inventario');
-        const data = await res.json();
+        const result = await safeFetch(`${window.API_BASE}/inventario`);
+        if (!result.ok) throw new Error(result.data?.detail || result.data || 'Error desconocido');
+        const data = result.data;
         inventarioCache = data.inventario;
         const productos = [...new Set(inventarioCache.map(r => r.producto))].sort();
         const tbody = document.getElementById('inventario-body');

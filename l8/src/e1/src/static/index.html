@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FarmaAndes - Coordinador 2PC</title>
+    <script>window.API_BASE = "";</script>
     <style>
       * {
         margin: 0;
@@ -180,12 +181,13 @@
       .timeline-entry.COMMITTED {
         border-left-color: #4caf50;
       }
-      .timeline-entry.FAILED {
-        border-left-color: #f44336;
-      }
       .timeline-entry.ROLLED_BACK {
         border-left-color: #f44336;
       }
+      .timeline-entry.ROLLBACK {
+        border-left-color: #ff5722;
+      }
+
       .timeline-entry .fase {
         font-weight: 600;
         min-width: 100px;
@@ -402,11 +404,12 @@
         <div class="log-list" id="log-list">Cargando log...</div>
       </div>
     </div>
-    <script src="/static/estado.js"></script>
-    <script src="/static/inventario.js"></script>
-    <script src="/static/log.js"></script>
-    <script src="/static/transferencia.js"></script>
-    <script src="/static/control.js"></script>
+    <script src="utils.js"></script>
+    <script src="estado.js"></script>
+    <script src="inventario.js"></script>
+    <script src="log.js"></script>
+    <script src="transferencia.js"></script>
+    <script src="control.js"></script>
     <script>
       document.getElementById("origen").addEventListener("change", cargarProductos);
       document.getElementById("transfer-form").addEventListener("submit", ejecutarTransferencia);

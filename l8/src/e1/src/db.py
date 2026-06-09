@@ -66,6 +66,23 @@ def get_nodo(nombre: str) -> Nodo:
     return NODOS[nombre]
 
 
+def simplify_db_error(e: Exception) -> str:
+    """Simplifica mensajes de error verbosos de psycopg para la UI."""
+    msg = str(e).strip()
+    if "Connection refused" in msg or "Can't assign requested address" in msg:
+        return "Conexión rechazada: el servidor no responde. Verifique que el contenedor Docker esté iniciado."
+    if "password authentication failed" in msg:
+        return "Fallo de autenticación en la base de datos."
+    if "database" in msg and "does not exist" in msg:
+        return "La base de datos no existe."
+    if "terminating connection due to administrator command" in msg:
+        return "Conexión terminada (el nodo fue detenido manualmente)."
+
+    # Si hay múltiples líneas (como en fallos de conexión de psycopg), tomar la primera relevante
+    lines = [l.strip() for l in msg.split("\n") if l.strip()]
+    return lines[0] if lines else msg
+
+
 @contextmanager
 def nodo_connection(nombre: str) -> Iterator[psycopg.Connection]:
     """Abre una conexión a un nodo en modo transacción explícita (autocommit=False).

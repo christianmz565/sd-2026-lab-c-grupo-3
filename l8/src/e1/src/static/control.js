@@ -2,16 +2,15 @@ async function controlNodo(nombre, accion) {
     const btn = event.target;
     btn.disabled = true;
     try {
-        const res = await fetch(`/nodos/${nombre}/${accion}`, { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok) {
-            alert(`Error: ${data.detail || 'Error desconocido'}`);
+        const result = await safeFetch(`${window.API_BASE}/nodos/${nombre}/${accion}`, { method: 'POST' });
+        if (!result.ok) {
+            alert(`Error: ${result.data?.detail || result.data || 'Error desconocido'}`);
             return;
         }
         await Promise.all([cargarSalud(), cargarInventario()]);
         cargarProductos();
     } catch (e) {
-        alert(`Error de red: ${e.message}`);
+        alert(`Error: ${e.message}`);
     } finally {
         btn.disabled = false;
     }

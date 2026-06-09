@@ -87,22 +87,23 @@ async function ejecutarTransferencia(e) {
     }
 
     try {
-        const res = await fetch('/transferir', {
+        const result = await safeFetch(`${window.API_BASE}/transferir`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
         stopCountdown();
-        const data = await res.json();
 
-        if (!res.ok) {
+        if (!result.ok) {
             resultDiv.innerHTML = `
                 <div style="padding: 1rem; background: #ffebee; border-radius: 6px;">
-                    <strong>Error:</strong> ${data.detail || 'Error desconocido'}
+                    <strong>Error:</strong> ${result.data?.detail || result.data || 'Error desconocido'}
                 </div>
             `;
             return;
         }
+
+        const data = result.data;
 
         resultDiv.innerHTML = `
             <div style="margin-bottom: 1rem;">

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import requests
 
-DEFAULT_BASE = "http://localhost:8000"
+DEFAULT_BASE = "http://127.0.0.1:9000"
 
 
 def main() -> int:

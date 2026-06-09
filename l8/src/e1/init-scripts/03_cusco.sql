@@ -6,5 +6,7 @@ CREATE TABLE IF NOT EXISTS inventario (
 
 INSERT INTO inventario(producto, stock) VALUES
     ('Paracetamol', 30),
+    ('Ibuprofeno',   0),
     ('Amoxicilina', 70),
+    ('Aspirina',     0),
     ('Loratadina',  20);

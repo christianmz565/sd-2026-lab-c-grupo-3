@@ -8,6 +8,7 @@ Endpoints:
   POST /nodos/{nombre}/detener  - detiene el contenedor Docker de un nodo
   POST /nodos/{nombre}/iniciar  - inicia el contenedor Docker de un nodo
 """
+
 from __future__ import annotations
 
 import os
@@ -19,7 +20,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 # Permite ejecutar con `uvicorn src.app:app` y `python -m src.app`
@@ -65,8 +67,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 _STATIC_DIR = _SRC_DIR / "static"
-app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
+
+@app.get("/")
+def index() -> HTMLResponse:
+    """Sirve la interfaz web principal."""
+    index_path = _STATIC_DIR / "index.html"
+    return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
 
 
 def _coord() -> TwoPhaseCommitCoordinator:
@@ -77,16 +93,10 @@ def _log() -> LogStore:
     return _state["log"]
 
 
-@app.get("/", response_class=HTMLResponse)
-def index() -> HTMLResponse:
-    """Sirve la interfaz web."""
-    html_path = _SRC_DIR / "static" / "index.html"
-    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
-
-
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     """Ping a los 3 nodos. Devuelve 'ok' o 'down' por nodo."""
+
     def status(nombre: str) -> str:
         return "ok" if db.health_check(nombre) else "down"
 
@@ -108,11 +118,13 @@ def inventario() -> InventarioResponse:
         except Exception:
             continue
         for it in items:
-            rows.append(InventarioRow(
-                almacen=nodo,  # type: ignore[arg-type]
-                producto=it["producto"],
-                stock=it["stock"],
-            ))
+            rows.append(
+                InventarioRow(
+                    almacen=nodo,  # type: ignore[arg-type]
+                    producto=it["producto"],
+                    stock=it["stock"],
+                )
+            )
     return InventarioResponse(inventario=rows)
 
 
@@ -153,10 +165,15 @@ def detener_nodo(nombre: NodoLiteral) -> dict:
     container = f"farmaandes_{nombre}"
     result = subprocess.run(
         ["docker", "stop", container],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     if result.returncode != 0:
-        raise HTTPException(status_code=500, detail=f"Error deteniendo {container}: {result.stderr.strip()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deteniendo {container}: {result.stderr.strip()}",
+        )
     return {"nodo": nombre, "estado": "detenido"}
 
 
@@ -166,15 +183,27 @@ def iniciar_nodo(nombre: NodoLiteral) -> dict:
     container = f"farmaandes_{nombre}"
     result = subprocess.run(
         ["docker", "start", container],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     if result.returncode != 0:
-        raise HTTPException(status_code=500, detail=f"Error iniciando {container}: {result.stderr.strip()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error iniciando {container}: {result.stderr.strip()}",
+        )
     for _ in range(10):
         time.sleep(1)
         if db.health_check(nombre):
             return {"nodo": nombre, "estado": "iniciado"}
-    return {"nodo": nombre, "estado": "iniciado", "aviso": "Base de datos puede no estar lista aún"}
+    return {
+        "nodo": nombre,
+        "estado": "iniciado",
+        "aviso": "Base de datos puede no estar lista aún",
+    }
+
+
+app.mount("/", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 
 if __name__ == "__main__":
@@ -183,6 +212,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "src.app:app",
         host="0.0.0.0",
-        port=int(os.getenv("PORT", "8000")),
+        port=int(os.getenv("PORT", "9000")),
         reload=True,
     )
