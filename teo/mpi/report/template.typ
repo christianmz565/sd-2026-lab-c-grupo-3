@@ -59,7 +59,6 @@
   set page(
     numbering: "1",
     number-align: center,
-    columns: 2,
   )
   counter(page).update(1)
 

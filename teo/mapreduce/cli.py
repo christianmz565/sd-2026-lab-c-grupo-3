@@ -54,13 +54,11 @@ def main():
         webbrowser.open(DEFAULT_SERVER_URL)
         sys.exit(0)
 
-    # Validate arguments (either text or file is required if not opening UI)
     if not args.text and not args.file:
         parser.print_help()
         print("\nError: Debe proporcionar --text / -t o --file / -f.")
         sys.exit(1)
 
-    # Read input text
     text = ""
     if args.text:
         text = args.text
@@ -75,7 +73,6 @@ def main():
             print(f"Error al leer el archivo: {e}")
             sys.exit(1)
 
-    # Attempt connection to server
     try:
         result = send_post_request(args.url, text)
         sum_data = result.get("summary", {})
@@ -84,7 +81,6 @@ def main():
         print(f"\033[91mError: El servidor no está disponible en {args.url}\033[0m")
         sys.exit(1)
 
-    # Print output ranking
     print("\n" + "=" * 45)
     print(" RANKING DE FRECUENCIA DE PALABRAS")
     print("=" * 45)

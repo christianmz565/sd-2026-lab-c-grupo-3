@@ -156,7 +156,6 @@ class MasterHandler(SimpleHTTPRequestHandler):
             self.send_error(404, "Not Found")
 
     def do_OPTIONS(self):
-        # Support CORS preflight requests for local development
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
