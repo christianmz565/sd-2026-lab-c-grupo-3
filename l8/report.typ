@@ -2,11 +2,11 @@
 #import "/functions.typ": summarize-name
 #import "@preview/elembic:1.1.1" as e
 
-#show: e.set_(code-block, lang: "java")
+#show: e.set_(code-block, lang: "python")
 
 #define("course_name", "Sistemas Distribuidos")
-#define("lab_title", "SOAP Web services")
-#define("lab_number", "07")
+#define("lab_title", "Bases de datos distribuidas")
+#define("lab_number", "08")
 #define("instructor_name", "Mg. Maribel Molina Barriga")
 #define("members", (
   "Bedregal Perez Daniel",
@@ -21,7 +21,7 @@
 }
 
 #lab-report()[
-  #set image(width: 78%)
+  #set image(width: 80%)
   #set list(indent: 2pt)
   #show raw.where(block: false): it => box(
     inset: (x: 0.5pt),
@@ -33,196 +33,113 @@
 
     = ENLACE A GITHUB
 
-    #link("https://github.com/christianmz565/sd-2026-lab-c-grupo-3/tree/main/l7")
-
-    = EJERCICIOS RESUELTOS POR EL DOCENTE
-
-    == Ejercicio Resuelto: Servicio SOAP de Suma
-
-    Siguiendo las instrucciones de la guía, se implementó un servicio web SOAP básico en Java utilizando JAX-WS. El servicio define una operación `sumar` que recibe dos enteros y retorna su suma.
-
-    Se definió primero una interfaz para el servicio, asegurando que el contrato sea claro y desacoplado de la implementación:
-
-    #code-block(
-      "l7/snippets/s1/CalculadoraAPI.java",
-      snippet: "interface",
-      lang: "java",
-      prefix: "//",
-    )
-
-    La implementación de dicha interfaz se decoró con la anotación `@WebService`, especificando el espacio de nombres y los nombres de puerto y servicio para cumplir con los estándares WSDL:
-
-    #code-block(
-      "l7/snippets/s1/CalculadoraSOAP.java",
-      snippet: "implementation",
-      lang: "java",
-      prefix: "//",
-    )
-
-    Para exponer el servicio en la red, se utilizó la clase `Endpoint.publish`, asignando el servicio a la dirección `http://localhost:8080/calculadora`:
-
-    #code-block(
-      "l7/snippets/s1/Publicador.java",
-      snippet: "publisher",
-      lang: "java",
-      prefix: "//",
-    )
-
-    Finalmente, se desarrolló un cliente consumidor en Java que localiza el WSDL, crea un proxy dinámico del servicio y realiza una llamada remota de prueba:
-
-    #code-block(
-      "l7/snippets/s1/ClienteSOAP.java",
-      snippet: "client",
-      lang: "java",
-      prefix: "//",
-    )
-
-    La validación del servicio se muestra en la siguiente captura, donde el cliente recibe correctamente el resultado de la operación remota:
-
-    #figure(
-      image("img/lab/s1/client.png"),
-      caption: [Ejecución del cliente SOAP en Java para la operación de suma.],
-    )
+    #link("https://github.com/christianmz565/sd-2026-lab-c-grupo-3/tree/main/l8")
 
     = SOLUCIÓN DE EJERCICIOS PROPUESTOS
 
-    == Ejercicio 1: Servicio SOAP de Conversión de Unidades
+    == Ejercicio 1: Caso de estudio FarmaAndes S.A.
 
-    Se desarrolló un servicio SOAP más robusto que permite realizar diversas conversiones de unidades: temperatura (Celsius/Fahrenheit), longitud (Metros/Pies) y masa (Kilogramos/Libras). La lógica de negocio se centralizó en la implementación del servicio:
+    *Enunciado:* FarmaAndes S.A. es una cadena farmacéutica con centros de distribución en Arequipa, Lima y Cusco. Cuando una sucursal solicita medicamentos a otra sede, el sistema debe realizar una transacción distribuida para garantizar que el inventario se descuente del almacén origen, se incremente en el destino, y que ambas operaciones sean atómicas. Si una operación falla, toda la transacción debe revertirse.
+
+    Se implementó un sistema de gestión de inventario distribuido para FarmaAndes S.A., coordinando transacciones entre nodos ubicados en Arequipa y Lima mediante el protocolo de confirmación de dos fases (2PC). El diseño se centra en la atomicidad: el descuento en origen y el incremento en destino deben ocurrir ambos o ninguno, evitando estados de inconsistencia donde el stock se pierda o se duplique.
+
+    Para la persistencia, se utilizaron bases de datos PostgreSQL con restricciones de integridad a nivel de esquema (`CHECK stock >= 0`). Esto asegura que, incluso si la lógica de aplicación fallara, el motor de base de datos rechazaría transacciones que resulten en stock negativo, disparando un error que el coordinador captura para iniciar un rollback global.
 
     #code-block(
-      "l7/snippets/e1/ConversorSOAP.java",
-      snippet: "implementation",
-      lang: "java",
-      prefix: "//",
+      "l8/snippets/e1/init.sql",
+      snippet: "init",
+      lang: "sql",
+      prefix: "--",
     )
 
-    Para interactuar con este servicio, se implementó un cliente en Python utilizando la librería `zeep`. Este cliente ofrece un menú interactivo y maneja la comunicación SOAP de forma transparente:
+    La lógica de acceso a datos emplea el aislamiento de transacciones mediante bloqueos pesimistas con `SELECT FOR UPDATE`. Este mecanismo bloquea las filas seleccionadas hasta que la transacción (local) se confirme o aborte, impidiendo que otros procesos modifiquen los mismos registros durante el proceso de preparación del 2PC:
 
     #code-block(
-      "l7/snippets/e1/client.py",
-      snippet: "python-client",
+      "l8/snippets/e1/db.py",
+      snippet: "lock-debit",
       lang: "python",
       prefix: "#",
     )
 
-    A continuación se presentan las evidencias de la ejecución del cliente Python interactuando con el servidor SOAP en Java:
-
-    #grid(
-      columns: (1fr, 1fr),
-      gutter: 1em,
-      figure(image("img/lab/e1/menu.png", width: 100%), caption: [Menú interactivo del cliente Python.]),
-      figure(
-        image("img/lab/e1/conversion.png", width: 100%),
-        caption: [Resultado de conversiones de temperatura y longitud.],
-      ),
-    )
-
-    == Ejercicio 2: Servicio SOAP de Gestión de Tienda (CRUD)
-
-    Se implementó un sistema de inventario avanzado mediante SOAP, permitiendo operaciones CRUD (Create, Read, Update, Delete) y una operación especial de compra que gestiona el stock de los productos.
-
-    La arquitectura se basa en un contrato de servicio definido mediante la interfaz `SOAPI`, la cual expone las operaciones necesarias para la gestión de productos. Se hace uso de objetos `Item` que JAX-WS serializa automáticamente a XML:
+    El `TwoPhaseCommitCoordinator` orquesta la transacción en dos etapas críticas. En la Fase 1 (Prepare), el coordinador instruye a cada nodo para que valide la operación y mantenga los cambios en un estado temporal. Si todos los nodos confirman que están listos, el coordinador procede a la Fase 2 (Commit) enviando la orden de confirmación definitiva. Si algún nodo falla en la preparación o pierde conectividad, se ordena un rollback síncrono en todos los participantes:
 
     #code-block(
-      "l7/snippets/e2/SOAPI.java",
-      snippet: "interface",
-      lang: "java",
-      prefix: "//",
+      "l8/snippets/e1/coordinator.py",
+      snippet: "phase-one",
+      lang: "python",
+      prefix: "#",
     )
 
-    La implementación del servicio en Java (`SOAPImpl`) delega la lógica de persistencia y reglas de negocio (como la validación de stock insuficiente durante una compra) a la clase de modelo `Item`:
+    A continuación se presentan las evidencias de ejecución bajo condiciones normales y de fallo:
 
-    #code-block("l7/snippets/e2/SOAPImpl.java", snippet: "implementation", lang: "java", prefix: "//")
-
-    La clase `Item` define los atributos de un producto (nombre, cantidad, costo) y implementa métodos para la gestión de inventario con código estándar de Java:
-    #code-block("l7/snippets/e2/Item.java", snippet: "logic", lang: "java", prefix: "//")
-
-    Al igual que en el ejercicio anterior, se desarrolló un cliente CLI en Python para validar las operaciones administrativas. En las capturas se observa la creación, actualización y eliminación de productos, así como la persistencia en el servidor:
-
-    #grid(
-      columns: (1fr, 1fr),
-      gutter: 1em,
-      figure(image("img/lab/e2/cli_add_item.png", width: 100%), caption: [Agregando un nuevo producto via CLI.]),
-      figure(
-        image("img/lab/e2/cli_buy_item.png", width: 100%),
-        caption: [Simulación de compra de un producto via CLI.],
-      ),
-    )
-    #grid(
-      columns: (1fr, 1fr),
-      gutter: 1em,
-      figure(
-        image("img/lab/e2/cli_update_item.png", width: 100%),
-        caption: [Actualizando stock y precio de un producto.],
-      ),
-      figure(
-        image("img/lab/e2/cli_get_items.png", width: 100%),
-        caption: [Listado de productos disponibles en el inventario.],
-      ),
+    #figure(
+      image("img/lab/e1_correct.png"),
+      caption: [Flujo nominal: transferencia de 20 unidades exitosa entre nodos sincronizados.],
     )
 
-    Para el consumo web, debido a las limitaciones del navegador para realizar peticiones SOAP directas (CORS, parsing XML complejo), se implementó un proxy en Node.js (Fastify) que traduce peticiones REST a llamadas SOAP internas:
+    La validación de la tolerancia a fallos se realizó deteniendo el servicio de base de datos del nodo destino durante la ventana de tiempo entre fases. El sistema detecta la excepción de red y garantiza que el nodo origen revierta el débito de stock, manteniendo la consistencia global:
+
+    #figure(
+      image("img/lab/e1_rollback.png"),
+      caption: [Resiliencia ante fallos: detección de nodo caído y rollback automático en el origen.],
+    )
+
+    == Ejercicio 2: Sistema Nacional de Bancos Cooperativos
+
+    *Enunciado:* Una red financiera opera en Arequipa, Cusco y Trujillo. Un cliente solicita transferir S/ 25,000 desde Arequipa hacia Cusco. Se debe diseñar e implementar un modelo distribuido que garantice atomicidad, consitencia y recuperación ante fallos mediante el protocolo Two-Phase Commit (2PC).
+
+    El sistema se extendió para manejar transferencias financieras, donde la precisión y la integridad son críticas. Se empleó el tipo de dato `DECIMAL(15, 2)` de PostgreSQL para evitar errores de redondeo asociados a los tipos de punto flotante. La coordinación ahora gestiona el estado de las transacciones mediante un registro de logs (`LogStore`) para permitir la trazabilidad de cada fase del protocolo.
+
+    La seguridad financiera se garantiza validando los saldos mediante bloqueos de escritura (`FOR UPDATE`). Esto previene el problema del "doble gasto" al asegurar que ninguna otra transacción pueda leer o modificar el saldo hasta que la transferencia distribuida haya decidido su estado final:
 
     #code-block(
-      "l7/snippets/e2/server.js",
-      snippet: "proxy",
-      lang: "javascript",
-      prefix: "//",
+      "l8/snippets/e2/db.py",
+      snippet: "lock-debit",
+      lang: "python",
+      prefix: "#",
     )
 
-    Finalmente, se diseñó una interfaz web moderna que permite a los usuarios finales ver el catálogo y realizar compras de forma intuitiva, interactuando indirectamente con el servicio SOAP original:
+    La implementación del coordinador separa estrictamente la toma de decisiones de la ejecución técnica. En la fase de confirmación, se emplea un plan de ejecución secuencial que verifica la conectividad antes de emitir los comandos de `COMMIT` finales, minimizando la ventana de vulnerabilidad ante fallos de red de último minuto:
 
-    #grid(
-      columns: (1fr, 1fr),
-      gutter: 1em,
-      figure(image("img/lab/e2/gui_list.png", width: 100%), caption: [Interfaz web del catálogo de productos.]),
-      figure(
-        image("img/lab/e2/gui_create_dialog.png", width: 100%),
-        caption: [Formulario modal para agregar productos.],
-      ),
-    )
-    #grid(
-      columns: (1fr, 1fr),
-      gutter: 1em,
-      figure(
-        image("img/lab/e2/gui_create_result.png", width: 100%),
-        caption: [Resultado de la sincronización con el servidor.],
-      ),
-      figure(
-        image("img/lab/e2/gui_delete_dialog.png", width: 100%),
-        caption: [Confirmación de eliminación de recursos en la web.],
-      ),
+    #code-block(
+      "l8/snippets/e2/coordinator.py",
+      snippet: "phase-two-commit",
+      lang: "python",
+      prefix: "#",
     )
 
+    Las pruebas demuestran la robustez de la arquitectura en el dominio bancario:
+
+    #figure(
+      image("img/lab/e2_correct.png"),
+      caption: [Operación bancaria exitosa de S/ 25,000 con trazabilidad completa de fases.],
+    )
+
+    En la simulación de fallo de red, se observa el comportamiento del coordinador al encontrarse con un nodo inaccesible durante la fase crítica de preparación. Al no recibir la confirmación de "preparado" de Cusco, el sistema aborta la transacción y libera los fondos retenidos en Arequipa, demostrando cumplimiento de las propiedades ACID:
+
+    #figure(
+      image("img/lab/e2_rollback.png"),
+      caption: [Consistencia financiera: reversión de fondos tras interceptar fallo en nodo remoto.],
+    )
   ]
 
   #lab-section("CUESTIONARIO")[
     #set par(justify: true)
 
-    == 1. ¿Puedo utilizar un componente JavaBeans para implementar un servicio web utilizando la invocación de SOAP sobre JMS (Java Message Service)?
+    == 1. Una empresa financiera prioriza la disponibilidad del servicio sobre la consistencia de los datos. ¿Qué riesgos podrían surgir y cómo afectarían a los clientes?
 
-    Sí, es posible. JAX-WS permite utilizar JavaBeans como implementaciones de servicios web. Al integrar SOAP con JMS, el componente JavaBean actúa como el receptor de los mensajes que llegan a una cola o tópico. El contenedor de aplicaciones se encarga de extraer el cuerpo SOAP del mensaje JMS, deserializarlo e invocar el método correspondiente en el JavaBean, permitiendo una comunicación asíncrona y fiable.
+    Priorizar disponibilidad sobre consistencia (modelo de consistencia eventual) conlleva riesgos significativos como el "doble gasto" o saldos inconsistentes. Un cliente podría retirar dinero simultáneamente desde dos cajeros si los nodos no se han sincronizado, resultando en un saldo negativo no autorizado. Para el cliente, esto genera desconfianza y posibles penalizaciones legales; para el banco, representa pérdidas financieras directas y un caos administrativo en la conciliación de cuentas.
 
-    == 2. ¿Cómo funciona la mensajería bidireccional con la implementación de SOAP y JMS? ¿Da soporte a varios clientes realizando solicitudes simultáneas?
+    == 2. El protocolo Two-Phase Commit garantiza consistencia, pero puede reducir la disponibilidad del sistema. ¿Considera que este sacrificio es justificable en todos los contextos empresariales? Fundamente su respuesta.
 
-    La mensajería bidireccional (solicitud-respuesta) en SOAP sobre JMS se logra mediante el uso de colas de respuesta (`ReplyTo`). El cliente envía un mensaje a una cola de solicitudes e incluye un identificador de correlación y la dirección de su propia cola de respuesta. El servidor procesa la solicitud y envía la respuesta a la cola especificada con el mismo ID de correlación. Sí da soporte a múltiples clientes simultáneos, ya que JMS es inherentemente escalable y maneja la concurrencia a través de gestores de colas que pueden distribuir mensajes entre múltiples hilos o instancias de servidor.
+    No es justificable en todos los contextos, pero es imprescindible en el sector financiero y contable. El sacrificio de disponibilidad (bloqueos prolongados si un nodo falla) es el precio a pagar por la integridad absoluta. Sin embargo, en redes sociales o sistemas de inventario de baja criticidad, la consistencia eventual es preferible, ya que un error menor (ej. un "like" que desaparece temporalmente) es menos costoso que tener el sistema caído globalmente por un fallo en un nodo menor.
 
-    == 3. ¿Por qué SOAP sigue siendo utilizado en sistemas empresariales críticos pese al auge de REST?
+    == 3. Imagine que una organización global opera cientos de nodos distribuidos. ¿Qué alternativas al protocolo 2PC podrían mejorar el rendimiento sin comprometer significativamente la confiabilidad del sistema?
 
-    SOAP prevalece en entornos empresariales (especialmente banca y seguros) debido a su robustez y formalidad. Ofrece estándares estrictos como WS-Security para cifrado y firma digital a nivel de mensaje (no solo transporte), WS-AtomicTransaction para transacciones distribuidas complejas, y el contrato WSDL que garantiza una tipificación fuerte y generación automática de clientes, lo cual reduce errores de integración en sistemas legados y de gran escala.
-
-    == 4. ¿Qué implicancias tiene el uso de XML en el rendimiento de sistemas distribuidos de alta concurrencia?
-
-    XML es un formato verboso y basado en texto, lo que implica un mayor consumo de ancho de banda en comparación con formatos binarios o JSON. Además, el parseo de XML requiere más recursos de CPU y memoria (especialmente con DOM), lo que puede convertirse en un cuello de botella en sistemas de alta concurrencia. El uso de SAX o StAX mitiga esto, pero el overhead de serialización/deserialización sigue siendo superior al de alternativas más ligeras.
-
-    == 5. ¿En qué escenarios arquitectónicos SOAP resulta más adecuado que REST? Justifique técnicamente.
-
-    SOAP es superior en escenarios que requieren:
-    - *Seguridad avanzada:* Cuando se necesita seguridad a nivel de mensaje (extremo a extremo) que persista a través de múltiples intermediarios.
-    - *Transaccionalidad:* En flujos financieros que exigen cumplimiento de propiedades ACID en múltiples servicios distribuidos.
-    - *Protocolos no-HTTP:* Cuando el servicio debe exponerse sobre SMTP, TCP o colas de mensajes (JMS) de forma transparente.
-    - *Contratos estrictos:* En integraciones B2B complejas donde la validación estricta de esquemas es crítica para la integridad de los datos.
+    A escala global (cientos de nodos), 2PC se vuelve ineficiente debido a la latencia acumulada y el riesgo de bloqueos. Alternativas robustas incluyen:
+    - *Sagas Pattern:* Divide la transacción en pasos compensatorios; si algo falla, se ejecutan transacciones de "anulación".
+    - *Three-Phase Commit (3PC):* Añade una fase de "pre-commit" para evitar bloqueos indefinidos si el coordinador falla.
+    - *Protocolos de Consenso (Paxos o Raft):* Utilizados para replicar logs de transacciones de forma tolerante a fallos sin requerir bloqueos estrictos de todos los participantes.
   ]
 
   #lab-section("CONCLUSIONES Y RECOMENDACIONES")[
@@ -231,62 +148,28 @@
 
     == CONCLUSIONES
 
-    + SOAP ofrece una arquitectura altamente estructurada y basada en contratos que facilita la interoperabilidad entre diferentes lenguajes (Java y Python en este laboratorio) mediante el uso de WSDL.
+    + El protocolo Two-Phase Commit (2PC) es una herramienta fundamental para garantizar las propiedades ACID en sistemas distribuidos, asegurando que los datos permanezcan consistentes incluso ante fallos parciales de red o de nodos.
 
-    + A pesar de su mayor overhead en comparación con REST, SOAP proporciona capacidades críticas para entornos empresariales, como la seguridad robusta y el soporte para diversos protocolos de transporte.
+    + La implementación de bloqueos pesimistas (`SELECT FOR UPDATE`) a nivel de base de datos es crítica durante la fase de preparación de 2PC para evitar condiciones de carrera que comprometerían la integridad de la transacción global.
 
-    + La implementación de servicios SOAP en Java se ha simplificado significativamente con el estándar JAX-WS, permitiendo convertir POJOs en servicios web mediante anotaciones simples.
+    + Existe un compromiso (trade-off) inherente entre consistencia y disponibilidad. Mientras que 2PC garantiza consistencia fuerte, introduce puntos únicos de fallo y latencias que deben ser gestionadas mediante tiempos de espera (timeouts) y logs de recuperación.
 
     == RECOMENDACIONES
 
-    + Se recomienda utilizar herramientas como SOAPUI o Postman para la inspección y depuración de los mensajes XML generados, facilitando la comprensión del flujo de datos.
+    + En entornos de alta carga, se recomienda complementar 2PC con mecanismos de monitoreo en tiempo real para detectar nodos "in-doubt" (en duda) y resolver manualmente las transacciones que queden bloqueadas por fallos críticos del coordinador.
 
-    + Para aplicaciones web modernas, es aconsejable emplear un patrón de proxy (como se hizo con Node.js) para mediar entre el frontend y el servicio SOAP, evitando problemas de CORS y tipado complejo en el navegador.
+    + Es fundamental manejar adecuadamente los tipos de datos (como `DECIMAL` para dinero) y las restricciones de integridad en el motor de base de datos para que actúen como última línea de defensa ante errores en la lógica de aplicación.
 
-    + Es fundamental definir correctamente los espacios de nombres (targetNamespace) en los contratos WSDL para evitar colisiones y asegurar que el servicio sea descubrible de forma estándar.
+    + Para sistemas con baja tolerancia a la latencia, se sugiere explorar el patrón de Sagas, el cual ofrece una mayor disponibilidad al no requerir bloqueos síncronos sobre múltiples recursos distribuidos.
   ]
 
   #lab-section("REFERENCIAS Y BIBLIOGRAFÍA")[
     [1] Tanenbaum, A.S. (2008). Sistemas distribuidos: principios y paradigmas. México. Pearson Educación.
 
-    [2] Ceballos, F. J. (2006). Java 2, Curso de programación. México: Alfaomega, RaMa.
+    [2] Kleppmann, M. (2017). Designing Data-Intensive Applications. O'Reilly Media.
 
-    [3] Deitel, H. M., & Deitel, P. J. (2004). Cómo programar en Java. México: Pearson Educación.
+    [3] PostgreSQL Documentation. (2026). Transactions and Concurrency Control. Recuperado de: https://www.postgresql.org/docs/current/mvcc.html
 
-    [4] García Tomás, J., Ferrando, S., & Piattini, M. (2001). Redes para procesos distribuidos. México: Alfaomega Ra-Ma.
-
-    [5] Fielding, R. (2000). Architectural Styles and the Design of Network-based Software Architectures. Dissertation. University of California, Irvine.
-  ]
-
-  #lab-section("ANEXOS")[
-    #set par(justify: true)
-
-    == Ejercicio 1: Conversor de Unidades (Java)
-
-    === Interfaz del Conversor (ConversorAPI.java)
-    #code-block("l7/src/main/java/e1/ConversorAPI.java", lang: "java")
-
-    === Implementación del Conversor (ConversorSOAP.java)
-    #code-block("l7/src/main/java/e1/ConversorSOAP.java", lang: "java")
-
-    === Script Cliente Python (client.py)
-    #code-block("l7/src/main/java/e1/cli/client.py", lang: "python")
-
-    == Ejercicio 2: Gestión de Tienda (Java + Python + Node.js)
-
-    === Interfaz de la Tienda (SOAPI.java)
-    #code-block("l7/src/main/java/e2/servicio/soap/SOAPI.java", lang: "java")
-
-    === Implementación de la Tienda (SOAPImpl.java)
-    #code-block("l7/src/main/java/e2/servicio/soap/SOAPImpl.java", lang: "java")
-
-    === Modelo de Datos (Item.java)
-    #code-block("l7/src/main/java/e2/servicio/model/Item.java", lang: "java")
-
-    === Proxy Backend (server.js)
-    #code-block("l7/src/main/java/e2/web/back/server.js", lang: "javascript")
-
-    === Script Cliente Python (client.py)
-    #code-block("l7/src/main/java/e2/cli/client.py", lang: "python")
+    [4] Gray, J., & Reuter, A. (1992). Transaction Processing: Concepts and Techniques. Morgan Kaufmann.
   ]
 ]
