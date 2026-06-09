@@ -1,5 +1,3 @@
-"""Schemas Pydantic para los request/response de la API."""
-
 from __future__ import annotations
 
 from typing import Literal

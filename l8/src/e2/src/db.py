@@ -1,10 +1,3 @@
-"""Capa de acceso a datos para los 3 nodos PostgreSQL del sistema financiero.
-
-Cada nodo (sucursal_arequipa, sucursal_cusco, sucursal_trujillo) se identifica
-por un nombre lógico. Esta capa provee operaciones atómicas por nodo
-(check_saldo, lock_and_debit, lock_and_credit, commit, rollback) que el
-coordinador 2PC compone para implementar el protocolo.
-"""
 from __future__ import annotations
 
 import os
@@ -20,6 +13,7 @@ from psycopg import errors as pg_errors
 @dataclass(frozen=True)
 class Sucursal:
     """Identificador lógico + DSN de una sucursal PostgreSQL."""
+
     nombre: str
     dsn: str
 
@@ -29,25 +23,20 @@ def _load_dsn(env_var: str, default_port: int, db_name: str) -> str:
     dsn = os.getenv(env_var)
     if dsn:
         return dsn
-    return (
-        f"postgresql://postgres:postgres@localhost:{default_port}/{db_name}"
-    )
+    return f"postgresql://postgres:postgres@localhost:{default_port}/{db_name}"
 
 
 def build_sucursales() -> dict[str, Sucursal]:
     """Construye el registro de las 3 sucursales desde variables de entorno."""
     return {
         "arequipa": Sucursal(
-            nombre="arequipa",
-            dsn=_load_dsn("DSN_AREQUIPA", 5438, "sucursal_arequipa"),
+            nombre="arequipa", dsn=_load_dsn("DSN_AREQUIPA", 5438, "sucursal_arequipa")
         ),
         "cusco": Sucursal(
-            nombre="cusco",
-            dsn=_load_dsn("DSN_CUSCO", 5439, "sucursal_cusco"),
+            nombre="cusco", dsn=_load_dsn("DSN_CUSCO", 5439, "sucursal_cusco")
         ),
         "trujillo": Sucursal(
-            nombre="trujillo",
-            dsn=_load_dsn("DSN_TRUJILLO", 5440, "sucursal_trujillo"),
+            nombre="trujillo", dsn=_load_dsn("DSN_TRUJILLO", 5440, "sucursal_trujillo")
         ),
     }
 
@@ -78,15 +67,14 @@ def simplify_db_error(e: Exception) -> str:
         return "La base de datos no existe."
     if "terminating connection due to administrator command" in msg:
         return "Conexión terminada (el nodo fue detenido manualmente)."
-
-    # Si hay múltiples líneas (como en fallos de conexión de psycopg), tomar la primera relevante
-    lines = [l.strip() for l in msg.split("\n") if l.strip()]
+    lines = [line.strip() for line in msg.split("\n") if line.strip()]
     return lines[0] if lines else msg
 
 
 @contextmanager
 def sucursal_connection(nombre: str) -> Iterator[psycopg.Connection]:
-    """Abre una conexión a una sucursal en modo transacción explícita (autocommit=False).
+    """
+    Abre una conexión a una sucursal en modo transacción explícita (autocommit=False).
 
     El coordinador es responsable de hacer commit() o rollback() sobre la
     conexión antes de que el context manager la cierre.
@@ -103,8 +91,7 @@ def read_saldo(conn: psycopg.Connection, numero_cuenta: str) -> float | None:
     """Lee el saldo actual de una cuenta. Retorna None si no existe."""
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT saldo FROM cuentas WHERE numero_cuenta = %s",
-            (numero_cuenta,),
+            "SELECT saldo FROM cuentas WHERE numero_cuenta = %s", (numero_cuenta,)
         )
         row = cur.fetchone()
         return float(row[0]) if row else None
@@ -122,10 +109,9 @@ def read_cuentas(conn: psycopg.Connection) -> list[dict]:
         ]
 
 
-def lock_and_debit(
-    conn: psycopg.Connection, numero_cuenta: str, monto: float
-) -> float:
-    """SELECT FOR UPDATE + UPDATE saldo -= monto. Retorna saldo resultante.
+def lock_and_debit(conn: psycopg.Connection, numero_cuenta: str, monto: float) -> float:
+    """
+    SELECT FOR UPDATE + UPDATE saldo -= monto. Retorna saldo resultante.
 
     Lanza:
       - LookupError si la cuenta no existe.
@@ -155,7 +141,8 @@ def lock_and_debit(
 def lock_and_credit(
     conn: psycopg.Connection, numero_cuenta: str, monto: float
 ) -> float:
-    """SELECT FOR UPDATE + UPDATE saldo += monto. Retorna saldo resultante.
+    """
+    SELECT FOR UPDATE + UPDATE saldo += monto. Retorna saldo resultante.
 
     Lanza LookupError si la cuenta no existe.
     """
@@ -189,7 +176,9 @@ def health_check(nombre: str) -> bool:
         return False
 
 
-def create_cuenta(conn: psycopg.Connection, numero_cuenta: str, titular: str, saldo: float) -> None:
+def create_cuenta(
+    conn: psycopg.Connection, numero_cuenta: str, titular: str, saldo: float
+) -> None:
     """Crea una nueva cuenta en la sucursal."""
     with conn.cursor() as cur:
         cur.execute(
@@ -198,7 +187,9 @@ def create_cuenta(conn: psycopg.Connection, numero_cuenta: str, titular: str, sa
         )
 
 
-def update_cuenta(conn: psycopg.Connection, numero_cuenta: str, titular: str, saldo: float) -> None:
+def update_cuenta(
+    conn: psycopg.Connection, numero_cuenta: str, titular: str, saldo: float
+) -> None:
     """Actualiza los datos de una cuenta existente."""
     with conn.cursor() as cur:
         cur.execute(
@@ -212,9 +203,6 @@ def update_cuenta(conn: psycopg.Connection, numero_cuenta: str, titular: str, sa
 def delete_cuenta(conn: psycopg.Connection, numero_cuenta: str) -> None:
     """Elimina una cuenta de la sucursal."""
     with conn.cursor() as cur:
-        cur.execute(
-            "DELETE FROM cuentas WHERE numero_cuenta = %s",
-            (numero_cuenta,),
-        )
+        cur.execute("DELETE FROM cuentas WHERE numero_cuenta = %s", (numero_cuenta,))
         if cur.rowcount == 0:
             raise LookupError(f"Cuenta '{numero_cuenta}' no existe")

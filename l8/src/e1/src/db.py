@@ -1,10 +1,3 @@
-"""Capa de acceso a datos para los 3 nodos PostgreSQL de FarmaAndes.
-
-Cada nodo (almacen_arequipa, almacen_lima, almacen_cusco) se identifica por
-un nombre lógico. Esta capa provee operaciones atómicas por nodo
-(check_stock, lock_and_apply, commit, rollback) que el coordinador 2PC
-compone para implementar el protocolo.
-"""
 from __future__ import annotations
 
 import os
@@ -19,6 +12,7 @@ from psycopg import errors as pg_errors
 @dataclass(frozen=True)
 class Nodo:
     """Identificador lógico + DSN de un nodo PostgreSQL."""
+
     nombre: str
     dsn: str
 
@@ -28,25 +22,18 @@ def _load_dsn(env_var: str, default_port: int, db_name: str) -> str:
     dsn = os.getenv(env_var)
     if dsn:
         return dsn
-    return (
-        f"postgresql://postgres:postgres@localhost:{default_port}/{db_name}"
-    )
+    return f"postgresql://postgres:postgres@localhost:{default_port}/{db_name}"
 
 
 def build_nodos() -> dict[str, Nodo]:
     """Construye el registro de los 3 nodos FarmaAndes desde variables de entorno."""
     return {
         "arequipa": Nodo(
-            nombre="arequipa",
-            dsn=_load_dsn("DSN_AREQUIPA", 5435, "almacen_arequipa"),
+            nombre="arequipa", dsn=_load_dsn("DSN_AREQUIPA", 5435, "almacen_arequipa")
         ),
-        "lima": Nodo(
-            nombre="lima",
-            dsn=_load_dsn("DSN_LIMA", 5436, "almacen_lima"),
-        ),
+        "lima": Nodo(nombre="lima", dsn=_load_dsn("DSN_LIMA", 5436, "almacen_lima")),
         "cusco": Nodo(
-            nombre="cusco",
-            dsn=_load_dsn("DSN_CUSCO", 5437, "almacen_cusco"),
+            nombre="cusco", dsn=_load_dsn("DSN_CUSCO", 5437, "almacen_cusco")
         ),
     }
 
@@ -60,9 +47,7 @@ class NodoDesconocidoError(KeyError):
 
 def get_nodo(nombre: str) -> Nodo:
     if nombre not in NODOS:
-        raise NodoDesconocidoError(
-            f"Nodo '{nombre}' no existe. Válidos: {list(NODOS)}"
-        )
+        raise NodoDesconocidoError(f"Nodo '{nombre}' no existe. Válidos: {list(NODOS)}")
     return NODOS[nombre]
 
 
@@ -77,15 +62,14 @@ def simplify_db_error(e: Exception) -> str:
         return "La base de datos no existe."
     if "terminating connection due to administrator command" in msg:
         return "Conexión terminada (el nodo fue detenido manualmente)."
-
-    # Si hay múltiples líneas (como en fallos de conexión de psycopg), tomar la primera relevante
-    lines = [l.strip() for l in msg.split("\n") if l.strip()]
+    lines = [line.strip() for line in msg.split("\n") if line.strip()]
     return lines[0] if lines else msg
 
 
 @contextmanager
 def nodo_connection(nombre: str) -> Iterator[psycopg.Connection]:
-    """Abre una conexión a un nodo en modo transacción explícita (autocommit=False).
+    """
+    Abre una conexión a un nodo en modo transacción explícita (autocommit=False).
 
     El coordinador es responsable de hacer commit() o rollback() sobre la
     conexión antes de que el context manager la cierre.
@@ -101,10 +85,7 @@ def nodo_connection(nombre: str) -> Iterator[psycopg.Connection]:
 def read_stock(conn: psycopg.Connection, producto: str) -> int | None:
     """Lee el stock actual de un producto. Retorna None si no existe."""
     with conn.cursor() as cur:
-        cur.execute(
-            "SELECT stock FROM inventario WHERE producto = %s",
-            (producto,),
-        )
+        cur.execute("SELECT stock FROM inventario WHERE producto = %s", (producto,))
         row = cur.fetchone()
         return row[0] if row else None
 
@@ -116,10 +97,9 @@ def read_inventario(conn: psycopg.Connection) -> list[dict]:
         return [{"producto": r[0], "stock": r[1]} for r in cur.fetchall()]
 
 
-def lock_and_debit(
-    conn: psycopg.Connection, producto: str, cantidad: int
-) -> int:
-    """SELECT FOR UPDATE + UPDATE stock -= cantidad. Retorna stock resultante.
+def lock_and_debit(conn: psycopg.Connection, producto: str, cantidad: int) -> int:
+    """
+    SELECT FOR UPDATE + UPDATE stock -= cantidad. Retorna stock resultante.
 
     Lanza:
       - LookupError si el producto no existe.
@@ -128,8 +108,7 @@ def lock_and_debit(
     """
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT stock FROM inventario WHERE producto = %s FOR UPDATE",
-            (producto,),
+            "SELECT stock FROM inventario WHERE producto = %s FOR UPDATE", (producto,)
         )
         row = cur.fetchone()
         if row is None:
@@ -145,17 +124,15 @@ def lock_and_debit(
         return row[0] - cantidad
 
 
-def lock_and_credit(
-    conn: psycopg.Connection, producto: str, cantidad: int
-) -> int:
-    """SELECT FOR UPDATE + UPDATE stock += cantidad. Retorna stock resultante.
+def lock_and_credit(conn: psycopg.Connection, producto: str, cantidad: int) -> int:
+    """
+    SELECT FOR UPDATE + UPDATE stock += cantidad. Retorna stock resultante.
 
     Lanza LookupError si el producto no existe.
     """
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT stock FROM inventario WHERE producto = %s FOR UPDATE",
-            (producto,),
+            "SELECT stock FROM inventario WHERE producto = %s FOR UPDATE", (producto,)
         )
         row = cur.fetchone()
         if row is None:

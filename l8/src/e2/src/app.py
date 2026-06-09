@@ -1,19 +1,7 @@
-"""Aplicación FastAPI: coordinador 2PC para red financiera.
-
-Endpoints:
-  GET  /health          - ping a los 3 nodos (sucursales)
-  GET  /cuentas         - vista agregada de todas las cuentas en las 3 sucursales
-  POST /transferir      - ejecuta una transferencia con protocolo 2PC
-  GET  /log             - bitácora en memoria de las últimas transacciones
-  POST /sucursales/{nombre}/detener  - detiene el contenedor Docker de una sucursal
-  POST /sucursales/{nombre}/iniciar  - inicia el contenedor Docker de una sucursal
-"""
-
 from __future__ import annotations
 
 import os
 import subprocess
-import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -21,32 +9,25 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-# Permite ejecutar con `uvicorn src.app:app` y `python -m src.app`
-_SRC_DIR = Path(__file__).resolve().parent
-if str(_SRC_DIR.parent) not in sys.path:
-    sys.path.insert(0, str(_SRC_DIR.parent))
-
-from src.coordinator import TransferError, TwoPhaseCommitCoordinator  # noqa: E402
-from src.log_store import LogStore  # noqa: E402
-from src.models import (  # noqa: E402
+from . import db
+from .coordinator import TransferError, TwoPhaseCommitCoordinator
+from .log_store import LogStore
+from .models import (
     CiudadLiteral,
     CuentaCreate,
     CuentaRow,
-    CuentaUpdate,
     CuentasResponse,
+    CuentaUpdate,
     HealthResponse,
     TransferRequest,
     TransferResponse,
 )
 
-from src import db  # noqa: E402
-
 load_dotenv()
-
-# Estado compartido: log en memoria + coordinador
+_SRC_DIR = Path(__file__).resolve().parent
 _state: dict = {}
 
 
@@ -61,24 +42,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Red Financiera 2PC Coordinator",
-    description=(
-        "Coordinador HTTP del protocolo Two-Phase Commit sobre 3 sucursales "
-        "PostgreSQL (Arequipa, Cusco, Trujillo). Transferencias de dinero "
-        "atómicas entre cuentas distribuidas. Caso de estudio Lab 08 - "
-        "Sistemas Distribuidos."
-    ),
+    description="Coordinador HTTP del protocolo Two-Phase Commit sobre 3 sucursales PostgreSQL (Arequipa, Cusco, Trujillo). Transferencias de dinero atómicas entre cuentas distribuidas. Caso de estudio Lab 08 - Sistemas Distribuidos.",
     version="0.2.0",
     lifespan=lifespan,
 )
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permite todos los orígenes
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 _STATIC_DIR = _SRC_DIR / "static"
 
 
@@ -105,9 +79,7 @@ def health() -> HealthResponse:
         return "ok" if db.health_check(nombre) else "down"
 
     return HealthResponse(
-        arequipa=status("arequipa"),
-        cusco=status("cusco"),
-        trujillo=status("trujillo"),
+        arequipa=status("arequipa"), cusco=status("cusco"), trujillo=status("trujillo")
     )
 
 
@@ -124,7 +96,7 @@ def cuentas() -> CuentasResponse:
         for it in items:
             rows.append(
                 CuentaRow(
-                    ciudad=ciudad,  # type: ignore[arg-type]
+                    ciudad=ciudad,
                     numero_cuenta=it["numero_cuenta"],
                     titular=it["titular"],
                     saldo=it["saldo"],
@@ -146,7 +118,9 @@ def crear_cuenta(req: CuentaCreate) -> dict:
 
 
 @app.put("/cuentas/{ciudad}/{numero_cuenta}")
-def actualizar_cuenta(ciudad: CiudadLiteral, numero_cuenta: str, req: CuentaUpdate) -> dict:
+def actualizar_cuenta(
+    ciudad: CiudadLiteral, numero_cuenta: str, req: CuentaUpdate
+) -> dict:
     """Actualiza los datos de una cuenta existente."""
     try:
         with db.sucursal_connection(ciudad) as conn:
@@ -175,7 +149,8 @@ def eliminar_cuenta(ciudad: CiudadLiteral, numero_cuenta: str) -> dict:
 
 @app.post("/transferir", response_model=TransferResponse)
 def transferir(req: TransferRequest) -> TransferResponse:
-    """Coordina la transferencia atómica entre dos cuentas vía 2PC.
+    """
+    Coordina la transferencia atómica entre dos cuentas vía 2PC.
 
     Flujo:
       1) Verifica que origen y destino sean sucursales distintas.
@@ -195,7 +170,6 @@ def transferir(req: TransferRequest) -> TransferResponse:
         )
     except TransferError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-
     return TransferResponse(**result)
 
 
@@ -210,10 +184,7 @@ def detener_sucursal(nombre: CiudadLiteral) -> dict:
     """Detiene el contenedor Docker de una sucursal PostgreSQL."""
     container = f"red_financiera_{nombre}"
     result = subprocess.run(
-        ["docker", "stop", container],
-        capture_output=True,
-        text=True,
-        timeout=30,
+        ["docker", "stop", container], capture_output=True, text=True, timeout=30
     )
     if result.returncode != 0:
         raise HTTPException(
@@ -228,10 +199,7 @@ def iniciar_sucursal(nombre: CiudadLiteral) -> dict:
     """Inicia el contenedor Docker de una sucursal PostgreSQL y espera a que esté listo."""
     container = f"red_financiera_{nombre}"
     result = subprocess.run(
-        ["docker", "start", container],
-        capture_output=True,
-        text=True,
-        timeout=30,
+        ["docker", "start", container], capture_output=True, text=True, timeout=30
     )
     if result.returncode != 0:
         raise HTTPException(
@@ -250,14 +218,9 @@ def iniciar_sucursal(nombre: CiudadLiteral) -> dict:
 
 
 app.mount("/", StaticFiles(directory=str(_STATIC_DIR)), name="static")
-
-
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "src.app:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", "9000")),
-        reload=True,
+        "src.app:app", host="0.0.0.0", port=int(os.getenv("PORT", "9000")), reload=True
     )

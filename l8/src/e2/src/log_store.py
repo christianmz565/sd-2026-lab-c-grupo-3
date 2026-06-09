@@ -1,9 +1,3 @@
-"""Log en memoria (thread-safe) para registrar los eventos del protocolo 2PC.
-
-Sólo persiste durante la vida del proceso; al reiniciar se pierde. Suficiente
-para el Ejercicio 2, donde el objetivo es la demostración, no la
-recuperación ante crashes.
-"""
 from __future__ import annotations
 
 import threading
@@ -12,7 +6,18 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Deque, Literal
 
-Fase = Literal["START", "VALIDATE", "PREPARE", "PREPARED", "DELAY", "COMMIT", "COMMITTED", "ROLLBACK", "ROLLED_BACK", "FAILED"]
+Fase = Literal[
+    "START",
+    "VALIDATE",
+    "PREPARE",
+    "PREPARED",
+    "DELAY",
+    "COMMIT",
+    "COMMITTED",
+    "ROLLBACK",
+    "ROLLED_BACK",
+    "FAILED",
+]
 Estado = Literal["COMMITTED", "ROLLED_BACK", "FAILED"]
 
 
@@ -37,11 +42,14 @@ class LogEntry:
 @dataclass
 class LogStore:
     """Almacén append-only de eventos 2PC con tamaño máximo."""
+
     max_entries: int = 1000
     _entries: Deque[LogEntry] = field(default_factory=deque)
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
-    def append(self, txn_id: str, fase: Fase, ciudad: str | None, detalle: str = "") -> None:
+    def append(
+        self, txn_id: str, fase: Fase, ciudad: str | None, detalle: str = ""
+    ) -> None:
         entry = LogEntry(
             txn_id=txn_id,
             timestamp=time.time(),
