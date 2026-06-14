@@ -1,0 +1,136 @@
+services:
+  # ─────────────── Infrastructure ───────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: logifresh_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-logifresh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-logifresh_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-logifresh}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-logifresh}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: logifresh_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─────────────── Microservices ───────────────
+  orders:
+    build: ./services/orders
+    container_name: logifresh_orders
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-logifresh}:${POSTGRES_PASSWORD:-logifresh_pass}@postgres/${POSTGRES_DB:-logifresh}
+      REDIS_URL: redis://redis:6379/0
+      INVENTORY_URL: http://inventory:8002
+      BILLING_URL: http://billing:8003
+      TRANSPORT_URL: http://transport:8004
+      NOTIFICATIONS_URL: http://notifications:8005
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  inventory:
+    build: ./services/inventory
+    container_name: logifresh_inventory
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-logifresh}:${POSTGRES_PASSWORD:-logifresh_pass}@postgres/${POSTGRES_DB:-logifresh}
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8002/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  billing:
+    build: ./services/billing
+    container_name: logifresh_billing
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-logifresh}:${POSTGRES_PASSWORD:-logifresh_pass}@postgres/${POSTGRES_DB:-logifresh}
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8003/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  transport:
+    build: ./services/transport
+    container_name: logifresh_transport
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-logifresh}:${POSTGRES_PASSWORD:-logifresh_pass}@postgres/${POSTGRES_DB:-logifresh}
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8004/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  notifications:
+    build: ./services/notifications
+    container_name: logifresh_notifications
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-logifresh}:${POSTGRES_PASSWORD:-logifresh_pass}@postgres/${POSTGRES_DB:-logifresh}
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8005/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
