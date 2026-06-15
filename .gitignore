@@ -179,3 +179,5 @@ dist
 
 #Target folders
 **/target
+
+.playwright-mcp/
