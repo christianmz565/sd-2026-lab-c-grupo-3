@@ -10,11 +10,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-logifresh}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5434:5432"
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-logifresh}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-logifresh}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -23,10 +21,8 @@ services:
     image: redis:7-alpine
     container_name: logifresh_redis
     restart: always
-    ports:
-      - "6379:6379"
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -52,7 +48,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8001/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,7 +66,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8002/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -88,7 +84,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8003/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -106,7 +102,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8004/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -127,18 +123,16 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8005/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-# ─────────────── Monitoring ───────────────
+  # ─────────────── Monitoring ───────────────
   influxdb:
     image: influxdb:1.8-alpine
     container_name: logifresh_influxdb
     restart: always
-    ports:
-      - "8086:8086"
     environment:
       - INFLUXDB_DB=k6
       - INFLUXDB_USER=admin
@@ -156,14 +150,14 @@ services:
     container_name: logifresh_grafana
     restart: always
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       influxdb:
         condition: service_healthy

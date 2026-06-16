@@ -2,13 +2,13 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+COMPOSE_DIR="$(dirname "$SCRIPT_DIR")"
 
-NETWORK=$(docker compose ps orders --format json 2>/dev/null | jq -r '.[0].Networks[0]' 2>/dev/null | head -1)
+NETWORK=$(docker compose -f "$COMPOSE_DIR/docker-compose.yml" ps orders --format json 2>/dev/null | jq -r '.[0].Networks[0]' 2>/dev/null | head -1)
 NETWORK=${NETWORK:-src_default}
 
 USE_INFLUX=false
-if docker compose ps influxdb 2>/dev/null | grep -q "Up"; then
+if docker compose -f "$COMPOSE_DIR/docker-compose.yml" ps influxdb 2>/dev/null | grep -q "Up"; then
     USE_INFLUX=true
     echo "✓ InfluxDB detectado - métricas se enviarán a Grafana"
 fi

@@ -59,6 +59,8 @@
               plantuml
               dig
               mpi
+              pnpm
+              nodejs
               nixd
               ruff
               biome
