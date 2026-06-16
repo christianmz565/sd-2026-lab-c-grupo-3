@@ -21,6 +21,7 @@ from typing import Optional
 
 import redis as redis_lib
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
@@ -69,7 +70,7 @@ async def notification_worker():
     while True:
         try:
             # BLPOP bloquea hasta que haya un mensaje (timeout=5s para no bloquear forever)
-            result = redis_client.blpop(QUEUE_NAME, timeout=5)
+            result = await asyncio.to_thread(redis_client.blpop, QUEUE_NAME, 5)
             if not result:
                 continue
 
@@ -158,6 +159,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
@@ -177,22 +186,22 @@ def enqueue_notification(req: NotifyRequest, db: Session = Depends(get_db)):
     Encola una notificación para envío asíncrono.
     Retorna 202 Accepted inmediatamente — no espera el envío real.
     """
-    with db.begin():
-        row = db.execute(
-            text("""
-                INSERT INTO notifications.notifications
-                    (order_id, recipient, type, payload, status)
-                VALUES (:oid, :rec, :type, :payload, 'PENDING')
-                RETURNING id
-            """),
-            {
-                "oid": req.order_id,
-                "rec": req.recipient,
-                "type": req.type,
-                "payload": json.dumps(req.payload or {}),
-            },
-        ).fetchone()
-        notification_id = row.id
+    row = db.execute(
+        text("""
+            INSERT INTO notifications.notifications
+                (order_id, recipient, type, payload, status)
+            VALUES (:oid, :rec, :type, :payload, 'PENDING')
+            RETURNING id
+        """),
+        {
+            "oid": req.order_id,
+            "rec": req.recipient,
+            "type": req.type,
+            "payload": json.dumps(req.payload or {}),
+        },
+    ).fetchone()
+    notification_id = row.id
+    db.commit()
 
     # Encola en Redis para procesamiento asíncrono
     message = {

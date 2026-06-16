@@ -24,6 +24,7 @@ from typing import Optional
 
 import httpx
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Header, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
@@ -82,6 +83,14 @@ app = FastAPI(
     ),
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -284,49 +293,50 @@ async def create_order(
 
     # ── Validar y aplicar descuento (DENTRO de la transacción) ──
     discount_pct = 0.0
-    with db.begin():
-        if req.promotion_code:
-            discount_pct = _get_discount(db, req.promotion_code)
-            if discount_pct == 0.0:
-                logger.warning(f"Código de promoción inválido o expirado: {req.promotion_code}")
+    if req.promotion_code:
+        discount_pct = _get_discount(db, req.promotion_code)
+        if discount_pct == 0.0:
+            logger.warning(f"Código de promoción inválido o expirado: {req.promotion_code}")
 
-        total = subtotal * (1 - discount_pct / 100)
+    total = subtotal * (1 - discount_pct / 100)
 
-        # ── Crear pedido ──
-        order_id_val = str(uuid.uuid4())
+    # ── Crear pedido ──
+    order_id_val = str(uuid.uuid4())
+    db.execute(
+        text("""
+            INSERT INTO orders.orders
+                (id, client_id, status, total_amount, discount_pct,
+                 promotion_code, idempotency_key)
+            VALUES
+                (:id, :cid, 'PENDING', :total, :disc, :promo, :ikey)
+        """),
+        {
+            "id": order_id_val,
+            "cid": req.client_id,
+            "total": round(total, 2),
+            "disc": discount_pct,
+            "promo": req.promotion_code,
+            "ikey": x_idempotency_key,
+        },
+    )
+
+    # ── Insertar ítems ──
+    for item in req.items:
         db.execute(
             text("""
-                INSERT INTO orders.orders
-                    (id, client_id, status, total_amount, discount_pct,
-                     promotion_code, idempotency_key)
-                VALUES
-                    (:id, :cid, 'PENDING', :total, :disc, :promo, :ikey)
+                INSERT INTO orders.order_items
+                    (order_id, product_id, quantity, unit_price)
+                VALUES (:oid, :pid, :qty, :price)
             """),
             {
-                "id": order_id_val,
-                "cid": req.client_id,
-                "total": round(total, 2),
-                "disc": discount_pct,
-                "promo": req.promotion_code,
-                "ikey": x_idempotency_key,
+                "oid": order_id_val,
+                "pid": item.product_id,
+                "qty": item.quantity,
+                "price": item.unit_price,
             },
         )
 
-        # ── Insertar ítems ──
-        for item in req.items:
-            db.execute(
-                text("""
-                    INSERT INTO orders.order_items
-                        (order_id, product_id, quantity, unit_price)
-                    VALUES (:oid, :pid, :qty, :price)
-                """),
-                {
-                    "oid": order_id_val,
-                    "pid": item.product_id,
-                    "qty": item.quantity,
-                    "price": item.unit_price,
-                },
-            )
+    db.commit()
 
     # ── Datos para el procesamiento asíncrono ──
     order_data = {
@@ -437,26 +447,26 @@ def list_orders(limit: int = 50, status: Optional[str] = None, db: Session = Dep
 @app.patch("/orders/{order_id}/cancel")
 def cancel_order(order_id: str, db: Session = Depends(get_db)):
     """Cancela un pedido en estado PENDING."""
-    with db.begin():
-        order = db.execute(
-            text("SELECT id, status FROM orders.orders WHERE id = :id FOR UPDATE"),
-            {"id": order_id},
-        ).fetchone()
+    order = db.execute(
+        text("SELECT id, status FROM orders.orders WHERE id = :id FOR UPDATE"),
+        {"id": order_id},
+    ).fetchone()
 
-        if not order:
-            raise HTTPException(status_code=404, detail="Pedido no encontrado")
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido no encontrado")
 
-        if order.status not in ("PENDING",):
-            raise HTTPException(
-                status_code=400,
-                detail=f"No se puede cancelar un pedido en estado '{order.status}'",
-            )
-
-        db.execute(
-            text("UPDATE orders.orders SET status = 'CANCELLED', updated_at = NOW() WHERE id = :id"),
-            {"id": order_id},
+    if order.status not in ("PENDING",):
+        raise HTTPException(
+            status_code=400,
+            detail=f"No se puede cancelar un pedido en estado '{order.status}'",
         )
 
+    db.execute(
+        text("UPDATE orders.orders SET status = 'CANCELLED', updated_at = NOW() WHERE id = :id"),
+        {"id": order_id},
+    )
+
+    db.commit()
     logger.info(f"Pedido {order_id} cancelado manualmente")
     return {"order_id": order_id, "status": "CANCELLED"}
 

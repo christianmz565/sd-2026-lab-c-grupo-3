@@ -13,6 +13,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
@@ -65,6 +66,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
@@ -111,52 +120,52 @@ def reserve_stock(req: ReserveRequest, db: Session = Depends(get_db)):
     errors = []
 
     try:
-        # Inicia transacción explícita
-        with db.begin():
-            for item in req.items:
-                product_id = item["product_id"]
-                quantity = item["quantity"]
+        for item in req.items:
+            product_id = item["product_id"]
+            quantity = item["quantity"]
 
-                # Bloqueo pesimista: SELECT FOR UPDATE
-                product = db.execute(
-                    text("""
-                        SELECT id, name, stock
-                        FROM inventory.products
-                        WHERE id = :id
-                        FOR UPDATE
-                    """),
-                    {"id": product_id},
-                ).fetchone()
+            # Bloqueo pesimista: SELECT FOR UPDATE
+            product = db.execute(
+                text("""
+                    SELECT id, name, stock
+                    FROM inventory.products
+                    WHERE id = :id
+                    FOR UPDATE
+                """),
+                {"id": product_id},
+            ).fetchone()
 
-                if not product:
-                    errors.append(f"Producto {product_id} no existe")
-                    raise ValueError(f"Producto {product_id} no existe")
+            if not product:
+                errors.append(f"Producto {product_id} no existe")
+                raise ValueError(f"Producto {product_id} no existe")
 
-                if product.stock < quantity:
-                    errors.append(
-                        f"Stock insuficiente para '{product.name}': "
-                        f"disponible={product.stock}, solicitado={quantity}"
-                    )
-                    raise ValueError("Stock insuficiente")
-
-                # Decrementa stock
-                db.execute(
-                    text("UPDATE inventory.products SET stock = stock - :qty WHERE id = :id"),
-                    {"qty": quantity, "id": product_id},
+            if product.stock < quantity:
+                errors.append(
+                    f"Stock insuficiente para '{product.name}': "
+                    f"disponible={product.stock}, solicitado={quantity}"
                 )
+                raise ValueError("Stock insuficiente")
 
-                # Registra movimiento
-                db.execute(
-                    text("""
-                        INSERT INTO inventory.stock_movements (product_id, order_id, delta, reason)
-                        VALUES (:pid, :oid, :delta, 'RESERVE')
-                    """),
-                    {"pid": product_id, "oid": req.order_id, "delta": -quantity},
-                )
+            # Decrementa stock
+            db.execute(
+                text("UPDATE inventory.products SET stock = stock - :qty WHERE id = :id"),
+                {"qty": quantity, "id": product_id},
+            )
 
-                logger.info(
-                    f"Reserva OK — order={req.order_id} product={product_id} qty={quantity}"
-                )
+            # Registra movimiento
+            db.execute(
+                text("""
+                    INSERT INTO inventory.stock_movements (product_id, order_id, delta, reason)
+                    VALUES (:pid, :oid, :delta, 'RESERVE')
+                """),
+                {"pid": product_id, "oid": req.order_id, "delta": -quantity},
+            )
+
+            logger.info(
+                f"Reserva OK — order={req.order_id} product={product_id} qty={quantity}"
+            )
+
+        db.commit()
 
     except ValueError:
         raise HTTPException(status_code=409, detail=errors[0] if errors else "Error de reserva")
@@ -167,23 +176,23 @@ def reserve_stock(req: ReserveRequest, db: Session = Depends(get_db)):
 @app.post("/release", status_code=200)
 def release_stock(req: ReleaseRequest, db: Session = Depends(get_db)):
     """Libera stock reservado (p.ej. si el pedido fue cancelado)."""
-    with db.begin():
-        for item in req.items:
-            product_id = item["product_id"]
-            quantity = item["quantity"]
+    for item in req.items:
+        product_id = item["product_id"]
+        quantity = item["quantity"]
 
-            db.execute(
-                text("UPDATE inventory.products SET stock = stock + :qty WHERE id = :id"),
-                {"qty": quantity, "id": product_id},
-            )
-            db.execute(
-                text("""
-                    INSERT INTO inventory.stock_movements (product_id, order_id, delta, reason)
-                    VALUES (:pid, :oid, :delta, 'RELEASE')
-                """),
-                {"pid": product_id, "oid": req.order_id, "delta": quantity},
-            )
+        db.execute(
+            text("UPDATE inventory.products SET stock = stock + :qty WHERE id = :id"),
+            {"qty": quantity, "id": product_id},
+        )
+        db.execute(
+            text("""
+                INSERT INTO inventory.stock_movements (product_id, order_id, delta, reason)
+                VALUES (:pid, :oid, :delta, 'RELEASE')
+            """),
+            {"pid": product_id, "oid": req.order_id, "delta": quantity},
+        )
 
+    db.commit()
     logger.info(f"Stock liberado — order={req.order_id}")
     return {"status": "released", "order_id": req.order_id}
 
@@ -191,27 +200,28 @@ def release_stock(req: ReleaseRequest, db: Session = Depends(get_db)):
 @app.post("/restock")
 def restock(req: RestockRequest, db: Session = Depends(get_db)):
     """Reabastece un producto."""
-    with db.begin():
-        result = db.execute(
-            text("""
-                UPDATE inventory.products
-                SET stock = stock + :qty
-                WHERE id = :id
-                RETURNING id, name, stock
-            """),
-            {"qty": req.quantity, "id": req.product_id},
-        ).fetchone()
+    result = db.execute(
+        text("""
+            UPDATE inventory.products
+            SET stock = stock + :qty
+            WHERE id = :id
+            RETURNING id, name, stock
+        """),
+        {"qty": req.quantity, "id": req.product_id},
+    ).fetchone()
 
-        if not result:
-            raise HTTPException(status_code=404, detail="Producto no encontrado")
+    if not result:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-        db.execute(
-            text("""
-                INSERT INTO inventory.stock_movements (product_id, delta, reason)
-                VALUES (:pid, :delta, :reason)
-            """),
-            {"pid": req.product_id, "delta": req.quantity, "reason": req.reason},
-        )
+    db.execute(
+        text("""
+            INSERT INTO inventory.stock_movements (product_id, delta, reason)
+            VALUES (:pid, :delta, :reason)
+        """),
+        {"pid": req.product_id, "delta": req.quantity, "reason": req.reason},
+    )
+
+    db.commit()
 
     return {"product_id": result.id, "name": result.name, "new_stock": result.stock}
 

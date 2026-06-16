@@ -16,6 +16,7 @@ from contextlib import asynccontextmanager
 from decimal import Decimal
 
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
@@ -65,6 +66,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
@@ -107,27 +116,27 @@ def create_invoice(req: CreateInvoiceRequest, db: Session = Depends(get_db)):
     # ── Paso 3: Insertar factura ──
     invoice_number = generate_invoice_number()
     try:
-        with db.begin():
-            row = db.execute(
-                text("""
-                    INSERT INTO billing.invoices
-                        (invoice_number, order_id, client_id,
-                         subtotal, discount_amount, tax_amount, total)
-                    VALUES
-                        (:inv_num, :oid, :cid, :sub, :disc, :tax, :total)
-                    RETURNING *
-                """),
-                {
-                    "inv_num": invoice_number,
-                    "oid": req.order_id,
-                    "cid": req.client_id,
-                    "sub": float(subtotal),
-                    "disc": float(discount_amount),
-                    "tax": float(tax_amount),
-                    "total": float(total),
-                },
-            ).fetchone()
+        row = db.execute(
+            text("""
+                INSERT INTO billing.invoices
+                    (invoice_number, order_id, client_id,
+                     subtotal, discount_amount, tax_amount, total)
+                VALUES
+                    (:inv_num, :oid, :cid, :sub, :disc, :tax, :total)
+                RETURNING *
+            """),
+            {
+                "inv_num": invoice_number,
+                "oid": req.order_id,
+                "cid": req.client_id,
+                "sub": float(subtotal),
+                "disc": float(discount_amount),
+                "tax": float(tax_amount),
+                "total": float(total),
+            },
+        ).fetchone()
 
+        db.commit()
         logger.info(f"Factura creada: {invoice_number} — order={req.order_id} total={total}")
         return {"idempotent": False, "invoice": _row_to_dict(row)}
 

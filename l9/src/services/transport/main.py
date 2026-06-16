@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
@@ -59,6 +60,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
@@ -83,39 +92,40 @@ def assign_shipment(req: AssignShipmentRequest, db: Session = Depends(get_db)):
         return _shipment_to_dict(existing)
 
     # Busca conductor disponible con FOR UPDATE para evitar doble asignación
-    with db.begin():
-        driver = db.execute(
-            text("""
-                SELECT id, name, vehicle
-                FROM transport.drivers
-                WHERE is_available = TRUE
-                ORDER BY id
-                LIMIT 1
-                FOR UPDATE SKIP LOCKED
-            """)
-        ).fetchone()
+    driver = db.execute(
+        text("""
+            SELECT id, name, vehicle
+            FROM transport.drivers
+            WHERE is_available = TRUE
+            ORDER BY id
+            LIMIT 1
+            FOR UPDATE SKIP LOCKED
+        """)
+    ).fetchone()
 
-        if not driver:
-            raise HTTPException(
-                status_code=503,
-                detail="No hay conductores disponibles en este momento"
-            )
-
-        # Marca conductor como no disponible
-        db.execute(
-            text("UPDATE transport.drivers SET is_available = FALSE WHERE id = :id"),
-            {"id": driver.id},
+    if not driver:
+        raise HTTPException(
+            status_code=503,
+            detail="No hay conductores disponibles en este momento"
         )
 
-        # Crea envío
-        row = db.execute(
-            text("""
-                INSERT INTO transport.shipments (order_id, driver_id, address, status)
-                VALUES (:oid, :did, :addr, 'ASSIGNED')
-                RETURNING *
-            """),
-            {"oid": req.order_id, "did": driver.id, "addr": req.address},
-        ).fetchone()
+    # Marca conductor como no disponible
+    db.execute(
+        text("UPDATE transport.drivers SET is_available = FALSE WHERE id = :id"),
+        {"id": driver.id},
+    )
+
+    # Crea envío
+    row = db.execute(
+        text("""
+            INSERT INTO transport.shipments (order_id, driver_id, address, status)
+            VALUES (:oid, :did, :addr, 'ASSIGNED')
+            RETURNING *
+        """),
+        {"oid": req.order_id, "did": driver.id, "addr": req.address},
+    ).fetchone()
+
+    db.commit()
 
     logger.info(
         f"Envío asignado — order={req.order_id} driver='{driver.name}' vehicle='{driver.vehicle}'"
@@ -153,34 +163,34 @@ def update_status(order_id: str, req: UpdateStatusRequest, db: Session = Depends
         "IN_TRANSIT": ["DELIVERED"],
     }
 
-    with db.begin():
-        shipment = db.execute(
-            text("SELECT * FROM transport.shipments WHERE order_id = :oid FOR UPDATE"),
-            {"oid": order_id},
-        ).fetchone()
+    shipment = db.execute(
+        text("SELECT * FROM transport.shipments WHERE order_id = :oid FOR UPDATE"),
+        {"oid": order_id},
+    ).fetchone()
 
-        if not shipment:
-            raise HTTPException(status_code=404, detail="Envío no encontrado")
+    if not shipment:
+        raise HTTPException(status_code=404, detail="Envío no encontrado")
 
-        allowed = valid_transitions.get(shipment.status, [])
-        if req.status not in allowed:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Transición inválida: {shipment.status} → {req.status}",
-            )
+    allowed = valid_transitions.get(shipment.status, [])
+    if req.status not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Transición inválida: {shipment.status} → {req.status}",
+        )
 
-        update_sql = "UPDATE transport.shipments SET status = :status"
-        params: dict = {"status": req.status, "oid": order_id}
+    update_sql = "UPDATE transport.shipments SET status = :status"
+    params: dict = {"status": req.status, "oid": order_id}
 
-        if req.status == "DELIVERED":
-            update_sql += ", delivered_at = NOW()"
-            # Libera conductor
-            db.execute(
-                text("UPDATE transport.drivers SET is_available = TRUE WHERE id = :did"),
-                {"did": shipment.driver_id},
-            )
+    if req.status == "DELIVERED":
+        update_sql += ", delivered_at = NOW()"
+        # Libera conductor
+        db.execute(
+            text("UPDATE transport.drivers SET is_available = TRUE WHERE id = :did"),
+            {"did": shipment.driver_id},
+        )
 
-        db.execute(text(update_sql + " WHERE order_id = :oid"), params)
+    db.execute(text(update_sql + " WHERE order_id = :oid"), params)
+    db.commit()
 
     logger.info(f"Envío {order_id}: {shipment.status} → {req.status}")
     return {"order_id": order_id, "new_status": req.status}
