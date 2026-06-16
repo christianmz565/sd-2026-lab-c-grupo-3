@@ -312,6 +312,7 @@ export function NewOrderForm({
             ) : null}
             <Button
               type="submit"
+              variant="primary"
               loading={submitting}
               disabled={!canSubmit}
               className="w-full"

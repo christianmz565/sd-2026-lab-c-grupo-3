@@ -5,7 +5,7 @@ type Size = "sm" | "md";
 
 const variantStyles: Record<Variant, string> = {
   primary:
-    "bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)] disabled:opacity-50",
+    "bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary)]/80 disabled:opacity-50",
   secondary:
     "bg-[var(--surface)] text-[var(--foreground)] border border-[var(--border-strong)] hover:bg-[var(--surface-muted)] disabled:opacity-50",
   ghost:
