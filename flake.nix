@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
 
-    lab-report.url = "github:christianmz565/lab-report/dev";
+    UNSAReport.url = "github:UNSAReport/UNSAReport";
     cam.url = "github:christianmz565/commit-author-manager";
   };
 
@@ -13,7 +13,7 @@
     {
       nixpkgs,
       flake-utils,
-      lab-report,
+      UNSAReport,
       cam,
       ...
     }:
@@ -65,7 +65,7 @@
             ]
             ++ fonts
             ++ [
-              lab-report.packages.${system}.default
+              UNSAReport.packages.${system}.default
               cam.packages.${system}.default
             ];
 

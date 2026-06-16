@@ -1,5 +1,6 @@
 {
-  "multiLab": true,
+  "template": "multi-lab",
+  "mode": "multi",
   "sessions": [
     "l4",
     "l5",

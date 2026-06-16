@@ -1,9 +1,28 @@
 {
   "nodes": {
-    "cam": {
+    "UNSAReport": {
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1781397547,
+        "narHash": "sha256-b+StpqJQcD0woLE2Bg6iZ0NjtkiQNCGZWLt6mrxgkzY=",
+        "owner": "UNSAReport",
+        "repo": "UNSAReport",
+        "rev": "8e2a3f4b46e9145ab89e7bdf97598977614e2897",
+        "type": "github"
+      },
+      "original": {
+        "owner": "UNSAReport",
+        "repo": "UNSAReport",
+        "type": "github"
+      }
+    },
+    "cam": {
+      "inputs": {
+        "flake-utils": "flake-utils_2",
+        "nixpkgs": "nixpkgs_2"
       },
       "locked": {
         "lastModified": 1778379085,
@@ -73,26 +92,6 @@
         "type": "github"
       }
     },
-    "lab-report": {
-      "inputs": {
-        "flake-utils": "flake-utils_3",
-        "nixpkgs": "nixpkgs_2"
-      },
-      "locked": {
-        "lastModified": 1779325846,
-        "narHash": "sha256-e/8dFyextT+OKjlepUYvSXCGCA1qGnoAaQ18Mviw21A=",
-        "owner": "christianmz565",
-        "repo": "lab-report",
-        "rev": "c02cb14e5893daff6b06315ca536333d7d5e58da",
-        "type": "github"
-      },
-      "original": {
-        "owner": "christianmz565",
-        "ref": "dev",
-        "repo": "lab-report",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1777954456,
@@ -143,9 +142,9 @@
     },
     "root": {
       "inputs": {
+        "UNSAReport": "UNSAReport",
         "cam": "cam",
-        "flake-utils": "flake-utils_2",
-        "lab-report": "lab-report",
+        "flake-utils": "flake-utils_3",
         "nixpkgs": "nixpkgs_3"
       }
     },
