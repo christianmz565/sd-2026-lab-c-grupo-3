@@ -96,6 +96,7 @@ app.add_middleware(
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+# START-SNIPPET,promotion-validation
 def _get_discount(db: Session, promotion_code: str) -> float:
     """
     Consulta el descuento de una promoción dentro de la misma sesión de BD.
@@ -115,8 +116,10 @@ def _get_discount(db: Session, promotion_code: str) -> float:
         {"code": promotion_code},
     ).fetchone()
     return float(row.discount) if row else 0.0
+# END-SNIPPET
 
 
+# START-SNIPPET,background-processing
 async def _process_order_async(order_id: str, order_data: dict):
     """
     Flujo completo de procesamiento del pedido — ejecutado en background.
@@ -203,8 +206,10 @@ async def _process_order_async(order_id: str, order_data: dict):
         except Exception as e:
             logger.error(f"Error inesperado procesando pedido {order_id}: {e}")
             _update_order_status(order_id, "ERROR", error=str(e))
+# END-SNIPPET
 
 
+# START-SNIPPET,idempotency-check
 async def _notify(client: httpx.AsyncClient, order_id: str, order_data: dict,
                   type_: str, payload: dict):
     try:
@@ -219,6 +224,7 @@ async def _notify(client: httpx.AsyncClient, order_id: str, order_data: dict,
         )
     except Exception as e:
         logger.warning(f"No se pudo encolar notificación: {e}")
+# END-SNIPPET
 
 
 def _update_order_status(order_id: str, status: str, error: Optional[str] = None):
@@ -270,6 +276,7 @@ async def create_order(
     """
     t0 = time.time()
 
+    # START-SNIPPET,idempotency-check
     # ── Idempotencia ──
     if x_idempotency_key:
         existing = db.execute(
@@ -287,6 +294,7 @@ async def create_order(
                     "message": "Pedido ya registrado previamente",
                 },
             )
+    # END-SNIPPET
 
     # ── Calcular subtotal ──
     subtotal = sum(item.quantity * item.unit_price for item in req.items)

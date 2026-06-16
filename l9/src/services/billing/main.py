@@ -82,6 +82,7 @@ def health():
     return {"status": "ok", "service": "billing"}
 
 
+# START-SNIPPET,create-invoice
 @app.post("/invoices", status_code=201)
 def create_invoice(req: CreateInvoiceRequest, db: Session = Depends(get_db)):
     """
@@ -150,6 +151,7 @@ def create_invoice(req: CreateInvoiceRequest, db: Session = Depends(get_db)):
         if existing:
             return {"idempotent": True, "invoice": _row_to_dict(existing)}
         raise HTTPException(status_code=500, detail="Error al crear factura")
+# END-SNIPPET
 
 
 @app.get("/invoices/{order_id}")

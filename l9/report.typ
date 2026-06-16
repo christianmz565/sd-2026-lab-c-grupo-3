@@ -1,21 +1,23 @@
-#import "/lib.typ": code-block, code-block-config, unsa-report
+#import "/lib.typ": code-block, code-block-config, summarize-name, unsa-report
 
+#let members = (
+  "Bedregal Perez Daniel",
+  "Jara Mamani Mariel Alisson",
+  "Mestas Zegarra Christian Raul",
+  "Noa Camino Yenaro Joel",
+  "Sequeiros Condori Luis Gustavo",
+)
 #show: unsa-report.with(
   course_name: "Sistemas Distribuidos",
-  lab_title: "Microservicios y Docker",
+  lab_title: "Software Quality y Software Testing aplicados a entornos distribuidos",
   lab_number: "09",
   instructor_name: "Mg. Maribel Molina Barriga",
-  members: (
-    "Bedregal Perez Daniel",
-    "Jara Mamani Mariel Alisson",
-    "Mestas Zegarra Christian Raul",
-    "Noa Camino Yenaro Joel",
-    "Sequeiros Condori Luis Gustavo",
-  ),
+  members: members,
+  members_abbr_list: members.map(name => summarize-name(name, separator: ",")).join(" - "),
 )
 
 #code-block-config(lang: "python")
-#set image(width: 78%)
+#set image(width: 60%)
 #set list(indent: 2pt)
 #show raw.where(block: false): it => box(inset: (x: 0.5pt))[#it]
 

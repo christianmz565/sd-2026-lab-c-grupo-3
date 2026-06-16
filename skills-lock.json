@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "typst-author": {
+      "source": "apcamargo/typst-skills",
+      "sourceType": "github",
+      "skillPath": "typst-author/SKILL.md",
+      "computedHash": "5430eddf794e1475fcf31f1bb9f2aba4d9d18e593a652dbda817f9c8ab9ed6f2"
+    },
+    "typst-writer": {
+      "source": "ypares/agent-skills",
+      "sourceType": "github",
+      "skillPath": "typst-writer/SKILL.md",
+      "computedHash": "f40541d0a0d080bb3a98aa8ebe60e31c8214bba170d9d752f4659fdbfd30257a"
+    }
+  }
+}

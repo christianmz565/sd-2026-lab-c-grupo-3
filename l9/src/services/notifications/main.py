@@ -57,6 +57,7 @@ class NotifyRequest(BaseModel):
 
 # ─── Background worker ───────────────────────────────────────────────────────
 
+# START-SNIPPET,notification-worker
 async def notification_worker():
     """
     Worker asíncrono que consume la cola Redis y 'envía' notificaciones.
@@ -92,6 +93,7 @@ async def notification_worker():
         except Exception as e:
             logger.error(f"Error en worker de notificaciones: {e}")
             await asyncio.sleep(1)
+# END-SNIPPET
 
 #Mejorar a envio real de email
 async def _simulate_send_email(message: dict):

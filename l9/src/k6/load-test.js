@@ -1,3 +1,4 @@
+// START-SNIPPET,load-test-config
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
@@ -18,9 +19,11 @@ export const options = {
     errors: ['rate<0.1'],
   },
 };
+// END-SNIPPET
 
 const BASE_URL = __ENV.BASE_URL || 'http://orders:8001';
 
+// START-SNIPPET,load-test-payload
 const payload = JSON.stringify({
   client_id: 'cliente-load-test',
   client_email: 'loadtest@ejemplo.com',
@@ -38,7 +41,9 @@ const params = {
     'X-Idempotency-Key': `load-test-${Date.now()}-${Math.random()}`,
   },
 };
+// END-SNIPPET
 
+// START-SNIPPET,load-test-execution
 export default function () {
   const start = Date.now();
   const res = http.post(`${BASE_URL}/orders`, payload, params);
@@ -55,3 +60,4 @@ export default function () {
 
   sleep(Math.random() * 2 + 0.5);
 }
+// END-SNIPPET

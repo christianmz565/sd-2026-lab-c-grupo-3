@@ -107,6 +107,7 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
             "stock": row.stock, "unit_price": float(row.unit_price)}
 
 
+# START-SNIPPET,reserve-stock
 @app.post("/reserve", status_code=200)
 def reserve_stock(req: ReserveRequest, db: Session = Depends(get_db)):
     """
@@ -171,6 +172,7 @@ def reserve_stock(req: ReserveRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail=errors[0] if errors else "Error de reserva")
 
     return {"status": "reserved", "order_id": req.order_id}
+# END-SNIPPET
 
 
 @app.post("/release", status_code=200)

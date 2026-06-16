@@ -33,6 +33,7 @@ class TestNotifications:
             time.sleep(0.5)
         return None
 
+# START-SNIPPET,test-notification-confirm
     def test_notification_on_confirm(self, client: httpx.Client):
         """Order confirmed → ORDER_CONFIRMED notification exists."""
         email = "test-notif-confirm@logifresh.pe"
@@ -50,6 +51,7 @@ class TestNotifications:
         )
         assert notif["recipient"] == email
         assert notif["status"] == "SENT"
+# END-SNIPPET
 
     def test_notification_on_cancel(self, client: httpx.Client):
         """Cancelled order → ORDER_CANCELLED notification."""

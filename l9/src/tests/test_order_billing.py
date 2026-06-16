@@ -21,6 +21,7 @@ PROMO_VERANO10 = "VERANO10"  # 10% discount
 @pytest.mark.usefixtures("wait_for_services")
 class TestOrderBilling:
 
+# START-SNIPPET,test-invoice-created
     def test_invoice_created_on_confirm(self, client: httpx.Client):
         """Order confirmed → invoice generated with correct IGV (18%)."""
         order = create_order(client, items=[
@@ -52,6 +53,7 @@ class TestOrderBilling:
         )
         assert invoice["status"] == "ISSUED"
         assert invoice["invoice_number"].startswith("FAC-")
+# END-SNIPPET
 
     def test_no_duplicate_invoice(self, client: httpx.Client):
         """Same order_id sent twice → only one invoice exists (idempotency)."""
