@@ -1,6 +1,24 @@
 {
   "version": 1,
   "skills": {
+    "design-doc-mermaid": {
+      "source": "spillwavesolutions/design-doc-mermaid",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "362eecfd376c8932aa86d366a6406bf389ac4f2f52d93e5892adf8c963392afe"
+    },
+    "mermaid-diagrams": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "skillPath": "skills/mermaid-diagrams/SKILL.md",
+      "computedHash": "6d36e69adad781f106a2fb4b19ebc22bf0c211babdc0d1ae5822fa65abb48bd8"
+    },
+    "mermaid-visualizer": {
+      "source": "axtonliu/axton-obsidian-visual-skills",
+      "sourceType": "github",
+      "skillPath": "mermaid-visualizer/SKILL.md",
+      "computedHash": "4cd0c51a2c2568ddff0b1b21b6a82f7ee2369d60f32f5a34e784588bf5f8c2b4"
+    },
     "typst-author": {
       "source": "apcamargo/typst-skills",
       "sourceType": "github",
