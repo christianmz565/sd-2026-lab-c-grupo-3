@@ -1,0 +1,35 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#C8310E', 'primaryTextColor': '#fff', 'primaryBorderColor': '#333', 'lineColor': '#333', 'textColor': '#000', 'secondaryColor': '#E0E0E0', 'tertiaryColor': '#fff', 'tertiaryTextColor': '#000', 'edgeLabelBackground': '#fff', 'clusterBkg': '#F5F5F5', 'clusterTitle': '#000', 'fontFamily': 'arial', 'fontSize': '12px'}, 'themeCSS': 'svg .labelBkg, svg .edgeLabel, svg .edgeLabel p, svg .edgeLabel span { background-color: transparent !important; color: #000 !important; fill: #000 !important; } svg .cluster rect { fill: #F5F5F5 !important; stroke: #999 !important; }'}%%
+
+graph TB
+    subgraph "Distribución Geográfica - FedEx Perú"
+        direction TB
+
+        subgraph "México"
+            MEX["<b>Ciudad de México</b><br/>Nodo Réplica<br/>Latencia: ~120ms"]
+        end
+
+        subgraph "Colombia"
+            BOG["<b>Bogotá</b><br/>Nodo Réplica<br/>Latencia: ~80ms"]
+        end
+
+        subgraph "Perú"
+            LIMA["<b>Lima</b><br/>Nodo Principal<br/>Centro de Datos"]
+        end
+
+        subgraph "Chile"
+            SCL["<b>Santiago</b><br/>Nodo Réplica<br/>Latencia: ~100ms"]
+        end
+    end
+
+    LIMA <-->|"Canal Primario<br/>Replicación Asíncrona<br/>~50ms"| BOG
+    LIMA <-->|"Canal Primario<br/>Replicación Asíncrona<br/>~70ms"| SCL
+    LIMA <-->|"Canal Primario<br/>Replicación Asíncrona<br/>~90ms"| MEX
+
+    BOG <-->|"Canal Secundario<br/>Sincronización Regional<br/>~150ms"| SCL
+    BOG <-->|"Canal Secundario<br/>Sincronización Regional<br/>~180ms"| MEX
+    SCL <-->|"Canal Secundario<br/>Sincronización Regional<br/>~200ms"| MEX
+
+    style LIMA fill:#C8310E,stroke:#333,color:#fff,stroke-width:3px
+    style BOG fill:#1565C0,stroke:#333,color:#fff,stroke-width:2px
+    style SCL fill:#1565C0,stroke:#333,color:#fff,stroke-width:2px
+    style MEX fill:#1565C0,stroke:#333,color:#fff,stroke-width:2px

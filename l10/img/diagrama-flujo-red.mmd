@@ -1,0 +1,70 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#C8310E', 'primaryTextColor': '#fff', 'primaryBorderColor': '#333', 'lineColor': '#333', 'textColor': '#000', 'secondaryColor': '#E0E0E0', 'tertiaryColor': '#fff', 'tertiaryTextColor': '#000', 'edgeLabelBackground': '#fff', 'clusterBkg': '#F5F5F5', 'clusterTitle': '#000', 'fontFamily': 'arial', 'fontSize': '12px'}, 'themeCSS': 'svg .labelBkg, svg .edgeLabel, svg .edgeLabel p, svg .edgeLabel span { background-color: transparent !important; color: #000 !important; fill: #000 !important; } svg .cluster rect { fill: #F5F5F5 !important; stroke: #999 !important; }'}%%
+
+graph LR
+    subgraph "Clientes"
+        APP["Aplicación<br/>Móvil/Web"]
+        API["API<br/>REST"]
+    end
+
+    subgraph "Lima - Nodo Principal"
+        LB["Load<br/>Balancer"]
+        L_STUDIO["Studio<br/>:3000"]
+        L_REST["PostgREST<br/>:3001"]
+        L_DB[("<b>PostgreSQL<br/>Primary</b><br/>:5432")]
+    end
+
+    subgraph "Bogotá - Réplica"
+        B_STUDIO["Studio<br/>:3010"]
+        B_REST["PostgREST<br/>:3011"]
+        B_DB[("<b>PostgreSQL<br/>Standby</b><br/>:5433")]
+    end
+
+    subgraph "Santiago - Réplica"
+        S_STUDIO["Studio<br/>:3020"]
+        S_REST["PostgREST<br/>:3021"]
+        S_DB[("<b>PostgreSQL<br/>Standby</b><br/>:5434")]
+    end
+
+    subgraph "Ciudad de México - Réplica"
+        M_STUDIO["Studio<br/>:3030"]
+        M_REST["PostgREST<br/>:3031"]
+        M_DB[("<b>PostgreSQL<br/>Standby</b><br/>:5435")]
+    end
+
+    APP --> LB
+    API --> LB
+
+    LB --> L_REST
+    LB --> B_REST
+    LB --> S_REST
+    LB --> M_REST
+
+    L_REST --> L_DB
+    B_REST --> B_DB
+    S_REST --> S_DB
+    M_REST --> M_DB
+
+    L_DB -->|"WAL Shipping<br/>Streaming Replication"| B_DB
+    L_DB -->|"WAL Shipping<br/>Streaming Replication"| S_DB
+    L_DB -->|"WAL Shipping<br/>Streaming Replication"| M_DB
+
+    L_STUDIO -.-> L_DB
+    B_STUDIO -.-> B_DB
+    S_STUDIO -.-> S_DB
+    M_STUDIO -.-> M_DB
+
+    style APP fill:#FFF3E0,stroke:#333,color:#333,stroke-width:1px
+    style API fill:#FFF3E0,stroke:#333,color:#333,stroke-width:1px
+    style LB fill:#2E7D32,stroke:#333,color:#fff,stroke-width:2px
+    style L_STUDIO fill:#E8EAF6,stroke:#333,color:#333,stroke-width:1px
+    style L_REST fill:#E8EAF6,stroke:#333,color:#333,stroke-width:1px
+    style L_DB fill:#C8310E,stroke:#333,color:#fff,stroke-width:3px
+    style B_STUDIO fill:#E8EAF6,stroke:#333,color:#333,stroke-width:1px
+    style B_REST fill:#E8EAF6,stroke:#333,color:#333,stroke-width:1px
+    style B_DB fill:#1565C0,stroke:#333,color:#fff,stroke-width:2px
+    style S_STUDIO fill:#E8EAF6,stroke:#333,color:#333,stroke-width:1px
+    style S_REST fill:#E8EAF6,stroke:#333,color:#333,stroke-width:1px
+    style S_DB fill:#1565C0,stroke:#333,color:#fff,stroke-width:2px
+    style M_STUDIO fill:#E8EAF6,stroke:#333,color:#333,stroke-width:1px
+    style M_REST fill:#E8EAF6,stroke:#333,color:#333,stroke-width:1px
+    style M_DB fill:#1565C0,stroke:#333,color:#fff,stroke-width:2px

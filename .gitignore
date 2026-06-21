@@ -186,3 +186,4 @@ dist
 l10/src/infrastructure/db/data/
 l10/src/infrastructure/db/config/pgsodium_root.key
 
+report.pdf
