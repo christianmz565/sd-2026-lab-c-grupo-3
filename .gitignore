@@ -181,3 +181,8 @@ dist
 **/target
 
 .playwright-mcp/
+
+# Supabase Local DB data and generated key
+l10/src/infrastructure/db/data/
+l10/src/infrastructure/db/config/pgsodium_root.key
+

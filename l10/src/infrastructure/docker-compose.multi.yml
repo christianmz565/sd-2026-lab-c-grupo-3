@@ -1,0 +1,408 @@
+name: sd-lab-db-multi
+
+x-db-common: &db-common
+  image: supabase/postgres:15.8.1.085
+  networks:
+    - inner-network
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+    interval: 5s
+    timeout: 5s
+    retries: 10
+  environment:
+    POSTGRES_HOST: /var/run/postgresql
+    PGPORT: 5432
+    POSTGRES_PORT: 5432
+    PGPASSWORD: ${POSTGRES_PASSWORD}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    PGDATABASE: ${POSTGRES_DB}
+    POSTGRES_DB: ${POSTGRES_DB}
+    JWT_SECRET: ${JWT_SECRET}
+    JWT_EXP: ${JWT_EXPIRY}
+
+x-studio-common: &studio-common
+  image: supabase/studio:2025.12.17-sha-43f4f7f
+  restart: unless-stopped
+  networks:
+    - inner-network
+  healthcheck:
+    test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})"]
+    timeout: 10s
+    interval: 5s
+    retries: 3
+
+x-rest-common: &rest-common
+  image: postgrest/postgrest:v14.1
+  restart: unless-stopped
+  networks:
+    - inner-network
+  command: ["postgrest"]
+
+x-meta-common: &meta-common
+  image: supabase/postgres-meta:v0.95.1
+  restart: unless-stopped
+  networks:
+    - inner-network
+
+services:
+  # =========================================================================
+  # LIMA
+  # =========================================================================
+  lima-db:
+    <<: *db-common
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - ./db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      - ./db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+      - ./db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      - ./db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+      - ./db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+      - ./db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+      - lima-db-data:/var/lib/postgresql/data
+      - lima-db-config:/etc/postgresql-custom
+      - ./db/config/supautils.conf:/etc/postgresql-custom/supautils.conf:ro,Z
+      - ./db/config/wal-g.conf:/etc/postgresql-custom/wal-g.conf:ro,Z
+      - ./db/config/read-replica.conf:/etc/postgresql-custom/read-replica.conf:ro,Z
+      - ./db/config/extension-custom-scripts:/etc/postgresql-custom/extension-custom-scripts:ro,Z
+
+  lima-studio:
+    <<: *studio-common
+    ports:
+      - "3000:3000"
+    depends_on:
+      lima-db:
+        condition: service_healthy
+      lima-meta:
+        condition: service_started
+    environment:
+      HOSTNAME: "::"
+      STUDIO_PG_META_URL: http://lima-meta:8080
+      PG_META_DB_HOST: lima-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: lima-db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      DEFAULT_ORGANIZATION_NAME: "FedEx Peru - Lima"
+      DEFAULT_PROJECT_NAME: "Lima Hub"
+      SUPABASE_URL: http://lima-rest:3000
+      SUPABASE_PUBLIC_URL: http://localhost:3001
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_ENABLE_LOGS: true
+      DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      NEXT_PUBLIC_DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      DASHBOARD_USERNAME: ${KONG_DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${KONG_DASHBOARD_PASSWORD}
+
+  lima-rest:
+    <<: *rest-common
+    ports:
+      - "3001:3000"
+    depends_on:
+      lima-db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@lima-db:5432/${POSTGRES_DB}
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
+
+  lima-meta:
+    <<: *meta-common
+    depends_on:
+      lima-db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: lima-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+
+  # =========================================================================
+  # BOGOTA
+  # =========================================================================
+  bogota-db:
+    <<: *db-common
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - ./db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      - ./db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+      - ./db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      - ./db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+      - ./db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+      - ./db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+      - bogota-db-data:/var/lib/postgresql/data
+      - bogota-db-config:/etc/postgresql-custom
+      - ./db/config/supautils.conf:/etc/postgresql-custom/supautils.conf:ro,Z
+      - ./db/config/wal-g.conf:/etc/postgresql-custom/wal-g.conf:ro,Z
+      - ./db/config/read-replica.conf:/etc/postgresql-custom/read-replica.conf:ro,Z
+      - ./db/config/extension-custom-scripts:/etc/postgresql-custom/extension-custom-scripts:ro,Z
+
+  bogota-studio:
+    <<: *studio-common
+    ports:
+      - "3010:3000"
+    depends_on:
+      bogota-db:
+        condition: service_healthy
+      bogota-meta:
+        condition: service_started
+    environment:
+      HOSTNAME: "::"
+      STUDIO_PG_META_URL: http://bogota-meta:8080
+      PG_META_DB_HOST: bogota-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: bogota-db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      DEFAULT_ORGANIZATION_NAME: "FedEx Peru - Bogota"
+      DEFAULT_PROJECT_NAME: "Bogota Hub"
+      SUPABASE_URL: http://bogota-rest:3000
+      SUPABASE_PUBLIC_URL: http://localhost:3011
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_ENABLE_LOGS: true
+      DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      NEXT_PUBLIC_DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      DASHBOARD_USERNAME: ${KONG_DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${KONG_DASHBOARD_PASSWORD}
+
+  bogota-rest:
+    <<: *rest-common
+    ports:
+      - "3011:3000"
+    depends_on:
+      bogota-db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@bogota-db:5432/${POSTGRES_DB}
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
+
+  bogota-meta:
+    <<: *meta-common
+    depends_on:
+      bogota-db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: bogota-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+
+  # =========================================================================
+  # SANTIAGO
+  # =========================================================================
+  santiago-db:
+    <<: *db-common
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - ./db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      - ./db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+      - ./db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      - ./db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+      - ./db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+      - ./db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+      - santiago-db-data:/var/lib/postgresql/data
+      - santiago-db-config:/etc/postgresql-custom
+      - ./db/config/supautils.conf:/etc/postgresql-custom/supautils.conf:ro,Z
+      - ./db/config/wal-g.conf:/etc/postgresql-custom/wal-g.conf:ro,Z
+      - ./db/config/read-replica.conf:/etc/postgresql-custom/read-replica.conf:ro,Z
+      - ./db/config/extension-custom-scripts:/etc/postgresql-custom/extension-custom-scripts:ro,Z
+
+  santiago-studio:
+    <<: *studio-common
+    ports:
+      - "3020:3000"
+    depends_on:
+      santiago-db:
+        condition: service_healthy
+      santiago-meta:
+        condition: service_started
+    environment:
+      HOSTNAME: "::"
+      STUDIO_PG_META_URL: http://santiago-meta:8080
+      PG_META_DB_HOST: santiago-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: santiago-db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      DEFAULT_ORGANIZATION_NAME: "FedEx Peru - Santiago"
+      DEFAULT_PROJECT_NAME: "Santiago Hub"
+      SUPABASE_URL: http://santiago-rest:3000
+      SUPABASE_PUBLIC_URL: http://localhost:3021
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_ENABLE_LOGS: true
+      DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      NEXT_PUBLIC_DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      DASHBOARD_USERNAME: ${KONG_DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${KONG_DASHBOARD_PASSWORD}
+
+  santiago-rest:
+    <<: *rest-common
+    ports:
+      - "3021:3000"
+    depends_on:
+      santiago-db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@santiago-db:5432/${POSTGRES_DB}
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
+
+  santiago-meta:
+    <<: *meta-common
+    depends_on:
+      santiago-db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: santiago-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+
+  # =========================================================================
+  # MEXICO
+  # =========================================================================
+  mexico-db:
+    <<: *db-common
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - ./db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      - ./db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+      - ./db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      - ./db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+      - ./db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+      - ./db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+      - mexico-db-data:/var/lib/postgresql/data
+      - mexico-db-config:/etc/postgresql-custom
+      - ./db/config/supautils.conf:/etc/postgresql-custom/supautils.conf:ro,Z
+      - ./db/config/wal-g.conf:/etc/postgresql-custom/wal-g.conf:ro,Z
+      - ./db/config/read-replica.conf:/etc/postgresql-custom/read-replica.conf:ro,Z
+      - ./db/config/extension-custom-scripts:/etc/postgresql-custom/extension-custom-scripts:ro,Z
+
+  mexico-studio:
+    <<: *studio-common
+    ports:
+      - "3030:3000"
+    depends_on:
+      mexico-db:
+        condition: service_healthy
+      mexico-meta:
+        condition: service_started
+    environment:
+      HOSTNAME: "::"
+      STUDIO_PG_META_URL: http://mexico-meta:8080
+      PG_META_DB_HOST: mexico-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: mexico-db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      DEFAULT_ORGANIZATION_NAME: "FedEx Peru - Mexico"
+      DEFAULT_PROJECT_NAME: "Mexico Hub"
+      SUPABASE_URL: http://mexico-rest:3000
+      SUPABASE_PUBLIC_URL: http://localhost:3031
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_ENABLE_LOGS: true
+      DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      NEXT_PUBLIC_DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      DASHBOARD_USERNAME: ${KONG_DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${KONG_DASHBOARD_PASSWORD}
+
+  mexico-rest:
+    <<: *rest-common
+    ports:
+      - "3031:3000"
+    depends_on:
+      mexico-db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@mexico-db:5432/${POSTGRES_DB}
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
+
+  mexico-meta:
+    <<: *meta-common
+    depends_on:
+      mexico-db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: mexico-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+
+networks:
+  inner-network:
+
+volumes:
+  lima-db-data:
+  lima-db-config:
+  bogota-db-data:
+  bogota-db-config:
+  santiago-db-data:
+  santiago-db-config:
+  mexico-db-data:
+  mexico-db-config:

@@ -1,0 +1,132 @@
+name: sd-lab-db
+
+services:
+  sd-lab-database:
+    image: supabase/postgres:15.8.1.085
+    networks:
+      - inner-network
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - ./db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      - ./db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+      - ./db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      - ./db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+      - ./db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+      - ./db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+      - sd-lab-db-data:/var/lib/postgresql/data:Z
+      - sd-lab-db-config:/etc/postgresql-custom:Z
+      - ./db/config/supautils.conf:/etc/postgresql-custom/supautils.conf:ro,Z
+      - ./db/config/wal-g.conf:/etc/postgresql-custom/wal-g.conf:ro,Z
+      - ./db/config/read-replica.conf:/etc/postgresql-custom/read-replica.conf:ro,Z
+      - ./db/config/extension-custom-scripts:/etc/postgresql-custom/extension-custom-scripts:ro,Z
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: ${POSTGRES_PORT}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      POSTGRES_DB: ${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: ${JWT_EXPIRY}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  studio:
+    image: supabase/studio:2025.12.17-sha-43f4f7f
+    restart: unless-stopped
+    networks:
+      - inner-network
+    ports:
+      - "3000:3000"
+    depends_on:
+      sd-lab-database:
+        condition: service_healthy
+      meta:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://studio:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})",
+        ]
+      timeout: 10s
+      interval: 5s
+      retries: 3
+    environment:
+      HOSTNAME: "::"
+      STUDIO_PG_META_URL: http://meta:8080
+      PG_META_DB_HOST: ${POSTGRES_HOST}
+      PG_META_DB_PORT: ${POSTGRES_PORT}
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      DEFAULT_ORGANIZATION_NAME: ${DEFAULT_ORGANIZATION_NAME}
+      DEFAULT_PROJECT_NAME: ${DEFAULT_PROJECT_NAME}
+      SUPABASE_URL: http://rest:3000
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_ENABLE_LOGS: true
+      DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      NEXT_PUBLIC_DISABLED_FEATURES: "project_auth:all,project_edge_function:all,project_storage:all,realtime:all"
+      DASHBOARD_USERNAME: ${KONG_DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${KONG_DASHBOARD_PASSWORD}
+
+  rest:
+    image: postgrest/postgrest:v14.1
+    restart: unless-stopped
+    networks:
+      - inner-network
+    ports:
+      - "3001:3000"
+    depends_on:
+      sd-lab-database:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
+    command: ["postgrest"]
+
+  meta:
+    image: supabase/postgres-meta:v0.95.1
+    restart: unless-stopped
+    networks:
+      - inner-network
+    depends_on:
+      sd-lab-database:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: ${POSTGRES_HOST}
+      PG_META_DB_PORT: ${POSTGRES_PORT}
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+
+networks:
+  inner-network:
+
+volumes:
+  sd-lab-db-data:
+  sd-lab-db-config:

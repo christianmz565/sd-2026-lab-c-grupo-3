@@ -1,7 +1,15 @@
 {
   "template": "multi-lab",
   "mode": "multi",
-  "sessions": ["l4", "l5", "l6", "l7", "l8", "l9"],
+  "sessions": [
+    "l4",
+    "l5",
+    "l6",
+    "l7",
+    "l8",
+    "l9",
+    "l10"
+  ],
   "capture": {
     "columns": 150,
     "freezeFlags": [
