@@ -1,0 +1,47 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#C8310E', 'primaryTextColor': '#fff', 'primaryBorderColor': '#333', 'lineColor': '#333', 'textColor': '#000', 'secondaryColor': '#E0E0E0', 'tertiaryColor': '#fff', 'tertiaryTextColor': '#000', 'edgeLabelBackground': 'transparent', 'clusterBkg': '#F5F5F5', 'clusterTitle': '#000', 'fontFamily': 'arial', 'fontSize': '12px'}, 'themeCSS': 'svg .labelBkg { display: none !important; } svg .edgeLabel { background: transparent !important; } svg .cluster rect { fill: #F5F5F5 !important; stroke: #999 !important; }'}%%
+
+graph TD
+    subgraph "Centro de Datos Principal - Lima"
+        LIMA["<b>NODO PRINCIPAL</b><br/>PostgreSQL Primary<br/>Puerto: 5432<br/>FedEx Peru - Lima"]
+    end
+
+    subgraph "Réplica Secundaria - Bogotá"
+        BOG["<b>NODO RÉPLICA</b><br/>PostgreSQL Standby<br/>Puerto: 5433<br/>FedEx Peru - Bogotá"]
+    end
+
+    subgraph "Réplica Secundaria - Santiago"
+        SCL["<b>NODO RÉPLICA</b><br/>PostgreSQL Standby<br/>Puerto: 5434<br/>FedEx Peru - Santiago"]
+    end
+
+    subgraph "Réplica Secundaria - Ciudad de México"
+        MEX["<b>NODO RÉPLICA</b><br/>PostgreSQL Standby<br/>Puerto: 5435<br/>FedEx Peru - Mexico"]
+    end
+
+    subgraph "Clientes"
+        C1["Clientes<br/>Lima"]
+        C2["Clientes<br/>Bogotá"]
+        C3["Clientes<br/>Santiago"]
+        C4["Clientes<br/>Ciudad de México"]
+    end
+
+    LIMA -->|"WAL Shipping"| BOG
+    LIMA -->|"WAL Shipping"| SCL
+    LIMA -->|"WAL Shipping"| MEX
+
+    C1 -->|Escritura| LIMA
+    C2 -->|Lectura| BOG
+    C3 -->|Lectura| SCL
+    C4 -->|Lectura| MEX
+
+    LIMA -.->|"Failover"| BOG
+    LIMA -.->|"Failover"| SCL
+    LIMA -.->|"Failover"| MEX
+
+    style LIMA fill:#C8310E,stroke:#333,color:#fff,stroke-width:2px
+    style BOG fill:#1565C0,stroke:#333,color:#fff,stroke-width:2px
+    style SCL fill:#1565C0,stroke:#333,color:#fff,stroke-width:2px
+    style MEX fill:#1565C0,stroke:#333,color:#fff,stroke-width:2px
+    style C1 fill:#FFF3E0,stroke:#333,color:#333,stroke-width:1px
+    style C2 fill:#FFF3E0,stroke:#333,color:#333,stroke-width:1px
+    style C3 fill:#FFF3E0,stroke:#333,color:#333,stroke-width:1px
+    style C4 fill:#FFF3E0,stroke:#333,color:#333,stroke-width:1px
