@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # Standby Init Script
-# Performs pg_basebackup if this is a fresh standby
+# Performs pg_basebackup, then starts PostgreSQL
 # =============================================================================
 
 set -e
@@ -16,50 +16,34 @@ PGPASSWORD="${POSTGRES_PASSWORD:-postgres}"
 export PGPASSWORD
 
 echo "=== Standby Init: $APP_NAME ==="
-echo "Primary: $PRIMARY_HOST:$PRIMARY_PORT"
-echo "Slot: $REPLICATION_SLOT"
+echo "Primary: $PRIMARY_HOST:$PRIMARY_PORT, Slot: $REPLICATION_SLOT"
 
-# Copy pg_hba.conf to correct location if it exists in custom location
-if [ -f /etc/postgresql-custom/pg_hba.conf ]; then
-    echo "Copying pg_hba.conf to /etc/postgresql/"
-    cp /etc/postgresql-custom/pg_hba.conf /etc/postgresql/pg_hba.conf
-    chown postgres:postgres /etc/postgresql/pg_hba.conf
-    chmod 640 /etc/postgresql/pg_hba.conf
+# Check if we need base backup
+SKIP_BACKUP=false
+if [ -f "$PGDATA/standby.signal" ] && [ -f "$PGDATA/postgresql.conf" ]; then
+    echo "Already configured as standby, skipping backup"
+    SKIP_BACKUP=true
 fi
 
-# Check if we need to do base backup
-NEEDS_BACKUP=false
-
-if [ ! -f "$PGDATA/postgresql.conf" ]; then
-    echo "No postgresql.conf found - needs base backup"
-    NEEDS_BACKUP=true
-fi
-
-# Check if standby.signal exists
-if [ ! -f "$PGDATA/standby.signal" ]; then
-    echo "No standby.signal found - needs base backup"
-    NEEDS_BACKUP=true
-fi
-
-if [ "$NEEDS_BACKUP" = true ]; then
-    echo "Waiting for primary ($PRIMARY_HOST) to be ready for replication..."
-    MAX_RETRIES=60
+if [ "$SKIP_BACKUP" = false ]; then
+    echo "Waiting for primary to be ready..."
+    MAX_RETRIES=90
     RETRY_COUNT=0
-    until pg_isready -h "$PRIMARY_HOST" -p "$PRIMARY_PORT" -U postgres; do
+    until pg_isready -h "$PRIMARY_HOST" -p "$PRIMARY_PORT" -U postgres 2>/dev/null; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
         if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-            echo "Primary never became ready, continuing anyway..."
-            break
+            echo "Max retries reached, giving up"
+            exit 1
         fi
-        echo "Primary not ready (attempt $RETRY_COUNT/$MAX_RETRIES), waiting 5s..."
-        sleep 5
+        echo "Primary not ready (attempt $RETRY_COUNT/$MAX_RETRIES), waiting..."
+        sleep 2
     done
+    echo "Primary is ready!"
 
-    # Additional wait for replication to be ready
-    echo "Waiting for replication to be ready..."
+    # Give extra time for replication to be fully ready
     sleep 5
 
-    echo "Primary is ready! Performing pg_basebackup..."
+    echo "Performing pg_basebackup..."
     rm -rf "$PGDATA"/*
 
     BACKUP_CMD="pg_basebackup -h $PRIMARY_HOST -p $PRIMARY_PORT -U $REPLICATION_USER -D $PGDATA -R -Xs -P"
@@ -69,25 +53,56 @@ if [ "$NEEDS_BACKUP" = true ]; then
 
     echo "Running: $BACKUP_CMD"
     if ! $BACKUP_CMD; then
-        echo "pg_basebackup failed! Trying without slot..."
-        BACKUP_CMD="pg_basebackup -h $PRIMARY_HOST -p $PRIMARY_PORT -U $REPLICATION_USER -D $PGDATA -R -Xs -P"
-        $BACKUP_CMD || echo "pg_basebackup failed completely"
+        echo "pg_basebackup failed, trying without slot..."
+        rm -rf "$PGDATA"/*
+        pg_basebackup -h "$PRIMARY_HOST" -p "$PRIMARY_PORT" -U "$REPLICATION_USER" -D "$PGDATA" -R -Xs -P || {
+            echo "pg_basebackup failed completely!"
+            exit 1
+        }
     fi
 
-    # Copy pg_hba.conf again after base backup (it gets overwritten)
+    # Configure standby settings after base backup
+    echo "Configuring standby settings..."
+
+    # Update primary_conninfo in postgresql.auto.conf to include password
+    if [ -f "$PGDATA/postgresql.auto.conf" ]; then
+        # Update application_name if it has a variable
+        sed -i "s/\${APP_NAME}/$APP_NAME/g" "$PGDATA/postgresql.auto.conf" 2>/dev/null || true
+
+        # Add password to primary_conninfo if not present
+        if grep -q "primary_conninfo" "$PGDATA/postgresql.auto.conf"; then
+            # Replace or add password to primary_conninfo
+            sed -i "s/primary_conninfo = '.*'/primary_conninfo = 'host=$PRIMARY_HOST port=$PRIMARY_PORT user=$REPLICATION_USER password=$PGPASSWORD application_name=$APP_NAME'/" "$PGDATA/postgresql.auto.conf" 2>/dev/null || true
+        fi
+
+        # Add slot name if specified
+        if [ -n "$REPLICATION_SLOT" ]; then
+            if ! grep -q "primary_slot_name" "$PGDATA/postgresql.auto.conf" 2>/dev/null; then
+                echo "primary_slot_name = '$REPLICATION_SLOT'" >> "$PGDATA/postgresql.auto.conf"
+            fi
+        fi
+    fi
+
+    # Add hot_standby if not present
+    if ! grep -q "hot_standby" "$PGDATA/postgresql.auto.conf" 2>/dev/null; then
+        echo "hot_standby = on" >> "$PGDATA/postgresql.auto.conf"
+    fi
+
+    # Add recovery target if not present
+    if ! grep -q "recovery_target_timeline" "$PGDATA/postgresql.auto.conf" 2>/dev/null; then
+        echo "recovery_target_timeline = 'latest'" >> "$PGDATA/postgresql.auto.conf"
+    fi
+
+    # Copy pg_hba.conf to data directory (it gets overwritten by base backup)
     if [ -f /etc/postgresql-custom/pg_hba.conf ]; then
-        echo "Copying pg_hba.conf after backup"
-        cp /etc/postgresql-custom/pg_hba.conf /etc/postgresql/pg_hba.conf
-        chown postgres:postgres /etc/postgresql/pg_hba.conf
-        chmod 640 /etc/postgresql/pg_hba.conf
+        cp /etc/postgresql-custom/pg_hba.conf "$PGDATA/pg_hba.conf"
+        chown postgres:postgres "$PGDATA/pg_hba.conf"
+        chmod 640 "$PGDATA/pg_hba.conf"
     fi
-
-    # Create standby.signal to ensure standby mode
-    touch "$PGDATA/standby.signal"
 
     echo "Base backup complete!"
 else
-    echo "Standby already configured, skipping backup"
+    echo "Skipping backup, starting PostgreSQL..."
 fi
 
 echo "=== Starting PostgreSQL ==="

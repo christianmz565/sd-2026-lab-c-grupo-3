@@ -74,13 +74,10 @@ services:
       - ./db/replication.sql:/docker-entrypoint-initdb.d/init-scripts/98-replication.sql:Z
       - lima-db-data:/var/lib/postgresql/data
       - lima-db-config:/etc/postgresql-custom
-      - ./db/config/postgresql.primary.conf:/etc/postgresql/postgresql.conf:ro,Z
-      - ./db/config/pg_hba.conf:/etc/postgresql-custom/pg_hba.conf:ro,Z
+      - ./db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro,Z
       - ./db/config/supautils.conf:/etc/postgresql-custom/supautils.conf:ro,Z
       - ./db/config/wal-g.conf:/etc/postgresql-custom/wal-g.conf:ro,Z
       - ./db/config/extension-custom-scripts:/etc/postgresql-custom/extension-custom-scripts:ro,Z
-      - ./scripts/init-primary.sh:/usr/local/bin/init-primary.sh:Z
-    command: ["/bin/bash", "-c", "chmod +x /usr/local/bin/init-primary.sh && /usr/local/bin/init-primary.sh"]
 
   lima-studio:
     <<: *studio-common
@@ -164,10 +161,7 @@ services:
       - ./db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
       - bogota-db-data:/var/lib/postgresql/data
       - bogota-db-config:/etc/postgresql-custom
-      - ./db/config/postgresql.standby.conf:/etc/postgresql-custom/postgresql.conf:ro,Z
       - ./db/config/pg_hba.conf:/etc/postgresql-custom/pg_hba.conf:ro,Z
-      - ./db/config/supautils.conf:/etc/postgresql-custom/supautils.conf:ro,Z
-      - ./db/config/wal-g.conf:/etc/postgresql-custom/wal-g.conf:ro,Z
       - ./db/config/standby-bogota.conf:/etc/postgresql-custom/standby.conf:ro,Z
       - ./db/config/extension-custom-scripts:/etc/postgresql-custom/extension-custom-scripts:ro,Z
       - ./scripts/init-standby.sh:/usr/local/bin/init-standby.sh:Z
@@ -186,7 +180,7 @@ services:
       REPLICATION_USER: postgres
       REPLICATION_SLOT: bogota_slot
       APP_NAME: bogota
-    command: ["/bin/bash", "-c", "chmod +x /usr/local/bin/init-standby.sh && /usr/local/bin/init-standby.sh"]
+    entrypoint: ["/bin/bash", "-c", "chmod +x /usr/local/bin/init-standby.sh && /usr/local/bin/init-standby.sh"]
     depends_on:
       lima-db:
         condition: service_healthy
@@ -273,10 +267,7 @@ services:
       - ./db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
       - santiago-db-data:/var/lib/postgresql/data
       - santiago-db-config:/etc/postgresql-custom
-      - ./db/config/postgresql.standby.conf:/etc/postgresql-custom/postgresql.conf:ro,Z
       - ./db/config/pg_hba.conf:/etc/postgresql-custom/pg_hba.conf:ro,Z
-      - ./db/config/supautils.conf:/etc/postgresql-custom/supautils.conf:ro,Z
-      - ./db/config/wal-g.conf:/etc/postgresql-custom/wal-g.conf:ro,Z
       - ./db/config/standby-santiago.conf:/etc/postgresql-custom/standby.conf:ro,Z
       - ./db/config/extension-custom-scripts:/etc/postgresql-custom/extension-custom-scripts:ro,Z
       - ./scripts/init-standby.sh:/usr/local/bin/init-standby.sh:Z
@@ -295,7 +286,7 @@ services:
       REPLICATION_USER: postgres
       REPLICATION_SLOT: santiago_slot
       APP_NAME: santiago
-    command: ["/bin/bash", "-c", "chmod +x /usr/local/bin/init-standby.sh && /usr/local/bin/init-standby.sh"]
+    entrypoint: ["/bin/bash", "-c", "chmod +x /usr/local/bin/init-standby.sh && /usr/local/bin/init-standby.sh"]
     depends_on:
       lima-db:
         condition: service_healthy
@@ -382,10 +373,7 @@ services:
       - ./db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
       - mexico-db-data:/var/lib/postgresql/data
       - mexico-db-config:/etc/postgresql-custom
-      - ./db/config/postgresql.standby.conf:/etc/postgresql-custom/postgresql.conf:ro,Z
       - ./db/config/pg_hba.conf:/etc/postgresql-custom/pg_hba.conf:ro,Z
-      - ./db/config/supautils.conf:/etc/postgresql-custom/supautils.conf:ro,Z
-      - ./db/config/wal-g.conf:/etc/postgresql-custom/wal-g.conf:ro,Z
       - ./db/config/standby-mexico.conf:/etc/postgresql-custom/standby.conf:ro,Z
       - ./db/config/extension-custom-scripts:/etc/postgresql-custom/extension-custom-scripts:ro,Z
       - ./scripts/init-standby.sh:/usr/local/bin/init-standby.sh:Z
@@ -404,7 +392,7 @@ services:
       REPLICATION_USER: postgres
       REPLICATION_SLOT: mexico_slot
       APP_NAME: mexico
-    command: ["/bin/bash", "-c", "chmod +x /usr/local/bin/init-standby.sh && /usr/local/bin/init-standby.sh"]
+    entrypoint: ["/bin/bash", "-c", "chmod +x /usr/local/bin/init-standby.sh && /usr/local/bin/init-standby.sh"]
     depends_on:
       lima-db:
         condition: service_healthy
