@@ -72,6 +72,9 @@ services:
       - ./db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
       - ./db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
       - ./db/replication.sql:/docker-entrypoint-initdb.d/init-scripts/98-replication.sql:Z
+      - ./db/replication_views.sql:/docker-entrypoint-initdb.d/init-scripts/99-replication-views.sql:Z
+      - ./db/fedex_schema.sql:/docker-entrypoint-initdb.d/init-scripts/98-fedex-schema.sql:Z
+      - ./db/report_views.sql:/docker-entrypoint-initdb.d/init-scripts/99-report-views.sql:Z
       - lima-db-data:/var/lib/postgresql/data
       - lima-db-config:/etc/postgresql-custom
       - ./db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro,Z

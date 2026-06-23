@@ -93,6 +93,13 @@ if [ "$SKIP_BACKUP" = false ]; then
         echo "recovery_target_timeline = 'latest'" >> "$PGDATA/postgresql.auto.conf"
     fi
 
+    # Set listen_addresses to accept connections from Docker network
+    if ! grep -q "listen_addresses" "$PGDATA/postgresql.auto.conf" 2>/dev/null; then
+        echo "listen_addresses = '*'" >> "$PGDATA/postgresql.auto.conf"
+    else
+        sed -i "s/listen_addresses = .*/listen_addresses = '*'/" "$PGDATA/postgresql.auto.conf" 2>/dev/null || true
+    fi
+
     # Copy pg_hba.conf to data directory (it gets overwritten by base backup)
     if [ -f /etc/postgresql-custom/pg_hba.conf ]; then
         cp /etc/postgresql-custom/pg_hba.conf "$PGDATA/pg_hba.conf"

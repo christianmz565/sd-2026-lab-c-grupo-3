@@ -81,6 +81,46 @@ fi
 echo ""
 
 # =============================================================================
+# STEP 3.5: CREATE REPLICATION SLOTS ON PRIMARY
+# =============================================================================
+echo -e "${YELLOW}[3.5/6] Creando replication slots en Lima...${NC}"
+
+SLOTS_CREATED=$(docker compose -f "$COMPOSE_FILE" exec -T lima-db psql -U supabase_admin -t -c "
+SELECT pg_create_physical_replication_slot('bogota_slot', false)
+WHERE NOT EXISTS (SELECT 1 FROM pg_replication_slots WHERE slot_name = 'bogota_slot');
+" 2>/dev/null | xargs) || true
+
+docker compose -f "$COMPOSE_FILE" exec -T lima-db psql -U supabase_admin -t -c "
+SELECT pg_create_physical_replication_slot('santiago_slot', false)
+WHERE NOT EXISTS (SELECT 1 FROM pg_replication_slots WHERE slot_name = 'santiago_slot');
+" 2>/dev/null || true
+
+docker compose -f "$COMPOSE_FILE" exec -T lima-db psql -U supabase_admin -t -c "
+SELECT pg_create_physical_replication_slot('mexico_slot', false)
+WHERE NOT EXISTS (SELECT 1 FROM pg_replication_slots WHERE slot_name = 'mexico_slot');
+" 2>/dev/null || true
+
+# Also grant replication to postgres (in case replication.sql failed)
+docker compose -f "$COMPOSE_FILE" exec -T lima-db psql -U supabase_admin -c "
+ALTER USER postgres WITH REPLICATION;
+" 2>/dev/null || true
+
+# Verify slots
+SLOT_COUNT=$(docker compose -f "$COMPOSE_FILE" exec -T lima-db psql -U supabase_admin -t -c "
+SELECT COUNT(*) FROM pg_replication_slots WHERE slot_type = 'physical';
+" 2>/dev/null | xargs)
+
+if [ "$SLOT_COUNT" = "3" ]; then
+    echo -e "${GREEN}✓ 3 replication slots creados${NC}"
+else
+    echo -e "${RED}✗ Expected 3 slots, found: $SLOT_COUNT${NC}"
+    docker compose -f "$COMPOSE_FILE" exec lima-db psql -U supabase_admin -c "SELECT * FROM pg_replication_slots;"
+    exit 1
+fi
+
+echo ""
+
+# =============================================================================
 # STEP 4: WAIT FOR STANDBYS TO BE HEALTHY
 # =============================================================================
 echo -e "${YELLOW}[4/6] Esperando que los Standbys estén listos...${NC}"
@@ -117,13 +157,13 @@ echo ""
 # =============================================================================
 echo -e "${YELLOW}[5/6] Verificando replication slots en Lima...${NC}"
 
-SLOTS=$(docker compose -f "$COMPOSE_FILE" exec lima-db psql -U postgres -t -c "SELECT COUNT(*) FROM pg_replication_slots WHERE slot_type = 'physical';" 2>/dev/null | xargs)
+SLOTS=$(docker compose -f "$COMPOSE_FILE" exec -T lima-db psql -U supabase_admin -t -c "SELECT COUNT(*) FROM pg_replication_slots WHERE slot_type = 'physical';" 2>/dev/null | xargs)
 
 if [ "$SLOTS" = "3" ]; then
     echo -e "${GREEN}✓ 3 replication slots creados (bogota, santiago, mexico)${NC}"
 else
     echo -e "${RED}✗ Expected 3 slots, found: $SLOTS${NC}"
-    docker compose -f "$COMPOSE_FILE" exec lima-db psql -U postgres -c "SELECT * FROM pg_replication_slots;"
+    docker compose -f "$COMPOSE_FILE" exec lima-db psql -U supabase_admin -c "SELECT * FROM pg_replication_slots;"
     exit 1
 fi
 
@@ -134,13 +174,13 @@ echo ""
 # =============================================================================
 echo -e "${YELLOW}[6/6] Verificando streaming replication...${NC}"
 
-STANDBY_COUNT=$(docker compose -f "$COMPOSE_FILE" exec lima-db psql -U postgres -t -c "SELECT COUNT(*) FROM pg_stat_replication;" 2>/dev/null | xargs)
+STANDBY_COUNT=$(docker compose -f "$COMPOSE_FILE" exec -T lima-db psql -U supabase_admin -t -c "SELECT COUNT(*) FROM pg_stat_replication;" 2>/dev/null | xargs)
 
 if [ "$STANDBY_COUNT" = "3" ]; then
     echo -e "${GREEN}✓ 3 standbys en streaming replication${NC}"
 else
     echo -e "${RED}✗ Expected 3 standbys, found: $STANDBY_COUNT${NC}"
-    docker compose -f "$COMPOSE_FILE" exec lima-db psql -U postgres -c "SELECT * FROM pg_stat_replication;"
+    docker compose -f "$COMPOSE_FILE" exec lima-db psql -U supabase_admin -c "SELECT * FROM pg_stat_replication;"
     exit 1
 fi
 
@@ -157,7 +197,7 @@ echo ""
 # Create test data on primary
 echo -e "${YELLOW}Creando tabla de prueba en Lima (Primary)...${NC}"
 
-docker compose -f "$COMPOSE_FILE" exec lima-db psql -U postgres -c "
+docker compose -f "$COMPOSE_FILE" exec -T lima-db psql -U supabase_admin -c "
 CREATE TABLE IF NOT EXISTS fedex_inventarios (
     id SERIAL PRIMARY KEY,
     centro VARCHAR(50) NOT NULL,
@@ -167,7 +207,7 @@ CREATE TABLE IF NOT EXISTS fedex_inventarios (
 );
 " 2>/dev/null
 
-docker compose -f "$COMPOSE_FILE" exec lima-db psql -U postgres -c "
+docker compose -f "$COMPOSE_FILE" exec -T lima-db psql -U supabase_admin -c "
 INSERT INTO fedex_inventarios (centro, producto, cantidad) VALUES
     ('Lima', 'Paquetes Internacional', 1500),
     ('Lima', 'Paquetes Nacional', 3000),
@@ -186,7 +226,7 @@ echo -e "${YELLOW}Verificando replicación en standbys...${NC}"
 for STANDBY in "${STANDBYS[@]}"; do
     echo -n "  $STANDBY: "
 
-    COUNT=$(docker compose -f "$COMPOSE_FILE" exec "$STANDBY" psql -U postgres -t -c "SELECT COUNT(*) FROM fedex_inventarios;" 2>/dev/null | xargs)
+    COUNT=$(docker compose -f "$COMPOSE_FILE" exec -T "$STANDBY" psql -U supabase_admin -t -c "SELECT COUNT(*) FROM fedex_inventarios;" 2>/dev/null | xargs)
 
     if [ "$COUNT" = "6" ]; then
         echo -e "${GREEN}✓ 6 registros replicados${NC}"
@@ -205,7 +245,7 @@ echo -e "${YELLOW}Verificando que standbys son read-only...${NC}"
 for STANDBY in "${STANDBYS[@]}"; do
     echo -n "  $STANDBY write test: "
 
-    if docker compose -f "$COMPOSE_FILE" exec "$STANDBY" psql -U postgres -c "INSERT INTO fedex_inventarios (centro, producto, cantidad) VALUES ('Test', 'Test', 1);" 2>&1 | grep -q "cannot execute INSERT in a read-only transaction"; then
+    if docker compose -f "$COMPOSE_FILE" exec -T "$STANDBY" psql -U supabase_admin -c "INSERT INTO fedex_inventarios (centro, producto, cantidad) VALUES ('Test', 'Test', 1);" 2>&1 | grep -q "cannot execute INSERT in a read-only transaction"; then
         echo -e "${GREEN}✓ Read-only (correcto)${NC}"
     else
         echo -e "${RED}✗ Permite escritura (ERROR!)${NC}"
@@ -222,7 +262,7 @@ echo -e "${YELLOW}Verificando que standbys están en modo recovery...${NC}"
 for STANDBY in "${STANDBYS[@]}"; do
     echo -n "  $STANDBY: "
 
-    RECOVERY=$(docker compose -f "$COMPOSE_FILE" exec "$STANDBY" psql -U postgres -t -c "SELECT pg_is_in_recovery();" 2>/dev/null | xargs)
+    RECOVERY=$(docker compose -f "$COMPOSE_FILE" exec -T "$STANDBY" psql -U supabase_admin -t -c "SELECT pg_is_in_recovery();" 2>/dev/null | xargs)
 
     if [ "$RECOVERY" = "t" ]; then
         echo -e "${GREEN}✓ Es standby (recovery mode)${NC}"
@@ -236,9 +276,8 @@ echo ""
 # =============================================================================
 # CLEANUP TEST DATA
 # =============================================================================
-echo -e "${YELLOW}Limpiando datos de prueba...${NC}"
-docker compose -f "$COMPOSE_FILE" exec lima-db psql -U postgres -c "DROP TABLE IF EXISTS fedex_inventarios;" 2>/dev/null
-echo -e "${GREEN}✓ Limpieza completada${NC}"
+echo -e "${YELLOW}Manteniendo tabla de prueba para visualizar en Studios...${NC}"
+echo -e "${GREEN}✓ Tabla fedex_inventarios disponible para ver${NC}"
 echo ""
 
 # =============================================================================
@@ -252,10 +291,10 @@ echo ""
 echo -e "${GREEN}✓ REPLICACIÓN FUNCIONANDO CORRECTAMENTE${NC}"
 echo ""
 echo "Replication slots en Lima:"
-docker compose -f "$COMPOSE_FILE" exec lima-db psql -U postgres -c "SELECT slot_name, slot_type, active FROM pg_replication_slots;" 2>/dev/null
+docker compose -f "$COMPOSE_FILE" exec lima-db psql -U supabase_admin -c "SELECT slot_name, slot_type, active FROM pg_replication_slots;" 2>/dev/null
 echo ""
 echo "Streaming replication status:"
-docker compose -f "$COMPOSE_FILE" exec lima-db psql -U postgres -c "SELECT application_name, client_addr, state, sync_state FROM pg_stat_replication;" 2>/dev/null
+docker compose -f "$COMPOSE_FILE" exec lima-db psql -U supabase_admin -c "SELECT application_name, client_addr, state, sync_state FROM pg_stat_replication;" 2>/dev/null
 echo ""
 
 echo -e "${BLUE}============================================${NC}"
@@ -276,7 +315,7 @@ echo "  Ver todos los contenedores:"
 echo "    docker compose -f $COMPOSE_FILE ps"
 echo ""
 echo "  Ver replication status:"
-echo "    docker compose -f $COMPOSE_FILE exec lima-db psql -U postgres -c \"SELECT * FROM pg_stat_replication;\""
+echo "    docker compose -f $COMPOSE_FILE exec lima-db psql -U supabase_admin -c \"SELECT * FROM pg_stat_replication;\""
 echo ""
 echo "  Ver logs de un nodo:"
 echo "    docker compose -f $COMPOSE_FILE logs -f lima-db"
