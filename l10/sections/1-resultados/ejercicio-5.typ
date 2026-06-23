@@ -24,3 +24,22 @@ La replicación completamente asíncrona expone a la empresa a pérdidas de dato
   Configurar un esquema híbrido utilizando los parámetros de confirmación síncrona selectiva de PostgreSQL (synchronous_commit) como se detalla en @postgres2026ha. Se define a Bogotá como un standby síncrono potencial y a los demás como asíncronos.
 - Impacto \
   Para transacciones de alta criticidad (como el cobro e inserción de un nuevo Pedido), la aplicación establece el parámetro para forzar que la transacción se escriba en Lima y se confirme en Bogotá antes de retornar éxito al cliente. Para actualizaciones de temperatura o telemetría GPS, se desactiva la confirmación síncrona, garantizando baja latencia y escrituras locales rápidas sin comprometer la consistencia de los datos críticos.
+
+=== Verificación del Estado de Nodos
+
+#grid(
+  columns: (1fr, 1fr),
+  gutter: 1em,
+  [
+    #figure(
+      image("../../img/ev10.jpeg", width: 90%),
+      caption: [Estado del nodo Bogotá: `pg_is_in_recovery = t` (standby)],
+    )
+  ],
+  [
+    #figure(
+      image("../../img/ev1.jpeg", width: 90%),
+      caption: [Tablas del esquema FedEx en el nodo primario],
+    )
+  ],
+)

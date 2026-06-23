@@ -95,3 +95,23 @@ La arquitectura garantiza:
   ),
   caption: [Tabla de datos críticos y frecuencia de replicación],
 ) <tab-datos>
+
+=== Verificación de la Infraestructura de Replicación
+
+La infraestructura desplegada utiliza slots de replicación físicos y conexiones de streaming para mantener la sincronización entre el nodo primario (Lima) y los standbys (Bogotá, Santiago, Ciudad de México).
+
+#grid(
+  columns: (1fr, 1fr),
+  [
+    #figure(
+      image("../../img/ev5.jpeg", width: 100%),
+      caption: [Slots de replicación activos en el nodo primario],
+    )
+  ],
+  [
+    #figure(
+      image("../../img/ev6.jpeg", width: 60%),
+      caption: [Conexiones de standbys en estado *streaming*],
+    )
+  ],
+)

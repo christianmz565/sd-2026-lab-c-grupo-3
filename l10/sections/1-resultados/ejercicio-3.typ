@@ -8,7 +8,7 @@ Para cada uno de los tipos de datos manejados por FedEx Perú, se determina y ju
 
 #figure(
   table(
-    columns: (1fr, 1.2fr, 1.8fr, 1.8fr),
+    columns: (1fr, 1.2fr, 2.5fr, 1.8fr),
     align: left,
     stroke: 0.5pt,
     fill: (x, y) => if y == 0 { gray.lighten(60%) } else if calc.odd(y) { rgb("#F9F9F9") } else { none },
@@ -55,3 +55,28 @@ Para cada uno de los tipos de datos manejados por FedEx Perú, se determina y ju
   ),
   caption: [Tabla comparativa y justificación de estrategias de replicación por tipo de datos para FedEx Perú.],
 ) <tab-estrategias>
+
+=== Vistas de Negocio para Monitoreo
+
+Se crearon vistas SQL en el nodo primario para consolidar la información de los cuatro centros de distribución, permitiendo reportes ejecutivos en tiempo real:
+
+#grid(
+  columns: (1fr, 1fr),
+  [
+    #figure(
+      image("../../img/ev7.jpeg", width: 70%),
+      caption: [Vista `resumen_centros`: inventario consolidado por sede],
+    )
+  ],
+  [
+    #figure(
+      image("../../img/ev8.jpeg", width: 70%),
+      caption: [Vista `envios_por_estado`: distribución de envíos],
+    )
+  ],
+)
+
+#figure(
+  image("../../img/ev9.jpeg", width: 40%),
+  caption: [Tabla `inventarios`: datos completos replicados desde los cuatro centros],
+) <fig-inventarios>
