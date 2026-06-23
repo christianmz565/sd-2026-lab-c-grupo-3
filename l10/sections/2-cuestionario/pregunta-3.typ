@@ -1,16 +1,9 @@
 #set par(justify: true)
 
-= Pregunta 3: Estrategia de Replicación para Desastres Regionales en FedEx Perú
+= Pregunta 3: Si usted fuera el arquitecto de software de FedEx Perú ¿qué estrategia de replicación implementaría para garantizar continuidad del negocio ante desastres regionales y por qué?
 
-Implementaría una *Estrategia Híbrida Multi-Región con Replicación Síncrona Selectiva* @kleppmann2017designing @postgres2026ha:
+Como arquitecto de software de FedEx Perú, implementaría una estrategia híbrida multi-región con replicación síncrona selectiva @kleppmann2017designing @postgres2026ha.
 
-*Topología de Nodos:*
-- *Primario (Lima)*: Procesa todas las escrituras transaccionales.
-- *Standby Síncrono (Bogotá)*: Replicación física síncrona con `synchronous_commit = on` para tablas críticas (Inventarios, Pedidos). Garantiza RPO = 0.
-- *Standbys Asíncronos (Santiago, México)*: WAL streaming asíncrono. Absorben consultas de lectura pesadas.
+La topología de nodos se organiza de la siguiente manera. El nodo primario se ubica en Lima y procesa todas las escrituras transaccionales de la región. Un standby síncrono se despliega en Bogotá con replicación física síncrona y la configuración synchronous_commit activada para las tablas criticas de inventarios y pedidos, garantizando un RPO igual a cero para estos datos. Los standbys asíncronos en Santiago y Ciudad de México utilizan streaming de WAL de forma asíncrona y absorben las consultas de lectura pesadas sin impactar la latencia de escritura del nodo primario.
 
-*Mecanismo de Failover:*
-- Patroni + clúster etcd (Lima, Bogotá, Santiago) para quórum y prevención de Split-Brain.
-- ante desastre regional en Perú: etcd detecta pérdida de conectividad → Bogotá es promovido automáticamente → DNS dinámico desvía tráfico → standbys restantes se reconectan a Bogotá.
-
-*Justificación:* RTO < 30 segundos, RPO = 0 para datos críticos, rendimiento balanceado al limitar síncrona solo a la ruta de menor latencia.
+El mecanismo de failover se basa en Patroni con un clúster de etcd distribuido entre Lima, Bogotá y Santiago para alcanzar consenso por quórum y prevenir escenarios de split-brain. Ante un desastre regional en Perú, etcd detecta la pérdida de conectividad, Bogotá es promovido automáticamente al rol de primario, el DNS dinámico desvía el tráfico de clientes hacia Bogotá, y los standbys restantes se reconectan al nuevo líder.

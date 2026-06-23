@@ -18,7 +18,7 @@ Justificación: Se adopta un modelo jerárquico con Lima como nodo principal (Pr
 === Diagrama Geográfico
 
 #figure(
-  image("../../img/diagrama-geografico.png", height: 40%, fit: "contain"),
+  image("../../img/diagrama-geografico.png", height: 30%, fit: "contain"),
   caption: [Distribución geográfica de los centros de datos],
 ) <fig-geografico>
 
@@ -27,7 +27,7 @@ Justificación: La distribución geográfica responde a la cobertura operativa r
 === Diagrama de Flujo de Red
 
 #figure(
-  image("../../img/diagrama-flujo-red.png", height: 40%, fit: "contain"),
+  image("../../img/diagrama-flujo-red.png", height: 30%, fit: "contain"),
   caption: [Flujo de red y componentes técnicos por sede],
 ) <fig-flujo>
 
@@ -111,7 +111,7 @@ La infraestructura desplegada utiliza slots de replicación físicos y conexione
   [
     #figure(
       image("../../img/ev6.jpeg", width: 60%),
-      caption: [Conexiones de standbys en estado *streaming*],
+      caption: [Conexiones de standbys en estado streaming],
     )
   ],
 )

@@ -8,7 +8,7 @@ Para cada uno de los tipos de datos manejados por FedEx Perú, se determina y ju
 
 #figure(
   table(
-    columns: (1fr, 1.2fr, 2.5fr, 1.8fr),
+    columns: (0.8fr, 1.2fr, 2.5fr, 1.8fr),
     align: left,
     stroke: 0.5pt,
     fill: (x, y) => if y == 0 { gray.lighten(60%) } else if calc.odd(y) { rgb("#F9F9F9") } else { none },
@@ -32,7 +32,7 @@ Para cada uno de los tipos de datos manejados por FedEx Perú, se determina y ju
     [
       Los datos de tracking de un paquete son de naturaleza aditiva e histórica (nuevos eventos que se añaden al historial de ruta).
 
-      No ocurren escrituras concurrentes conflictivas sobre el mismo registro. Los clientes leen desde réplicas locales reduciendo la carga del nodo de origen (Lima).
+      No ocurren escrituras concurrentes conflictivas sobre el mismo registro. Los clientes leen desde réplicas locales.
     ],
     [Consistencia Eventual / Alto Rendimiento: Un lag de replicación de segundos es imperceptible para el usuario final y permite procesar miles de actualizaciones de estado simultáneamente.],
 
@@ -40,8 +40,6 @@ Para cada uno de los tipos de datos manejados por FedEx Perú, se determina y ju
     [Replicación Asíncrona.],
     [
       Los pedidos finalizados son registros históricos inmutables. Se registran en la sede donde se realiza el envío y se replican asíncronamente al resto de sedes para auditoría, consulta de clientes y reportes.
-
-      No requiere sincronización síncrona obligatoria durante la transacción.
     ],
     [Consistencia Eventual / Alta Disponibilidad: La transacción se confirma inmediatamente en la sede de origen. La sincronización global ocurre de fondo sin penalizar al usuario.],
 
@@ -77,6 +75,6 @@ Se crearon vistas SQL en el nodo primario para consolidar la información de los
 )
 
 #figure(
-  image("../../img/ev9.jpeg", width: 40%),
+  image("../../img/ev9.jpeg", width: 30%),
   caption: [Tabla `inventarios`: datos completos replicados desde los cuatro centros],
 ) <fig-inventarios>

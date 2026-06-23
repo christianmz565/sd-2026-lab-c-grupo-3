@@ -32,8 +32,8 @@ La replicación completamente asíncrona expone a la empresa a pérdidas de dato
   gutter: 1em,
   [
     #figure(
-      image("../../img/ev10.jpeg", width: 90%),
-      caption: [Estado del nodo Bogotá: `pg_is_in_recovery = t` (standby)],
+      image("../../img/ev10.jpeg", width: 80%),
+      caption: [Estado del nodo Bogotá: `pg_is_in_recovery = t`],
     )
   ],
   [
