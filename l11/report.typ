@@ -7,46 +7,46 @@
 #mermaid(
   "
   flowchart TD
-      subgraph Fuentes[Fuentes de Datos]
-          API[Go API - 8000 - /metrics]
-          TRAEFIK[Traefik v3.7 - Access logs]
-          DOCKER[Docker Engine - cAdvisor]
+      subgraph Fuentes['Fuentes de Datos']
+          API['Go API - 8000 - /metrics']
+          TRAEFIK['Traefik v3.7 - Access logs']
+          DOCKER['Docker Engine - cAdvisor']
       end
 
-      subgraph Recoleccion[Capa de Recoleccion]
-          PROM[Prometheus - Scrape 15s]
-          PROMTAIL[Promtail - Log discovery]
+      subgraph Recoleccion['Capa de Recoleccion']
+          PROM['Prometheus - Scrape 15s']
+          PROMTAIL['Promtail - Log discovery']
       end
 
-      subgraph Almacenamiento[Capa de Almacenamiento]
-          TSDB[Prometheus TSDB - Retencion 15d]
-          LOKI[Loki - Retencion 30d - Indice 7d]
+      subgraph Almacenamiento['Capa de Almacenamiento']
+          TSDB['Prometheus TSDB - Retencion 15d']
+          LOKI['Loki - Retencion 30d - Indice 7d']
       end
 
-      subgraph Dashboard[Grafana - Dashboard Unificado]
-          PANELS_M[Paneles de Metricas]
-          PANELS_L[Paneles de Logs]
-          CORREL[Correlacion Metricas y Logs]
+      subgraph Dashboard['Grafana - Dashboard Unificado']
+          PANELS_M['Paneles de Metricas']
+          PANELS_L['Paneles de Logs']
+          CORREL['Correlacion Metricas y Logs']
       end
 
-      subgraph Alertas[Sistema de Alertas]
-          RULES[Reglas de Alerta]
-          AM[AlertManager]
-          NOTIFY[Notificaciones - Email y Slack]
+      subgraph Alertas['Sistema de Alertas']
+          RULES['Reglas de Alerta']
+          AM['AlertManager']
+          NOTIFY['Notificaciones - Email y Slack']
       end
 
-      API -->|metrics| PROM
-      API -->|stdout JSON| PROMTAIL
-      TRAEFIK -->|access logs y metrics| PROM
+      API -->|metrics /metrics| PROM
+      API -->|stdout JSON logs| PROMTAIL
+      TRAEFIK -->|metrics /metrics| PROM
       TRAEFIK -->|access log files| PROMTAIL
       DOCKER -->|cAdvisor metrics| PROM
       PROMTAIL -->|push logs| LOKI
-      PROM -->|query metrics| TSDB
-      TSDB -->|PromQL| PANELS_M
-      LOKI -->|LogQL| PANELS_L
+      PROM-->|write time series|TSDB
+      TSDB -->|PromQL queries| PANELS_M
+      LOKI -->|LogQL queries| PANELS_L
       PANELS_M --> CORREL
       PANELS_L --> CORREL
-      PANELS_M -->|threshold breach| RULES
+      PROM -->|evaluate rules| RULES
       RULES -->|firing| AM
       AM -->|route| NOTIFY
   ",
