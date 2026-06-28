@@ -1,0 +1,4 @@
+# Certificados generados (no commitear)
+certs/*.crt
+certs/*.key
+certs/*.pem
