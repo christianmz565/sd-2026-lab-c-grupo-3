@@ -10,8 +10,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8080:8080"
     command:
       - "--configFile=/etc/traefik/traefik.yml"
+      - "--entryPoints.traefik.address=:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro

@@ -15,7 +15,7 @@
 
       subgraph Recoleccion['Capa de Recoleccion']
           PROM['Prometheus - Scrape 15s']
-          PROMTAIL['Promtail - Log discovery']
+           ALLOY['Alloy - Log discovery']
       end
 
       subgraph Almacenamiento['Capa de Almacenamiento']
@@ -36,11 +36,11 @@
       end
 
       API -->|metrics /metrics| PROM
-      API -->|stdout JSON logs| PROMTAIL
+      API -->|stdout JSON logs| ALLOY
       TRAEFIK -->|metrics /metrics| PROM
-      TRAEFIK -->|access log files| PROMTAIL
+      TRAEFIK -->|access log files| ALLOY
       DOCKER -->|cAdvisor metrics| PROM
-      PROMTAIL -->|push logs| LOKI
+      ALLOY -->|push logs| LOKI
       PROM-->|write time series|TSDB
       TSDB -->|PromQL queries| PANELS_M
       LOKI -->|LogQL queries| PANELS_L
@@ -73,7 +73,7 @@ El sistema recopila datos de tres fuentes principales:
 === Capa de recoleccion
 
 - *Prometheus:* Se configura con un intervalo de scrape de 15 segundos. Contacta periodicamente los endpoints `/metrics` del API Go y de Traefik para obtener metricas en formato de texto. Cada muestra incluye labels como `method`, `path`, `status` y `instance`, lo que permite agregar datos por cualquier dimension. Prometheus almacena las series temporales en su base de datos TSDB (Time Series Database) con compresion automatica.
-- *Promtail:* Es un agente ligero disenado especificamente para Loki. Descubre automaticamente los archivos de log (stdout de Docker, access logs de Traefik) y los envia a Loki con metadata como el nombre del contenedor, el nivel de log y el servicio de origen. Cada flujo de logs se identifica por un conjunto de labels unicas.
+- *Grafana Alloy:* Agente unificado de recoleccion de datos que reemplaza a Promtail. Descubre automaticamente los contenedores Docker a traves del socket, recolecta logs de stdout/stderr y los envia a Loki con metadata como el nombre del contenedor, el servicio de compose y el nivel de log. Utiliza el lenguaje de configuracion River para definir pipelines de procesamiento que incluyen parsing Docker, extraccion de labels y filtrado.
 
 === Capa de almacenamiento
 
