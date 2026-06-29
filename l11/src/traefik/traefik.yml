@@ -1,6 +1,12 @@
 api:
   dashboard: true
-  insecure: false
+  insecure: true
+
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
 
 entryPoints:
   web:
@@ -13,6 +19,8 @@ entryPoints:
           permanent: true
   websecure:
     address: ":443"
+  traefik:
+    address: ":8080"
 
 providers:
   docker:
