@@ -7,7 +7,161 @@
   "links": [],
   "panels": [
     {
-      "datasource": "Prometheus",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Total Request Rate",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.01 },
+              { "color": "red", "value": 0.05 }
+            ]
+          },
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Error Rate (4xx/5xx)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"[45]..\"}[1m])) / sum(rate(http_requests_total[1m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 2 }
+            ]
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Latency P95",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=~\"$service\"}[1m])) by (le))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 10 }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Active Connections",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(traefik_open_connections)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "title": "HTTP Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -22,21 +176,21 @@
           "unit": "reqps"
         }
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
       "id": 1,
       "options": { "legend": { "displayMode": "table", "placement": "bottom" } },
-      "title": "Request Rate",
+      "title": "Request Rate by Service",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[1m])) by (service)",
+          "expr": "sum(rate(http_requests_total{service=~\"$service\"}[1m])) by (service)",
           "legendFormat": "{{service}}",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": "Prometheus",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -48,26 +202,26 @@
           "unit": "s"
         }
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "id": 2,
       "options": { "legend": { "displayMode": "table", "placement": "bottom" } },
-      "title": "Latency P95",
+      "title": "Latency P95 / P50",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, service))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=~\"$service\"}[1m])) by (le, service))",
           "legendFormat": "P95 {{service}}",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, service))",
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{service=~\"$service\"}[1m])) by (le, service))",
           "legendFormat": "P50 {{service}}",
           "refId": "B"
         }
       ]
     },
     {
-      "datasource": "Prometheus",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "fixedColor": "red", "mode": "fixed" },
@@ -79,20 +233,20 @@
           "unit": "percentunit"
         }
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
       "id": 3,
-      "title": "Error Rate",
+      "title": "Error Rate by Service",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m]))",
-          "legendFormat": "5xx error rate",
+          "expr": "sum(rate(http_requests_total{status=~\"[45]..\", service=~\"$service\"}[1m])) by (service) / sum(rate(http_requests_total{service=~\"$service\"}[1m])) by (service)",
+          "legendFormat": "{{service}}",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": "Prometheus",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -104,72 +258,37 @@
           "unit": "short"
         }
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
       "id": 4,
-      "title": "Active Connections",
+      "title": "Open Connections by EntryPoint",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(traefik_service_open_connections) by (service)",
-          "legendFormat": "{{service}}",
+          "expr": "sum(traefik_open_connections) by (entrypoint)",
+          "legendFormat": "{{entrypoint}}",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 2
-          },
-          "unit": "bytes"
-        }
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-      "id": 5,
-      "title": "Container Memory Usage",
-      "type": "timeseries",
-      "targets": [
-        {
-          "expr": "container_memory_usage_bytes{name=~\"sd-lab11-.*\"}",
-          "legendFormat": "{{name}}",
-          "refId": "A"
-        }
-      ]
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 102,
+      "title": "Containers",
+      "type": "row"
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "id": 103,
+      "title": "Logs",
+      "type": "row"
     },
     {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 2
-          },
-          "unit": "percentunit"
-        }
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-      "id": 6,
-      "title": "Container CPU Usage",
-      "type": "timeseries",
-      "targets": [
-        {
-          "expr": "rate(container_cpu_usage_seconds_total{name=~\"sd-lab11-.*\"}[1m])",
-          "legendFormat": "{{name}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "datasource": "Loki",
+      "datasource": { "type": "loki", "uid": "loki" },
       "fieldConfig": { "defaults": { "custom": { "lineWidth": 1, "fillOpacity": 30 } } },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 24 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 32 },
       "id": 7,
       "options": {
         "dedupStrategy": "none",
@@ -185,15 +304,15 @@
       "type": "logs",
       "targets": [
         {
-          "expr": "{com_docker_compose_service=~\"app|traefik\"} |= \"\"",
+          "expr": "{service_name=~\".+\"} |= \"\"",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": "Loki",
+      "datasource": { "type": "loki", "uid": "loki" },
       "fieldConfig": { "defaults": { "custom": { "lineWidth": 1, "fillOpacity": 30 } } },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 34 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 42 },
       "id": 8,
       "options": {
         "dedupStrategy": "none",
@@ -207,7 +326,7 @@
       "type": "logs",
       "targets": [
         {
-          "expr": "{com_docker_compose_service=~\"app|traefik\"} |~ \"(?i)(error|fatal|panic)\"",
+          "expr": "{service_name=~\".+\"} |~ \"(?i)(error|fatal|panic)\"",
           "refId": "A"
         }
       ]
@@ -215,9 +334,29 @@
   ],
   "schemaVersion": 39,
   "tags": ["lab11", "monitoring", "audit"],
-  "templating": { "list": [] },
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(http_requests_total, service)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "service",
+        "options": [],
+        "query": { "qryType": 1, "query": "label_values(http_requests_total, service)" },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query",
+        "label": "Service"
+      },
+    ]
+  },
   "time": { "from": "now-1h", "to": "now" },
   "title": "Lab 11 - Monitoring & Audit Dashboard",
   "uid": "lab11-monitoring",
-  "version": 1
+  "version": 2
 }
