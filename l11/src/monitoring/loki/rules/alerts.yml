@@ -1,0 +1,32 @@
+groups:
+  - name: app_log_alerts
+    rules:
+      - alert: HighErrorRateInLogs
+        expr: |
+          sum(count_over_time({com_docker_compose_service=~".+"} |~ "(?i)(error|fatal|panic)" [5m])) by (com_docker_compose_service) > 10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate in logs for {{ $labels.com_docker_compose_service }}"
+          description: "More than 10 error/fatal/panic entries in the last 5 minutes."
+
+      - alert: ContainerRestarting
+        expr: |
+          sum(count_over_time({com_docker_compose_service=~".+"} |~ "(?i)(fatal|panic|crash)" [10m])) by (com_docker_compose_service) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.com_docker_compose_service }} may be crashing"
+          description: "Fatal or panic entries detected in container logs."
+
+      - alert: NoLogsReceived
+        expr: |
+          sum(count_over_time({com_docker_compose_service=~".+"} [5m])) by (com_docker_compose_service) == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No logs from {{ $labels.com_docker_compose_service }}"
+          description: "Service has not produced any logs in 5 minutes."
