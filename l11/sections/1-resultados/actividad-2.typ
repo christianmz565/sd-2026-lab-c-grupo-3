@@ -63,7 +63,7 @@ Son los puntos de acceso de los usuarios a la plataforma. Desde estos clientes s
 
 === 2. API Gateway
 
-Actúa como punto de entrada único para todas las solicitudes provenientes de los clientes, siguiendo el patrón de API Gateway documentado por @owasp2024microservices. Su función principal es canalizar las peticiones hacia el Servicio de Autenticación y posteriormente hacia los microservicios correspondientes, permitiendo centralizar aspectos de seguridad y control. Implementa rate limiting para proteger contra ataques de fuerza bruta y DDoS.
+Actúa como punto de entrada único para todas las solicitudes provenientes de los clientes, siguiendo el patrón de API Gateway documentado por @owasp2024microservices. Su función principal es canalizar las peticiones hacia el Servicio de Autenticación y posteriormente hacia los microservicios correspondientes, permitiendo centralizar aspectos de seguridad y control.
 
 === 3. Servicio de Autenticación (Identity Provider)
 

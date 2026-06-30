@@ -44,17 +44,7 @@ Los labels de Traefik en cada contenedor definen las reglas de enrutamiento: #ra
 
 == Stack de Monitoreo y Auditoría
 
-=== Prometheus - Recolección de Métricas
-
-Prometheus se configura con un intervalo de scrape de 15 segundos, recolectando métricas del API Go y de Traefik:
-
-#code-block(file: "l11/src/monitoring/prometheus/prometheus.yml", snippet: "scrape-configs", lang: "yaml", prefix: "#")
-
-=== Grafana Alloy - Recolección de Logs
-
-Alloy descubre automáticamente los contenedores Docker y procesa los logs estructurados en JSON, extrayendo el nivel de log como label para facilitar el filtrado en Loki:
-
-#code-block(file: "l11/src/monitoring/alloy/alloy-config.river", snippet: "log-discovery", lang: "river", prefix: "//")
+El sistema implementa un stack completo de observabilidad con Prometheus para métricas, Grafana Alloy para recolección de logs, Loki para almacenamiento y Grafana para visualización. La configuración detallada de cada componente se presenta en la Actividad 5.
 
 === Evidencias de Implementación
 

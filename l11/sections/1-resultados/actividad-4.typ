@@ -74,7 +74,7 @@ Es el componente responsable de autenticar a los usuarios y otorgar autorizació
 
 === 3. JWT (JSON Web Token)
 
-Después de una autenticación exitosa, el servidor OAuth 2.0 genera un token JWT firmado digitalmente con RS256. Este token contiene información sobre la identidad, roles, permisos y tiempo de expiración del usuario, permitiendo que los servicios validen la autorización sin necesidad de mantener sesiones centralizadas. Los tokens tienen una expiración de 15 minutos, con refresh tokens de 7 días @jwt2015rfc7519.
+Los tokens JWT generados por el Servicio de Autenticación (detallado en la Actividad 2) contienen información sobre la identidad, roles, permisos y tiempo de expiración del usuario, permitiendo que los servicios validen la autorización sin necesidad de mantener sesiones centralizadas @jwt2015rfc7519.
 
 === 4. API Gateway (Traefik)
 
