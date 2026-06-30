@@ -1,11 +1,34 @@
+// START-SNIPPET,log-discovery
 discovery.docker "containers" {
   host             = "unix:///var/run/docker.sock"
   refresh_interval = "5s"
 }
 
+discovery.relabel "docker" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container_name"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service_name"
+  }
+
+  rule {
+    source_labels = ["service_name"]
+    regex         = "app"
+    target_label  = "service_name"
+    replacement   = "go-api"
+  }
+}
+
 loki.source.docker "containers" {
   host       = "unix:///var/run/docker.sock"
-  targets    = discovery.docker.containers.targets
+  targets    = discovery.relabel.docker.output
   forward_to = [loki.process.docker.receiver]
 }
 
@@ -14,7 +37,7 @@ loki.process "docker" {
 
   stage.json {
     expressions = {
-      log = "log",
+      level = "level",
     }
   }
 
@@ -32,3 +55,4 @@ loki.write "local" {
     url = "http://loki:3100/loki/api/v1/push"
   }
 }
+// END-SNIPPET

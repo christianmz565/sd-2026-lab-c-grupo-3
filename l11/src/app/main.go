@@ -109,16 +109,24 @@ func recordMetrics(method, path string, status int, duration float64) {
 	mu.Unlock()
 }
 
+// START-SNIPPET,metrics-middleware
 func metricsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		mr := &metricsResponse{ResponseWriter: w, status: http.StatusOK}
 		next(mr, r)
 		duration := time.Since(start).Seconds()
-		log.Printf(`{"level":"info","msg":"%s %s %d %.3f","method":"%s","path":"%s","status":%d,"duration":%.3f}`, r.Method, r.URL.Path, mr.status, duration, r.Method, r.URL.Path, mr.status, duration)
+		level := "info"
+		if mr.status >= 500 {
+			level = "error"
+		} else if mr.status >= 400 {
+			level = "warn"
+		}
+		log.Printf(`{"level":"%s","msg":"%s %s %d %.3f","method":"%s","path":"%s","status":%d,"duration":%.3f}`, level, r.Method, r.URL.Path, mr.status, duration, r.Method, r.URL.Path, mr.status, duration)
 		recordMetrics(r.Method, r.URL.Path, mr.status, duration)
 	}
 }
+// END-SNIPPET
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
@@ -245,7 +253,9 @@ func errorTest(w http.ResponseWriter, r *http.Request) {
 	writeError(w, http.StatusInternalServerError, "test error 500")
 }
 
+// START-SNIPPET,endpoints
 func main() {
+	log.SetFlags(0)
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", metricsMiddleware(index))
 	mux.HandleFunc("GET /health", metricsMiddleware(health))
@@ -263,3 +273,4 @@ func main() {
 		log.Fatal(err)
 	}
 }
+// END-SNIPPET

@@ -11,6 +11,7 @@ alerting:
 rule_files:
   - "alerts.yml"
 
+# START-SNIPPET,scrape-configs
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
@@ -29,4 +30,5 @@ scrape_configs:
       - targets: ["traefik:8080"]
         labels:
           service: "traefik"
+# END-SNIPPET
 

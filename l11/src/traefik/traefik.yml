@@ -8,6 +8,7 @@ metrics:
     addRoutersLabels: true
     addServicesLabels: true
 
+# START-SNIPPET,entrypoints
 entryPoints:
   web:
     address: ":80"
@@ -34,3 +35,4 @@ providers:
 log:
   level: INFO
   format: common
+# END-SNIPPET

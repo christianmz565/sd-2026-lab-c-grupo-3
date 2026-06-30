@@ -304,7 +304,7 @@
       "type": "logs",
       "targets": [
         {
-          "expr": "{service_name=~\".+\"} |= \"\"",
+          "expr": "{service_name=~\"$service\"}",
           "refId": "A"
         }
       ]
@@ -326,7 +326,7 @@
       "type": "logs",
       "targets": [
         {
-          "expr": "{service_name=~\".+\"} |~ \"(?i)(error|fatal|panic)\"",
+          "expr": "{service_name=~\"$service\"} |~ \"(?i)(error|fatal|panic)\"",
           "refId": "A"
         }
       ]
@@ -337,22 +337,22 @@
   "templating": {
     "list": [
       {
-        "allValue": ".*",
+        "allValue": ".+",
         "current": { "selected": true, "text": "All", "value": "$__all" },
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "definition": "label_values(http_requests_total, service)",
+        "definition": "label_values(up, service)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "service",
         "options": [],
-        "query": { "qryType": 1, "query": "label_values(http_requests_total, service)" },
+        "query": { "qryType": 1, "query": "label_values(up, service)" },
         "refresh": 2,
         "regex": "",
         "sort": 1,
         "type": "query",
         "label": "Service"
-      },
+      }
     ]
   },
   "time": { "from": "now-1h", "to": "now" },

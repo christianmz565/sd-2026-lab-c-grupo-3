@@ -56,6 +56,7 @@
               uv
               bun
               just
+              mermaid-cli
               plantuml
               dig
               mpi
@@ -64,6 +65,7 @@
               nixd
               ruff
               biome
+              openssl
             ]
             ++ fonts
             ++ [

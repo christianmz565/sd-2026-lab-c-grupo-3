@@ -1,5 +1,6 @@
 name: sd-lab11-traefik
 
+# START-SNIPPET,services
 services:
   traefik:
     image: traefik:v3.7
@@ -47,3 +48,4 @@ services:
 networks:
   web:
     name: sd-lab11-web
+# END-SNIPPET

@@ -1,0 +1,5 @@
+#set par(justify: true)
+
+== Pregunta 2: La dirección de una empresa considera que implementar mecanismos avanzados de cifrado reducirá significativamente el rendimiento de sus sistemas distribuidos. Evalúe esta afirmación y argumente cómo puede lograrse un equilibrio entre seguridad y desempeño.
+
+La afirmación es una percepción obsoleta @isTLSfast @easecloud2026tls. Las extensiones AES-NI en procesadores modernos permiten que AES-GCM opere a velocidades cercanas a la memoria; Google reporta que SSL/TLS representa menos del 1% de carga de CPU y menos de 10 KB de memoria por conexión @isTLSfast. TLS 1.3 redujo el handshake de 2 a 1 roundtrip, y con resumición 0-RTT los clientes recurrentes envían datos en el primer paquete @easecloud2026tls. Twitter confirma que priorizar ECDHE causó aumento insignificante de CPU gracias a keepalive y resumición de sesión @isTLSfast. Para equilibrar seguridad y desempeño se recomiendan certificados ECDSA (256 bits equivale a RSA 3072), OCSP stapling, resumición con tickets y HSTS @easecloud2026tls. En microservicios, mTLS interno añade solo 1-2ms de latencia, imperceptible frente a WAN de 80-120ms @owasp2024microservices.

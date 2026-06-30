@@ -20,6 +20,7 @@ if [ -f "$CERT_FILE" ] && [ -f "$KEY_FILE" ] && [ "${FORCE:-0}" != "1" ]; then
   exit 0
 fi
 
+# START-SNIPPET,cert-generation
 echo "▶ Generando clave privada RSA 4096 bits..."
 openssl genrsa -out "$KEY_FILE" 4096 2>/dev/null
 
@@ -36,6 +37,7 @@ openssl req -new -x509 \
   -addext "$SAN_ENV" \
   -addext "keyUsage=digitalSignature,keyEncipherment" \
   -addext "extendedKeyUsage=serverAuth,clientAuth" 2>/dev/null
+# END-SNIPPET
 
 chmod 644 "$CERT_FILE"
 
