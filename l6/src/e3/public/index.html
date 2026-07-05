@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E1 — RESTful API · Spring Boot</title>
+  <title>E3 — GraphQL API · Yoga + Hono</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="css/styles.css">
   <style>
     :root {
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
-      --primary-light: rgba(99,102,241,0.1);
-      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-      --primary-glow: 0 8px 24px rgba(99,102,241,0.25);
+      --primary: #ec4899;
+      --primary-hover: #db2777;
+      --primary-light: rgba(236,72,153,0.1);
+      --primary-gradient: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      --primary-glow: 0 8px 24px rgba(236,72,153,0.25);
     }
   </style>
 </head>
@@ -25,15 +25,15 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <a href="/" class="sidebar-logo">
-          <div class="sidebar-logo-icon"><i class="fa-solid fa-book"></i></div>
+          <div class="sidebar-logo-icon"><i class="fa-solid fa-code"></i></div>
           <div class="sidebar-logo-text">
             <span class="sidebar-logo-title">Lab 06</span>
             <span class="sidebar-logo-sub">REST vs GraphQL</span>
           </div>
         </a>
-        <div class="tech-badge rest">
-          <i class="fa-solid fa-server"></i>
-          <span>RESTful · Spring Boot · Java</span>
+        <div class="tech-badge graphql">
+          <i class="fa-solid fa-circle-nodes"></i>
+          <span>GraphQL · Yoga + Hono · Bun</span>
         </div>
       </div>
 
@@ -43,6 +43,10 @@
           <i class="fa-solid fa-book"></i>
           <span>Coleccion</span>
         </a>
+        <a href="#consola" class="nav-item" data-section="consola">
+          <i class="fa-solid fa-terminal"></i>
+          <span>Consola GraphQL</span>
+        </a>
         <a href="#comparativa" class="nav-item" data-section="comparativa">
           <i class="fa-solid fa-scale-balanced"></i>
           <span>Comparativa</span>
@@ -51,7 +55,7 @@
 
       <div class="sidebar-footer">
         <span>SD-2026</span>
-        <strong>Ejercicio 1</strong>
+        <strong>Ejercicio 3</strong>
       </div>
     </aside>
 
@@ -61,16 +65,16 @@
       <header class="header">
         <div class="header-info">
           <div class="header-eyebrow">
-            RESTful API
-            <span class="method-badge get">GET</span>
-            <span class="method-badge post">POST</span>
-            <span class="method-badge" style="background:var(--warning-bg);color:var(--warning);">PUT</span>
-            <span class="method-badge" style="background:var(--danger-bg);color:var(--danger);">DELETE</span>
+            GraphQL API
+            <span class="method-badge mutation">POST /graphql</span>
           </div>
           <h1 class="header-title">Biblioteca Digital</h1>
-          <p class="header-subtitle">Multiples endpoints REST — cada operacion tiene su propia ruta HTTP</p>
+          <p class="header-subtitle">Un unico endpoint para todas las operaciones — el cliente define los campos</p>
         </div>
         <div class="header-actions">
+          <button class="btn btn-ghost" onclick="openSection('consola')">
+            <i class="fa-solid fa-terminal"></i> Abrir Consola
+          </button>
           <button class="btn btn-primary" onclick="openModal()">
             <i class="fa-solid fa-plus"></i> Registrar Libro
           </button>
@@ -98,17 +102,17 @@
             </div>
             <div class="stat-card">
               <div>
-                <div class="stat-label">Endpoints</div>
-                <div class="stat-value" style="font-size:14px;font-family:var(--font-mono);">4</div>
+                <div class="stat-label">Endpoint</div>
+                <div class="stat-value" style="font-size:14px;font-family:var(--font-mono);">/graphql</div>
               </div>
-              <div class="stat-icon success"><i class="fa-solid fa-route"></i></div>
+              <div class="stat-icon success"><i class="fa-solid fa-code"></i></div>
             </div>
             <div class="stat-card">
               <div>
                 <div class="stat-label">Runtime</div>
-                <div class="stat-value" style="font-size:16px;">JVM</div>
+                <div class="stat-value" style="font-size:16px;">Bun</div>
               </div>
-              <div class="stat-icon warning"><i class="fa-solid fa-coffee"></i></div>
+              <div class="stat-icon warning"><i class="fa-solid fa-bolt"></i></div>
             </div>
           </div>
 
@@ -128,14 +132,14 @@
           <!-- Loading -->
           <div class="loading-state" id="loading-state">
             <div class="spinner"></div>
-            <p>Cargando coleccion via REST...</p>
+            <p>Cargando coleccion via GraphQL...</p>
           </div>
 
           <!-- Empty -->
           <div class="empty-state hidden" id="empty-state">
             <div class="empty-icon"><i class="fa-solid fa-book-open"></i></div>
             <h3>No hay libros registrados</h3>
-            <p>Realiza un POST /api/books para registrar el primero.</p>
+            <p>Ejecuta una mutation createBook para agregar el primero.</p>
             <button class="btn btn-primary" onclick="openModal()">
               <i class="fa-solid fa-plus"></i> Registrar Libro
             </button>
@@ -143,6 +147,72 @@
 
           <!-- Grid -->
           <div class="cards-grid" id="books-grid"></div>
+        </section>
+
+        <!-- SECCION: CONSOLA GRAPHQL -->
+        <section id="sec-consola" class="hidden">
+          <div class="stats-row" style="margin-bottom:20px;">
+            <div class="stat-card" style="grid-column: 1 / -1;">
+              <div>
+                <div class="stat-label">Endpoint</div>
+                <div class="stat-value" style="font-size:14px;font-family:var(--font-mono);">POST http://localhost:3000/graphql</div>
+              </div>
+              <div class="stat-icon success"><i class="fa-solid fa-link"></i></div>
+            </div>
+          </div>
+
+          <div class="gql-console">
+            <div class="gql-console-header">
+              <span class="gql-dot red"></span>
+              <span class="gql-dot yellow"></span>
+              <span class="gql-dot green"></span>
+              <span style="margin-left:8px;">GraphQL Playground</span>
+            </div>
+            <div class="gql-console-body">
+              <textarea class="gql-editor" id="gql-editor" spellcheck="false"># Query: Listar todos los libros
+{
+  books {
+    id
+    title
+    author
+    isbn
+    description
+  }
+}
+
+# Mutation: Crear un libro
+# mutation {
+#   createBook(input: {
+#     title: "Nuevo Libro"
+#     author: "Autor"
+#     isbn: "978-1234567890"
+#   }) {
+#     id
+#     title
+#   }
+# }
+
+# Mutation: Eliminar un libro
+# mutation {
+#   deleteBook(id: "1")
+# }</textarea>
+              <pre class="gql-result" id="gql-result">// Resultado aparece aqui...</pre>
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px;">
+            <button class="btn btn-primary" onclick="executeGql()">
+              <i class="fa-solid fa-play"></i> Ejecutar
+            </button>
+            <button class="btn btn-secondary" onclick="loadPreset('listar')">
+              <i class="fa-solid fa-list"></i> Listar
+            </button>
+            <button class="btn btn-secondary" onclick="loadPreset('crear')">
+              <i class="fa-solid fa-plus"></i> Crear
+            </button>
+            <button class="btn btn-secondary" onclick="loadPreset('eliminar')">
+              <i class="fa-solid fa-trash"></i> Eliminar
+            </button>
+          </div>
         </section>
 
         <!-- SECCION: COMPARATIVA -->
@@ -182,15 +252,21 @@
                 </tr>
                 <tr>
                   <td><strong>Under-fetching</strong></td>
-                  <td><span class="cross">Si</span> — multiples requests</td>
-                  <td><span class="cross">Si</span> — multiples requests</td>
-                  <td><span class="check">No</span> — una sola query</td>
+                  <td><span class="cross">Si</span> — requiere multiples requests</td>
+                  <td><span class="cross">Si</span> — requiere multiples requests</td>
+                  <td><span class="check">No</span> — una sola query con relaciones</td>
                 </tr>
                 <tr>
                   <td><strong>Documentacion</strong></td>
-                  <td>Externa (Swagger)</td>
-                  <td>Externa (Swagger)</td>
-                  <td>Integrada (introspection)</td>
+                  <td>Externa (Swagger/OpenAPI)</td>
+                  <td>Externa (Swagger/OpenAPI)</td>
+                  <td>Integrada (introspection + playground)</td>
+                </tr>
+                <tr>
+                  <td><strong>Tipo de datos</strong></td>
+                  <td>JSON (definido por el servidor)</td>
+                  <td>JSON (definido por el servidor)</td>
+                  <td>JSON (definido por el cliente)</td>
                 </tr>
                 <tr>
                   <td><strong>Lenguaje</strong></td>
@@ -205,54 +281,16 @@
                   <td>Bun (nativo JS)</td>
                 </tr>
                 <tr>
-                  <td><strong>Caching HTTP</strong></td>
-                  <td><span class="check">Si</span> — nativo</td>
-                  <td><span class="check">Si</span> — nativo</td>
-                  <td><span class="cross">No</span> — manual</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Endpoints de este ejercicio -->
-          <div class="comparison-section" style="margin-top:20px;">
-            <div class="comparison-header">
-              <i class="fa-solid fa-route"></i>
-              Endpoints — Ejercicio 1 (Spring Boot)
-            </div>
-            <table class="comparison-table">
-              <thead>
-                <tr>
-                  <th>Metodo</th>
-                  <th>Ruta</th>
-                  <th>Descripcion</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><span class="badge badge-info">GET</span></td>
-                  <td><code>/api/books</code></td>
-                  <td>Listar todos los libros</td>
+                  <td><strong>Complejidad cliente</strong></td>
+                  <td>Alta — multiples llamadas</td>
+                  <td>Alta — multiples llamadas</td>
+                  <td>Baja — una sola llamada</td>
                 </tr>
                 <tr>
-                  <td><span class="badge badge-info">GET</span></td>
-                  <td><code>/api/books/{id}</code></td>
-                  <td>Obtener libro por ID</td>
-                </tr>
-                <tr>
-                  <td><span class="badge badge-success">POST</span></td>
-                  <td><code>/api/books</code></td>
-                  <td>Registrar nuevo libro</td>
-                </tr>
-                <tr>
-                  <td><span class="badge badge-warning">PUT</span></td>
-                  <td><code>/api/books/{id}</code></td>
-                  <td>Actualizar libro existente</td>
-                </tr>
-                <tr>
-                  <td><span class="badge badge-danger">DELETE</span></td>
-                  <td><code>/api/books/{id}</code></td>
-                  <td>Eliminar libro</td>
+                  <td><strong>Caching</strong></td>
+                  <td><span class="check">Si</span> — HTTP nativo</td>
+                  <td><span class="check">Si</span> — HTTP nativo</td>
+                  <td><span class="cross">No</span> — requiere implementacion</td>
                 </tr>
               </tbody>
             </table>
@@ -314,6 +352,9 @@
       </div>
       <div class="modal-body" id="detail-body"></div>
       <div class="modal-footer">
+        <button class="btn btn-danger" id="btn-delete-detail">
+          <i class="fa-solid fa-trash"></i> Eliminar
+        </button>
         <button class="btn btn-secondary" onclick="closeDetail()">Cerrar</button>
       </div>
     </div>
@@ -322,6 +363,6 @@
   <!-- TOAST -->
   <div class="toast-container" id="toast-container"></div>
 
-  <script src="/js/app.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

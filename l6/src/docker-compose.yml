@@ -1,0 +1,15 @@
+services:
+  e1:
+    build: ./e1
+    ports:
+      - "8081:8080"
+    volumes:
+      - e1-data:/app/uploads
+
+  e3:
+    build: ./e3
+    ports:
+      - "5003:3000"
+
+volumes:
+  e1-data:

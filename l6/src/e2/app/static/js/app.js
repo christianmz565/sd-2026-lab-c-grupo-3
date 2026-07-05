@@ -1,318 +1,300 @@
-const API_URL = '/estudiantes';
+const API_URL = "/estudiantes";
 
-// Elementos del DOM
-const tbody = document.getElementById('students-table-body');
-const modal = document.getElementById('student-modal');
-const form = document.getElementById('student-form');
-const inputId = document.getElementById('student-id');
-const inputMatricula = document.getElementById('matricula');
-const inputNombre = document.getElementById('nombre');
-const inputCarrera = document.getElementById('carrera');
-const inputEdad = document.getElementById('edad');
-const inputEmail = document.getElementById('email');
-const inputTelefono = document.getElementById('telefono');
-const inputMatriculado = document.getElementById('matriculado');
-const inputSemestres = document.getElementById('semestres');
-const inputEstado = document.getElementById('estado');
-const modalTitle = document.getElementById('modal-title');
-const searchInput = document.getElementById('search-input');
-const filterMatriculado = document.getElementById('filter-matriculado');
-const filterEstado = document.getElementById('filter-estado');
-const sortBy = document.getElementById('sort-by');
-const btnExport = document.getElementById('btn-export');
-const statTotal = document.getElementById('stat-total');
-const statMatriculados = document.getElementById('stat-matriculados');
-const statEdad = document.getElementById('stat-edad');
-const statCarreras = document.getElementById('stat-carreras');
-const deleteModal = document.getElementById('delete-modal');
-const btnCloseDelete = document.getElementById('btn-close-delete');
-const btnCancelDelete = document.getElementById('btn-cancel-delete');
-const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+// ============================================
+// ESTADO
+// ============================================
+let students = [];
 
-const btnOpenModal = document.getElementById('btn-open-modal');
-const btnCloseModal = document.getElementById('btn-close-modal');
-const btnCancel = document.getElementById('btn-cancel');
+// ============================================
+// DOM READY
+// ============================================
+document.addEventListener("DOMContentLoaded", () => {
+  fetchStudents();
+  setupNav();
+  setupSearch();
+  setupFilters();
+});
 
-let studentsCache = [];
-
-// Event Listeners
-document.addEventListener('DOMContentLoaded', fetchStudents);
-btnOpenModal.addEventListener('click', () => openModal());
-btnCloseModal.addEventListener('click', closeModal);
-btnCancel.addEventListener('click', closeModal);
-form.addEventListener('submit', handleFormSubmit);
-searchInput.addEventListener('input', () => renderTable(studentsCache));
-filterMatriculado.addEventListener('change', () => renderTable(studentsCache));
-filterEstado.addEventListener('change', () => renderTable(studentsCache));
-sortBy.addEventListener('change', () => renderTable(studentsCache));
-btnExport.addEventListener('click', handleExport);
-btnCloseDelete.addEventListener('click', closeDeleteModal);
-btnCancelDelete.addEventListener('click', closeDeleteModal);
-btnConfirmDelete.addEventListener('click', confirmDelete);
-
-// Cargar Estudiantes
-async function fetchStudents() {
-    try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        studentsCache = Array.isArray(data) ? data : [];
-        renderTable(studentsCache);
-        updateStats(studentsCache);
-    } catch (error) {
-        console.error("Error cargando estudiantes:", error);
-        tbody.innerHTML = `<tr><td colspan="10" class="text-center">Error al cargar los datos</td></tr>`;
-    }
-}
-
-// Renderizar Tabla
-function renderTable(students) {
-    const filtered = applyFilters(students);
-
-    if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="text-center">No hay estudiantes registrados.</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = '';
-    filtered.forEach(student => {
-        const tr = document.createElement('tr');
-        const estadoClass = getEstadoClass(student.estado);
-        const matriculaBadge = student.matriculado ? 'Si' : 'No';
-        tr.innerHTML = `
-            <td>#${student.id}</td>
-            <td>
-                <div class="student-cell">
-                    <div class="student-avatar">${getInitials(student.nombre)}</div>
-                    <div>
-                        <strong>${student.nombre}</strong>
-                        <span>${student.matricula || 'Sin matricula'}</span>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <div class="cell-stack">
-                    <strong>${student.carrera}</strong>
-                </div>
-            </td>
-            <td class="hide-mobile">${student.edad}</td>
-            <td class="hide-mobile">${student.email}</td>
-            <td class="hide-tablet">${student.telefono}</td>
-            <td><span class="badge ${student.matriculado ? 'badge-success' : 'badge-muted'}">${matriculaBadge}</span></td>
-            <td class="hide-mobile">${student.semestres}</td>
-            <td><span class="badge ${estadoClass}">${student.estado}</span></td>
-            <td class="actions-cell">
-                <button class="icon-btn" onclick="editStudent(${student.id})" title="Editar">
-                    <i class="fa-solid fa-pen"></i>
-                </button>
-                <button class="icon-btn danger" onclick="deleteStudent(${student.id})" title="Eliminar">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
+// ============================================
+// NAVEGACION
+// ============================================
+function setupNav() {
+  document.querySelectorAll(".nav-item[data-section]").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      openSection(item.dataset.section);
     });
+  });
 }
 
-// Modal Mgt
-function openModal(isEdit = false) {
-    if (!isEdit) {
-        form.reset();
-        inputId.value = '';
-        inputMatriculado.value = 'true';
-        inputEstado.value = 'Activo';
-        modalTitle.textContent = 'Registrar Estudiante';
+function openSection(name) {
+  document.querySelectorAll(".nav-item").forEach((n) => n.classList.remove("active"));
+  document.querySelector(`.nav-item[data-section="${name}"]`)?.classList.add("active");
+
+  ["coleccion", "comparativa"].forEach((s) => {
+    const sec = document.getElementById(`sec-${s}`);
+    if (sec) sec.classList.toggle("hidden", s !== name);
+  });
+}
+
+// ============================================
+// BUSQUEDA Y FILTROS
+// ============================================
+function setupSearch() {
+  let timeout;
+  document.getElementById("search-input").addEventListener("input", () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => renderTable(), 200);
+  });
+}
+
+function setupFilters() {
+  document.getElementById("filter-estado").addEventListener("change", renderTable);
+  document.getElementById("sort-by").addEventListener("change", renderTable);
+}
+
+function getFiltered() {
+  const query = document.getElementById("search-input").value.toLowerCase().trim();
+  const estado = document.getElementById("filter-estado").value;
+  const sort = document.getElementById("sort-by").value;
+
+  let filtered = students.filter((s) => {
+    const matchQuery = [s.nombre, s.matricula, s.carrera, s.email, s.telefono]
+      .some((v) => String(v || "").toLowerCase().includes(query));
+    const matchEstado = estado === "all" || s.estado === estado;
+    return matchQuery && matchEstado;
+  });
+
+  filtered.sort((a, b) => {
+    if (sort === "edad") return (a.edad || 0) - (b.edad || 0);
+    return String(a[sort] || "").localeCompare(String(b[sort] || ""), "es", { sensitivity: "base" });
+  });
+
+  return filtered;
+}
+
+// ============================================
+// FETCH ESTUDIANTES (REST: GET /estudiantes)
+// ============================================
+async function fetchStudents() {
+  showLoading(true);
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    const data = await res.json();
+    students = Array.isArray(data) ? data : [];
+    renderTable();
+    updateStats();
+  } catch (e) {
+    showToast("Error al cargar estudiantes: " + e.message, "danger");
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ============================================
+// RENDER TABLA
+// ============================================
+function renderTable() {
+  const tbody = document.getElementById("students-body");
+  const empty = document.getElementById("empty-state");
+  const table = document.getElementById("table-wrap");
+  const loading = document.getElementById("loading-state");
+
+  const filtered = getFiltered();
+  loading.classList.add("hidden");
+
+  if (filtered.length === 0) {
+    table.classList.add("hidden");
+    empty.classList.remove("hidden");
+    return;
+  }
+
+  empty.classList.add("hidden");
+  table.classList.remove("hidden");
+
+  const estadoClasses = {
+    Activo: "badge-success",
+    "En riesgo": "badge-warning",
+    Graduado: "badge-info",
+    Baja: "badge-danger",
+  };
+
+  tbody.innerHTML = filtered
+    .map((s) => {
+      const initials = getInitials(s.nombre);
+      const estadoClass = estadoClasses[s.estado] || "badge-muted";
+      const matBadge = s.matriculado ? "badge-success" : "badge-muted";
+
+      return `
+      <tr>
+        <td>#${s.id}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:var(--primary-light);color:var(--primary);display:grid;place-items:center;font-weight:700;font-size:13px;">${initials}</div>
+            <div class="cell-stack">
+              <strong>${s.nombre}</strong>
+              <span>${s.matricula || ""}</span>
+            </div>
+          </div>
+        </td>
+        <td>${s.carrera}</td>
+        <td>${s.edad}</td>
+        <td style="font-size:12px;color:var(--text-secondary);">${s.email}</td>
+        <td><span class="badge ${matBadge}">${s.matriculado ? "Si" : "No"}</span></td>
+        <td><span class="badge ${estadoClass}">${s.estado}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-icon btn-secondary btn-sm" onclick="editStudent(${s.id})" title="Editar">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn btn-icon btn-danger btn-sm" onclick="deleteStudent(${s.id})" title="Eliminar">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+    })
+    .join("");
+}
+
+// ============================================
+// STATS
+// ============================================
+function updateStats() {
+  document.getElementById("stat-total").textContent = students.length;
+  const matriculados = students.filter((s) => s.matriculado).length;
+  document.getElementById("stat-matriculados").textContent = matriculados;
+}
+
+// ============================================
+// LOADING
+// ============================================
+function showLoading(show) {
+  document.getElementById("loading-state").classList.toggle("hidden", !show);
+  document.getElementById("table-wrap").classList.toggle("hidden", show);
+}
+
+// ============================================
+// MODAL: CREAR/EDITAR
+// ============================================
+function openModal(studentId = null) {
+  const modal = document.getElementById("student-modal");
+  const form = document.getElementById("student-form");
+  const title = document.getElementById("modal-title");
+
+  form.reset();
+  document.getElementById("input-id").value = "";
+
+  if (studentId) {
+    const s = students.find((x) => x.id === studentId);
+    if (s) {
+      document.getElementById("input-id").value = s.id;
+      document.getElementById("input-matricula").value = s.matricula || "";
+      document.getElementById("input-nombre").value = s.nombre || "";
+      document.getElementById("input-carrera").value = s.carrera || "";
+      document.getElementById("input-edad").value = s.edad || "";
+      document.getElementById("input-email").value = s.email || "";
+      document.getElementById("input-telefono").value = s.telefono || "";
+      document.getElementById("input-matriculado").value = String(s.matriculado);
+      document.getElementById("input-semestres").value = s.semestres || "";
+      document.getElementById("input-estado").value = s.estado || "Activo";
+      title.textContent = "Editar Estudiante";
     }
-    modal.classList.remove('hidden');
+  } else {
+    title.textContent = "Registrar Estudiante";
+  }
+
+  modal.classList.remove("hidden");
 }
 
 function closeModal() {
-    modal.classList.add('hidden');
+  document.getElementById("student-modal").classList.add("hidden");
 }
 
-// Form Submit (Crear o Actualizar)
-async function handleFormSubmit(e) {
-    e.preventDefault();
+function editStudent(id) {
+  openModal(id);
+}
 
-    const id = inputId.value;
-    const isEdit = id !== '';
-    
-    const payload = {
-        matricula: inputMatricula.value,
-        nombre: inputNombre.value,
-        carrera: inputCarrera.value,
-        edad: parseInt(inputEdad.value),
-        email: inputEmail.value,
-        telefono: inputTelefono.value,
-        matriculado: inputMatriculado.value === 'true',
-        semestres: parseInt(inputSemestres.value),
-        estado: inputEstado.value
-    };
+// ============================================
+// SUBMIT (REST: POST / PUT)
+// ============================================
+async function submitStudent() {
+  const id = document.getElementById("input-id").value;
+  const isEdit = id !== "";
 
-    try {
-        const url = isEdit ? `${API_URL}/${id}` : API_URL;
-        const method = isEdit ? 'PUT' : 'POST';
+  const payload = {
+    matricula: document.getElementById("input-matricula").value,
+    nombre: document.getElementById("input-nombre").value,
+    carrera: document.getElementById("input-carrera").value,
+    edad: parseInt(document.getElementById("input-edad").value),
+    email: document.getElementById("input-email").value,
+    telefono: document.getElementById("input-telefono").value,
+    matriculado: document.getElementById("input-matriculado").value === "true",
+    semestres: parseInt(document.getElementById("input-semestres").value) || 1,
+    estado: document.getElementById("input-estado").value,
+  };
 
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+  try {
+    const url = isEdit ? `${API_URL}/${id}` : API_URL;
+    const method = isEdit ? "PUT" : "POST";
 
-        if (response.ok) {
-            closeModal();
-            fetchStudents();
-        } else {
-            alert("Ocurrió un error al guardar.");
-        }
-    } catch (error) {
-        console.error("Error al guardar estudiante:", error);
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      showToast(isEdit ? "Estudiante actualizado" : "Estudiante registrado", "success");
+      closeModal();
+      fetchStudents();
+    } else {
+      throw new Error(`Error ${res.status}`);
     }
+  } catch (e) {
+    showToast("Error: " + e.message, "danger");
+  }
 }
 
-// Editar Estudiante
-window.editStudent = function(id) {
-    const student = studentsCache.find(item => item.id === id);
-    if (!student) return;
-    inputId.value = student.id;
-    inputMatricula.value = student.matricula || '';
-    inputNombre.value = student.nombre || '';
-    inputCarrera.value = student.carrera || '';
-    inputEdad.value = student.edad || '';
-    inputEmail.value = student.email || '';
-    inputTelefono.value = student.telefono || '';
-    inputMatriculado.value = String(student.matriculado);
-    inputSemestres.value = student.semestres || '';
-    inputEstado.value = student.estado || 'Activo';
-    modalTitle.textContent = 'Editar Estudiante';
-    openModal(true);
-};
-
-// Eliminar Estudiante
-window.deleteStudent = async function(id) {
-    openDeleteModal(id);
-};
-
-async function confirmDelete() {
-    const id = deleteModal.dataset.id;
-    if (!id) return;
-    try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE'
-        });
-
-        if (response.ok) {
-            closeDeleteModal();
-            fetchStudents();
-        } else {
-            alert("No se pudo eliminar el estudiante.");
-        }
-    } catch (error) {
-        console.error("Error al eliminar estudiante:", error);
-    }
+// ============================================
+// ELIMINAR (REST: DELETE /estudiantes/{id})
+// ============================================
+async function deleteStudent(id) {
+  if (!confirm("Eliminar este estudiante?")) return;
+  try {
+    const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    showToast("Estudiante eliminado", "success");
+    fetchStudents();
+  } catch (e) {
+    showToast("Error: " + e.message, "danger");
+  }
 }
 
-function openDeleteModal(id) {
-    deleteModal.dataset.id = id;
-    deleteModal.classList.remove('hidden');
-}
-
-function closeDeleteModal() {
-    deleteModal.dataset.id = '';
-    deleteModal.classList.add('hidden');
-}
-
-function updateStats(students) {
-    const total = students.length;
-    const matriculados = students.filter(s => s.matriculado).length;
-    const edadProm = total ? (students.reduce((acc, s) => acc + (s.edad || 0), 0) / total) : 0;
-    const carreras = new Set(students.map(s => s.carrera)).size;
-    statTotal.textContent = total;
-    statMatriculados.textContent = matriculados;
-    statEdad.textContent = edadProm.toFixed(1);
-    statCarreras.textContent = carreras;
-}
-
-function getEstadoClass(estado) {
-    switch (estado) {
-        case 'Activo':
-            return 'badge-success';
-        case 'En riesgo':
-            return 'badge-warning';
-        case 'Graduado':
-            return 'badge-info';
-        case 'Baja':
-            return 'badge-danger';
-        default:
-            return 'badge-muted';
-    }
-}
-
+// ============================================
+// UTILS
+// ============================================
 function getInitials(name) {
-    if (!name) return '??';
-    const parts = name.trim().split(' ');
-    const first = parts[0]?.[0] || '';
-    const last = parts[1]?.[0] || '';
-    return `${first}${last}`.toUpperCase();
+  if (!name) return "??";
+  const parts = name.trim().split(" ");
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase();
 }
 
-function applyFilters(students) {
-    const query = searchInput.value.toLowerCase().trim();
-    const estadoFiltro = filterEstado.value;
-    const matriculadoFiltro = filterMatriculado.value;
+// ============================================
+// TOAST
+// ============================================
+function showToast(message, type = "info") {
+  const container = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
 
-    let filtered = students.filter(student => {
-        const matchesQuery = [
-            student.nombre,
-            student.matricula,
-            student.carrera,
-            student.email,
-            student.telefono
-        ].some(value => String(value || '').toLowerCase().includes(query));
+  const icons = { success: "fa-check-circle", danger: "fa-exclamation-circle", info: "fa-info-circle" };
+  toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${message}</span>`;
 
-        const matchesEstado = estadoFiltro === 'all' || student.estado === estadoFiltro;
-        const matchesMatriculado = matriculadoFiltro === 'all' || String(student.matriculado) === matriculadoFiltro;
-
-        return matchesQuery && matchesEstado && matchesMatriculado;
-    });
-
-    const order = sortBy.value;
-    filtered = filtered.sort((a, b) => {
-        if (order === 'edad' || order === 'semestres') {
-            return (a[order] || 0) - (b[order] || 0);
-        }
-        return String(a[order] || '').localeCompare(String(b[order] || ''), 'es', { sensitivity: 'base' });
-    });
-
-    return filtered;
-}
-
-function handleExport() {
-    const filtered = applyFilters(studentsCache);
-    const headers = ['id', 'matricula', 'nombre', 'carrera', 'edad', 'email', 'telefono', 'matriculado', 'semestres', 'estado'];
-    const rows = filtered.map(student => [
-        student.id,
-        student.matricula,
-        student.nombre,
-        student.carrera,
-        student.edad,
-        student.email,
-        student.telefono,
-        student.matriculado,
-        student.semestres,
-        student.estado
-    ]);
-
-    const csvContent = [headers, ...rows]
-        .map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(','))
-        .join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'estudiantes.csv';
-    link.click();
-    URL.revokeObjectURL(url);
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = "slideIn 0.3s ease reverse forwards";
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
 }

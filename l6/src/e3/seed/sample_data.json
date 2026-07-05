@@ -1,0 +1,30 @@
+[
+  {
+    "isbn": "0060850523",
+    "title": "Brave New World",
+    "author": "Aldous Huxley",
+    "description": "A profiling of a futuristic World State where citizens are genetically engineered, socially stratified, and kept content via psychological conditioning and drugs.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0060850523-L.jpg"
+  },
+  {
+    "isbn": "0143039431",
+    "title": "The Pillars of the Earth",
+    "author": "Ken Follett",
+    "description": "A sweeping historical epic set in 12th-century England, centered around the decades-long construction of a massive Gothic cathedral.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0143039431-L.jpg"
+  },
+  {
+    "isbn": "0316015849",
+    "title": "Twilight",
+    "author": "Stephenie Meyer",
+    "description": "The romance that begins when teenager Bella Swan moves to a rainy Washington town and falls in love with Edward Cullen, a literal vampire.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0316015849-L.jpg"
+  },
+  {
+    "isbn": "0593135202",
+    "title": "Project Hail Mary",
+    "author": "Andy Weir",
+    "description": "A lone astronaut must use his scientific wits to solve an extinction-level threat to Earth, aided by an unexpected alien ally.",
+    "image_url": "https://covers.openlibrary.org/b/isbn/0593135202-L.jpg"
+  }
+]
