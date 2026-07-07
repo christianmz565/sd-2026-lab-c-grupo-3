@@ -1,0 +1,50 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#E91E63', 'primaryTextColor': '#fff', 'primaryBorderColor': '#AD1457', 'lineColor': '#666', 'secondaryColor': '#FCE4EC', 'tertiaryColor': '#fff'}}}%%
+graph TB
+    subgraph Client["Capa de Cliente"]
+        C1[Navegador Web]
+        C2[Aplicación Móvil]
+        C3[Cliente API]
+    end
+
+    subgraph GraphQL["API GraphQL - Yoga + Hono - E3"]
+        direction TB
+        E1["POST /graphql"]
+        Q1["Consulta: books"]
+        Q2["Consulta: book by id"]
+        M1["Mutación: createBook"]
+        M2["Mutación: updateBook"]
+        M3["Mutación: deleteBook"]
+    end
+
+    subgraph Server["Capa de Servidor"]
+        S1[Runtime Bun]
+        S2[Framework HTTP Hono]
+        S3[Servidor GraphQL Yoga]
+        S4[Esquema y Resolvers]
+    end
+
+    subgraph Data["Capa de Datos"]
+        D1[Arreglo en Memoria]
+    end
+
+    C1 --> E1
+    C2 --> E1
+    C3 --> E1
+
+    E1 --> S1
+    S1 --> S2
+    S2 --> S3
+    S3 --> S4
+
+    Q1 --> S4
+    Q2 --> S4
+    M1 --> S4
+    M2 --> S4
+    M3 --> S4
+
+    S4 --> D1
+
+    style Client fill:#FCE4EC,stroke:#AD1457
+    style GraphQL fill:#F8BBD0,stroke:#AD1457
+    style Server fill:#C8E6C9,stroke:#2E7D32
+    style Data fill:#FFE0B2,stroke:#E65100
