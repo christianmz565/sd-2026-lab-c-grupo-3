@@ -52,7 +52,7 @@
 
 = Introducción
 
-La proliferación de sistemas distribuidos y arquitecturas de microservicios ha elevado el diseño de interfaces de programación de aplicaciones (APIs) a una preocupación ingenieril de primer orden. Dos paradigmas han emergido como enfoques dominantes: Representational State Transfer (REST), un estilo arquitectónico formalizado por Fielding @fielding2000architectural, y GraphQL, un lenguaje de consultas y runtime desarrollado por Facebook en 2015 y publicado como código abierto en 2020.
+La proliferación de sistemas distribuidos y arquitecturas de microservicios ha elevado el diseño de interfaces de programación de aplicaciones (APIs) a una preocupación ingenieril de primer orden. En un contexto donde las aplicaciones modernas dependen de múltiples servicios que se comunican entre sí, la elección del paradigma de API determina no solo el rendimiento del sistema, sino también la velocidad de desarrollo, la mantenibilidad del código y la experiencia del equipo de ingeniería. Dos paradigmas han emergido como enfoques dominantes: Representational State Transfer (REST), un estilo arquitectónico formalizado por Fielding @fielding2000architectural, y GraphQL, un lenguaje de consultas y runtime desarrollado por Facebook en 2015 y publicado como código abierto en 2020.
 
 REST organiza la exposición de datos en torno a recursos discretos identificados por URIs, aprovechando los métodos HTTP estándar (GET, POST, PUT, DELETE) @pautasso2008restful. Este enfoque se beneficia de herramientas maduras, caché nativa de HTTP y amplia adopción en la industria. Sin embargo, las APIs REST son susceptibles a sobre-fetching (retornar campos innecesarios) y under-fetching (requerir múltiples solicitudes para ensamblar datos relacionados) @muzaki2024reducing.
 
@@ -68,7 +68,7 @@ En comparaciones directas de rendimiento, Śliwa y Pańczyk@sliwa2021performance
 
 Jin et al.@jin2024graphql evaluaron GraphQL versus REST en entornos serverless, encontrando que GraphQL ofrece generalmente menor latencia y costo debido a la reducción de sobre/under-fetching. Muzaki y Salam@muzaki2024reducing analizaron específicamente la reducción de under-fetching y sobre-fetching, demostrando la efectividad de GraphQL en eliminar solicitudes multi-endpoint.
 
-Desde la perspectiva de frameworks, Gómez et al.@gomez2020crudyleaf presentaron CRUDyLeaf, un lenguaje específico de dominio para generar APIs RESTful en Spring Boot, mientras que Zimmermann et al.@zimmermann2020introduction introdujeron patrones de API de microservicios que capturan soluciones recurrentes en el diseño de APIs distribuidas. Estos trabajos establecen colectivamente que aunque GraphQL aborda limitaciones específicas de REST, ningún paradigma es universalmente superior.
+Desde la perspectiva de frameworks, Gómez et al.@gomez2020crudyleaf presentaron CRUDyLeaf, un lenguaje específico de dominio para generar APIs RESTful en Spring Boot, mientras que Zimmermann et al.@zimmermann2020introduction introdujeron patrones de API de microservicios que capturan soluciones recurrentes en el diseño de APIs distribuidas. En el ámbito industrial, la adopción de GraphQL ha crecido significativamente, con empresas como GitHub, Shopify y Airbnb migrando partes de sus APIs desde REST hacia GraphQL, impulsadas por la necesidad de reducir la cantidad de datos transferidos a clientes móviles @thallapally2024enhancing. Estos trabajos establecen colectivamente que aunque GraphQL aborda limitaciones específicas de REST, ningún paradigma es universalmente superior.
 
 = Diseño e Implementación del Sistema
 
@@ -85,9 +85,33 @@ REST es un estilo arquitectónico definido por Fielding @fielding2000architectur
 
 Siguiendo las directrices del taller práctico, se implementó un sistema de gestión bibliotecaria profesional utilizando Spring Boot 4.0.6 con Java 21 @guntupally2018spring. La arquitectura se diseñó en capas siguiendo el patrón controller-repository-model, una de las mejores prácticas en el diseño de APIs RESTful @zimmermann2020introduction.
 
-El modelo de datos correspondiente a los libros se definió mediante una clase JPA (`Book`), mapeándola a una tabla relacional en SQLite. Los atributos clave se decoraron con restricciones de integridad como `nullable = false` y `unique = true` para el ISBN. La clase controladora se implementó con `@RestController` y `@RequestMapping` para definir la raíz de los endpoints en `/api/books`. Se expusieron endpoints RESTful semánticamente correctos: `GET /api/books` para listar, `GET /api/books/{id}` para obtener un libro específico, `POST /api/books` para crear, `PUT /api/books/{id}` para actualizar, y `DELETE /api/books/{id}` para eliminar @pautasso2008restful.
+El modelo de datos correspondiente a los libros se definió mediante una entidad JPA mapeada a una tabla relacional en SQLite. Los atributos clave se decoraron con restricciones de integridad para garantizar la validez de los datos. La clase controladora se implementó con la anotación \@RestController y se mapeó bajo la raíz /api/books. Se expusieron endpoints semánticamente correctos para las operaciones CRUD: listado completo, obtención de un libro por identificador, creación, actualización y eliminación @pautasso2008restful. La Figura~<e1-entity> muestra la definición de la entidad JPA, donde se observan las restricciones de integridad aplicadas.
 
-Para la creación y registro de libros, se implementó soporte para peticiones de tipo `multipart/form-data`, permitiendo procesar metadatos en combinación con una imagen binaria (portada). Se valida que los atributos esenciales no estén vacíos, se asegura la unicidad del ISBN mediante consultas al repositorio y se guarda el archivo localmente generando un identificador único para evitar colisiones. La persistencia de datos utiliza SQLite a través de Spring Data JPA con Hibernate ORM @gomez2020crudyleaf.
+#figure(
+  ```java
+  @Entity
+  @Table(name = "books")
+  public class Book {
+      @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+      private Long id;
+
+      @Column(nullable = false)
+      private String title;
+
+      @Column(nullable = false)
+      private String author;
+
+      @Column(unique = true, nullable = false)
+      private String isbn;
+
+      private String description;
+      private String imageUrl;
+  }
+  ```,
+  caption: [Entidad JPA Book con restricciones de integridad y mapeado a tabla SQLite.],
+) <e1-entity>
+
+Para la creación y registro de libros, se implementó soporte para peticiones multipart que permiten procesar metadatos en combinación con una imagen binaria de portada. Se valida que los atributos esenciales no estén vacíos, se asegura la unicidad del ISBN mediante consultas al repositorio y se guarda el archivo localmente generando un identificador único para evitar colisiones. La persistencia de datos utiliza SQLite a través de Spring Data JPA con Hibernate ORM @gomez2020crudyleaf.
 
 #figure(
   image("img/e1-dashboard.png", width: 80%),
@@ -103,7 +127,24 @@ Para la creación y registro de libros, se implementó soporte para peticiones d
 
 Como segundo ejercicio del taller, se implementó un sistema de registro estudiantil avanzado empleando Flask y SQLAlchemy @menasce2001capacity. A diferencia del ejercicio anterior que utiliza un framework full-stack (Spring Boot), esta implementación demuestra un enfoque más ligero y minimalista, adecuado para prototipado rápido y servicios de baja complejidad.
 
-El modelo ORM `Estudiante` mapea la entidad a una tabla en SQLite con campos para métricas académicas (matrícula, carrera, semestres) y estados de matriculación. Las rutas se implementaron utilizando decoradores de Flask sobre funciones orientadas a recursos, implementando el patrón de interfaz uniforme REST @fielding2000architectural. Se implementaron endpoints para las operaciones CRUD completas: listado de todos los estudiantes (GET), creación de nuevos registros (POST) con validación de tipos, actualización parcial (PUT) que permite modificar campos individuales, y eliminación (DELETE) con manejo de errores semántico @velepucha2023microservices.
+El modelo ORM define una entidad estudiante mapeada a una tabla en SQLite con campos para métricas académicas (matrícula, carrera, semestres) y estados de matriculación. Las rutas se implementaron utilizando decoradores de Flask sobre funciones orientadas a recursos, implementando el patrón de interfaz uniforme REST @fielding2000architectural. La Figura~<e2-route> muestra una ruta representativa del sistema, donde se observa la ligereza del enfoque Flask frente a Spring Boot.
+
+#figure(
+  ```python
+  @app.route("/api/estudiantes", methods=["GET"])
+  def listar_estudiantes():
+      busqueda = request.args.get("busqueda", "")
+      query = Estudiante.query
+      if busqueda:
+          query = query.filter(
+              Estudiante.nombre.contains(busqueda)
+          )
+      return jsonify([e.to_dict() for e in query.all()])
+  ```,
+  caption: [Ruta Flask para listado de estudiantes con filtrado por búsqueda.],
+) <e2-route>
+
+Se implementaron endpoints para las operaciones CRUD completas: listado de todos los estudiantes con soporte de filtrado, creación de nuevos registros con validación de tipos, actualización parcial que permite modificar campos individuales, y eliminación con manejo de errores semántico @velepucha2023microservices.
 
 Se diseñó un panel administrativo (Dashboard) que ofrece visualizaciones estadísticas sobre el alumnado y herramientas de filtrado avanzado para la gestión de registros. La interfaz permite buscar por nombre, matrícula o carrera, filtrar por estado de matriculación y ordenar por diferentes criterios, demostrando la capacidad de las APIs RESTful para soportar interfaces de cliente ricas y complejas.
 
@@ -121,7 +162,30 @@ Se diseñó un panel administrativo (Dashboard) que ofrece visualizaciones estad
 
 Como extensión del taller, más allá de los ejercicios propuestos por el docente, se implementó una API GraphQL para el mismo dominio de catálogo de libros, permitiendo una comparación directa entre paradigmas @quina2022graphql. Esta implementación utiliza Bun 1.3 como runtime, el framework HTTP Hono y el servidor graphql-yoga.
 
-A diferencia de las APIs REST que exponen múltiples endpoints, GraphQL opera a través de un único endpoint (`POST /graphql`) que maneja todas las operaciones mediante consultas (queries) y mutaciones (mutations). El esquema define el tipo `Book` con los campos `id`, `title`, `author`, `isbn`, `description` e `imageUrl`, junto con los tipos raíz `Query` y `Mutation`.
+A diferencia de las APIs REST que exponen múltiples endpoints, GraphQL opera a través de un único punto de acceso que maneja todas las operaciones mediante consultas y mutaciones. El esquema GraphQL define el tipo Book con los campos identificador, título, autor, ISBN, descripción e imagen, junto con los tipos raíz Query y Mutation. La Figura~<graphql-schema> muestra la definición del esquema, que constituye el contrato entre cliente y servidor.
+
+#figure(
+  ```graphql
+  type Book {
+    id: ID!
+    title: String!
+    author: String!
+    isbn: String!
+    description: String
+    imageUrl: String
+  }
+
+  type Query {
+    books: [Book!]!
+    book(id: ID!): Book
+  }
+
+  type Mutation {
+    createBook(title: String!, author: String!, isbn: String!): Book!
+  }
+  ```,
+  caption: [Esquema GraphQL que define el tipo Book y las operaciones disponibles.],
+) <graphql-schema>
 
 #figure(
   image("img/graphql-architecture.png", width: 80%),
@@ -137,7 +201,7 @@ Los resolvers se implementan como funciones que acceden a datos almacenados en a
 
 == Interfaces de Cliente
 
-Ambos sistemas incluyen interfaces web basadas en navegador. El cliente REST muestra libros en una cuadrícula de tarjetas con funcionalidad de búsqueda, mientras que el cliente GraphQL añade una consola de consultas interactiva para ejecutar operaciones GraphQL arbitrarias. El cliente REST se construyó con JavaScript vanilla utilizando la Fetch API para consumir los endpoints RESTful, demostrando el patrón de comunicación cliente-servidor sin estado @fielding2000architectural. El cliente GraphQL utiliza la misma base pero añade un editor de consultas que valida la sintaxis GraphQL antes de la ejecución, proporcionando retroalimentación inmediata al desarrollador @khan2020sustainable.
+Ambos sistemas incluyen interfaces web basadas en navegador. El cliente REST muestra libros en una cuadrícula de tarjetas con funcionalidad de búsqueda, mientras que el cliente GraphQL añade una consola de consultas interactiva para ejecutar operaciones GraphQL arbitrarias. El cliente REST se construyó con JavaScript vanilla utilizando la API Fetch para consumir los endpoints RESTful, demostrando el patrón de comunicación cliente-servidor sin estado @fielding2000architectural. El cliente GraphQL utiliza la misma base pero añade un editor de consultas que valida la sintaxis antes de la ejecución, proporcionando retroalimentación inmediata al desarrollador @khan2020sustainable.
 
 #figure(
   image("img/e3-graphql-console.png", width: 80%),
@@ -148,7 +212,26 @@ Ambos sistemas incluyen interfaces web basadas en navegador. El cliente REST mue
 
 == Entorno de Prueba
 
-Las pruebas se realizaron utilizando k6 (Grafana Labs) con el siguiente perfil de carga: ramp-up de 10 segundos a 10 usuarios virtuales (VUs), estado estable de 30 segundos a 50 VUs, carga pico de 10 segundos a 100 VUs, carga pico sostenida de 30 segundos a 50 VUs, y ramp-down de 10 segundos. La duración total de prueba fue de 90 segundos por escenario. Se utilizaron los scripts de prueba estándar de k6 con métricas personalizadas de latencia y tasa de error @menasce2001capacity.
+Las pruebas se realizaron utilizando k6 (Grafana Labs) con el siguiente perfil de carga: ramp-up de 10 segundos a 10 usuarios virtuales (VUs), estado estable de 30 segundos a 50 VUs, carga pico de 10 segundos a 100 VUs, carga pico sostenida de 30 segundos a 50 VUs, y ramp-down de 10 segundos. La duración total de prueba fue de 90 segundos por escenario. Se utilizaron scripts de prueba estándar con métricas personalizadas de latencia y tasa de error @menasce2001capacity. La Figura~<k6-script> muestra el escenario de carga definido para las pruebas.
+
+#figure(
+  ```javascript
+  export const options = {
+    stages: [
+      { duration: "10s", target: 10 },  // ramp-up
+      { duration: "30s", target: 50 },  // estable
+      { duration: "10s", target: 100 }, // pico
+      { duration: "30s", target: 50 },  // sostenido
+      { duration: "10s", target: 0 },   // ramp-down
+    ],
+    thresholds: {
+      http_req_duration: ["p(95)<50"],
+      http_req_failed: ["rate<0.01"],
+    },
+  };
+  ```,
+  caption: [Escenario de carga k6 con fases de ramp-up, estable, pico y enfriamiento.],
+) <k6-script>
 
 #figure(
   image("img/comparison-flow.png", width: 95%),
@@ -157,7 +240,7 @@ Las pruebas se realizaron utilizando k6 (Grafana Labs) con el siguiente perfil d
 
 == Tamaño del Payload
 
-Para la consulta ``listar todos los libros'' que retorna 15 registros, el endpoint REST retorna 4.654 bytes (todos los campos), mientras que GraphQL retorna 4.703 bytes para todos los campos pero solo 1.019 bytes cuando se consultan únicamente `title` y `author`, una reducción del 78\%. Este resultado es consistente con los hallazgos de Lawi et al.@lawi2021evaluating y Muzaki y Salam@muzaki2024reducing, quienes reportaron reducciones similares en transferencia de datos. La ventaja fundamental de GraphQL se manifiesta en que los clientes que solicitan subconjuntos mínimos de datos incurriendo en payloads proporcionales al número de campos solicitados @sliwa2021performance.
+Para la consulta de listado completo que retorna 15 registros, el endpoint REST retorna 4.654 bytes (todos los campos), mientras que GraphQL retorna 4.703 bytes para todos los campos pero solo 1.019 bytes cuando se consultan únicamente título y autor, una reducción del 78\%. Este resultado es consistente con los hallazgos de Lawi et al.@lawi2021evaluating y Muzaki y Salam@muzaki2024reducing, quienes reportaron reducciones similares en transferencia de datos. La ventaja fundamental de GraphQL se manifiesta en que los clientes que solicitan subconjuntos mínimos de datos incurriendo en payloads proporcionales al número de campos solicitados @sliwa2021performance.
 
 En operaciones de lectura individual de un libro, GraphQL transferirá 12.7\% menos datos que REST incluso cuando se solicitan todos los campos, debido a la eliminación de metadatos HTTP adicionales. Cuando se realizan consultas selectivas, la reducción alcanza el 76.2\% de datos transferidos, validando la eficiencia del modelo de consultas dirigidas por el cliente @erigha2021optimizing.
 
@@ -169,18 +252,41 @@ En operaciones de lectura individual de un libro, GraphQL transferirá 12.7\% me
     align: (left, right, right, right),
     table.header([Métrica], [REST], [GraphQL], [Diferencia]),
     [Total de Solicitudes], [40,470], [40,775], [+0.75\%],
-    [Latencia Promedio], [2.73\,ms], [2.24\,ms], [*--17.9\%*],
-    [Latencia P95], [4.86\,ms], [4.62\,ms], [*--4.9\%*],
-    [Latencia Máxima], [26.82\,ms], [23.67\,ms], [*--11.7\%*],
+    [Latencia Promedio], [2.73ms], [2.24ms], [*--17.9\%*],
+    [Latencia P95], [4.86ms], [4.62ms], [*--4.9\%*],
+    [Latencia Máxima], [26.82ms], [23.67ms], [*--11.7\%*],
     [Throughput], [449 RPS], [453 RPS], [+0.8\%],
     [Tasa de Error], [0\%], [0\%], [--],
   ),
   caption: [Comparación de rendimiento para la operación GET de listado completo de libros a 100 usuarios virtuales.],
 ) <read-all>
 
-Para la recuperación de libros individuales, GraphQL logró 2.08\,ms de latencia promedio versus 2.46\,ms de REST (mejora del 15.4\%), con 12.7\% menos datos recibidos. Las consultas selectivas de campos en GraphQL redujeron aún más la latencia a 2.17\,ms con 76.2\% menos transferencia de datos @lawi2021evaluating. Estos resultados son consistentes con los reportados por Mikuła y Dzieńkowski@mikula2020comparison, quienes encontraron ventajas similares de GraphQL en escenarios de lectura con campos selectivos.
+Para la recuperación de libros individuales, GraphQL logró 2.08ms de latencia promedio versus 2.46ms de REST (mejora del 15.4\%), con 12.7\% menos datos recibidos. Las consultas selectivas de campos en GraphQL redujeron aún más la latencia a 2.17ms con 76.2\% menos transferencia de datos @lawi2021evaluating.
 
 El rendimiento de lectura demuestra que la ventaja de GraphQL se incrementa con la complejidad de las consultas. Para operaciones que involucran múltiples entidades relacionadas, GraphQL permite resolver todas las dependencias en una sola solicitud, mientras que REST requiere múltiples llamadas secuenciales, incrementando la latencia total @kanthed2023rest. Este fenómeno es particularmente relevante en aplicaciones móviles donde la optimización del ancho de banda es crítica @khan2020sustainable.
+
+== Recuperación de Libro Individual
+
+La consulta de un libro individual es una de las operaciones más frecuentes en aplicaciones de catálogo, donde el usuario selecciona un elemento del listado para ver su detalle completo. La Figura~<read-single> presenta los resultados de esta operación bajo carga de 100 usuarios virtuales.
+
+#figure(
+  table(
+    columns: 4,
+    align: (left, right, right, right),
+    table.header([Métrica], [REST], [GraphQL], [Diferencia]),
+    [Total de Solicitudes], [40,661], [40,950], [+0.7\%],
+    [Latencia Promedio], [2.46ms], [2.08ms], [*--15.4\%*],
+    [Latencia P95], [4.52ms], [4.19ms], [*--7.3\%*],
+    [Latencia Máxima], [22.38ms], [18.52ms], [*--17.2\%*],
+    [Throughput], [451 RPS], [455 RPS], [+0.9\%],
+    [Datos Recibidos], [21.3 MB], [18.6 MB], [*--12.7\%*],
+  ),
+  caption: [Comparación de rendimiento para la operación GET de libro individual a 100 usuarios virtuales.],
+) <read-single>
+
+GraphQL logra una latencia promedio de 2.08ms frente a los 2.46ms de REST, representando una mejora del 15.4\%. Esta ventaja se amplía en la latencia máxima: 18.52ms versus 22.38ms, una reducción del 17.2\%. La diferencia es especialmente significativa en la cantidad de datos recibidos: GraphQL transfirió 12.7\% menos datos que REST incluso cuando se solicitan todos los campos, debido a la eliminación de metadatos HTTP adicionales en el formato de respuesta @lawi2021evaluating.
+
+Cuando se utilizan consultas selectivas de campos, la ventaja de GraphQL se incrementa dramáticamente. Una solicitud que solicita únicamente título y autor reduce la latencia promedio a 2.17ms y la transferencia de datos a 46.7\,MB, una reducción del 76.2\% respecto a REST con todos los campos. Este resultado valida que el modelo de consultas dirigidas por el cliente permite optimizaciones significativas en escenarios reales donde no se necesitan todos los atributos de una entidad @erigha2021optimizing. Los hallazgos son consistentes con los reportados por Mikuła y Dzieńkowski@mikula2020comparison, quienes encontraron ventajas similares de GraphQL en escenarios de lectura con campos selectivos.
 
 == Rendimiento de Escritura
 
@@ -189,9 +295,9 @@ El rendimiento de lectura demuestra que la ventaja de GraphQL se incrementa con 
     columns: 4,
     align: (left, right, right, right),
     table.header([Métrica], [REST], [GraphQL], [Diferencia]),
-    [Latencia Promedio], [1.69\,ms], [2.34\,ms], [+38.5\%],
-    [Latencia P95], [2.69\,ms], [3.86\,ms], [+43.5\%],
-    [Latencia Máxima], [31.22\,ms], [7.35\,ms], [*--76.5\%*],
+    [Latencia Promedio], [1.69ms], [2.34ms], [+38.5\%],
+    [Latencia P95], [2.69ms], [3.86ms], [+43.5\%],
+    [Latencia Máxima], [31.22ms], [7.35ms], [*--76.5\%*],
     [Throughput], [48.4 RPS], [48.4 RPS], [0\%],
     [Datos Enviados], [655 KB], [1.01 MB], [+54\%],
   ),
@@ -208,7 +314,7 @@ El mayor volumen de datos enviados por GraphQL en escritura (+54\%) se debe al f
 
 REST sigue siendo la elección preferida para aplicaciones que requieren caché nativa de HTTP (a través de headers ETag y Cache-Control), APIs públicas con documentación estandarizada (OpenAPI/Swagger), operaciones CRUD simples y entornos con infraestructura REST establecida @pautasso2008restful. Su menor sobrecarga de escritura y capacidades superiores de caché lo hacen ideal para comunicación servidor-a-servidor y redes de distribución de contenido @haupt2017framework.
 
-Las implementaciones del taller (E1 con Spring Boot y E2 con Flask) demuestran que las APIs RESTful bien diseñadas, siguiendo los principios de interfaz uniforme y orientación a recursos, proporcionan una base sólida para sistemas distribuidos @zimmermann2020introduction. Spring Boot facilita la creación de APIs robustas con soporte para multipart/form-data y manejo de archivos, mientras Flask ofrece un enfoque más ligero para servicios de baja complejidad @gomez2020crudyleaf.
+Las implementaciones del taller (E1 con Spring Boot y E2 con Flask) demuestran que las APIs RESTful bien diseñadas, siguiendo los principios de interfaz uniforme y orientación a recursos, proporcionan una base sólida para sistemas distribuidos @zimmermann2020introduction. Spring Boot facilita la creación de APIs robustas con soporte para peticiones multipart y manejo de archivos, mientras Flask ofrece un enfoque más ligero para servicios de baja complejidad @gomez2020crudyleaf.
 
 == Cuándo Elegir GraphQL
 
@@ -220,7 +326,9 @@ La extensión GraphQL (E3) demostró que la flexibilidad en las consultas del cl
 
 La comparación revela compromisos fundamentales. REST ofrece simplicidad, herramientas maduras e integración nativa con HTTP a costa de potencial sobre/under-fetching @muzaki2024reducing. GraphQL proporciona consultas flexibles dirigidas por el cliente a costa de mayor complejidad del servidor, caché no trivial y posibles preocupaciones de seguridad @khan2020sustainable. Como demuestran las implementaciones del taller, la elección del framework (Spring Boot versus Flask versus Bun/GraphQL-Yoga) también impacta significativamente en la experiencia de desarrollo y el rendimiento resultante @sikora2025comparative.
 
-El análisis de los ejercicios del taller revela que RESTful no es simplemente el uso de HTTP, sino el cumplimiento estricto de las restricciones arquitectónicas de Fielding @fielding2000architectural. El diseño de endpoints orientados a acciones (como `/getUsers` o `/createUser`) en lugar de recursos rompe la uniformidad de la interfaz y dificulta la cacheabilidad, limitando la escalabilidad horizontal @haupt2017framework. Esta lección fundamental se refuerza en ambas implementaciones del taller, donde se siguen consistentemente los principios de diseño orientado a recursos.
+El análisis de los ejercicios del taller revela que RESTful no es simplemente el uso de HTTP, sino el cumplimiento estricto de las restricciones arquitectónicas de Fielding @fielding2000architectural. El diseño de endpoints orientados a acciones (como /getUsers o /createUser) en lugar de recursos rompe la uniformidad de la interfaz y dificulta la cacheabilidad, limitando la escalabilidad horizontal @haupt2017framework. Esta lección fundamental se refuerza en ambas implementaciones del taller, donde se siguen consistentemente los principios de diseño orientado a recursos.
+
+Desde la perspectiva de la experiencia de desarrollo, REST ofrece una curva de aprendizaje más suave: los desarrolladores familiarizados con HTTP pueden comenzar a construir APIs inmediatamente, y herramientas como OpenAPI generan documentación y clientes automáticamente. GraphQL, en cambio, requiere una inversión inicial mayor para definir el esquema, configurar el servidor de resolvers y aprender el lenguaje de consultas, pero esta inversión se amortiza en proyectos con múltiples consumidores que requieren diferentes vistas de los mismos datos @sikora2025comparative. La disponibilidad de herramientas de desarrollo, como GraphiQL y Apollo Studio, ha mejorado significativamente la experiencia de trabajo con GraphQL, aunque el ecosistema REST sigue siendo más amplio y maduro.
 
 = Conclusiones
 
