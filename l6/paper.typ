@@ -1,9 +1,10 @@
-#import "@preview/charged-ieee:0.1.4": ieee
+#import "ieee.typ": ieee
 
+#set text(lang: "es")
 #show: ieee.with(
   title: [Comparación de Rendimiento entre REST y GraphQL: Análisis Empírico de Paradigmas de Arquitectura de APIs],
   abstract: [
-    El diseño de interfaces de programación de aplicaciones (APIs) es una decisión arquitectónica crítica en sistemas distribuidos, que impacta directamente en el rendimiento, la escalabilidad y la productividad de los desarrolladores. Este trabajo presenta un análisis comparativo de dos paradigmas dominantes de APIs: Representational State Transfer (REST) y GraphQL. Implementamos ambos enfoques para un dominio idéntico de catálogo de libros, incluyendo una API RESTful construida con Spring Boot (Java 21) y Flask (Python), y un servidor GraphQL con Bun/GraphQL-Yoga, y los evaluamos bajo condiciones de carga controladas utilizando k6. Además, describimos en detalle el proceso de diseño y desarrollo de los servicios RESTful siguiendo las directrices de un taller práctico, cubriendo desde los principios teóricos de REST hasta la implementación completa con persistencia de datos y clientes web. Nuestros experimentos miden latencia de respuesta, tamaño de payload, throughput y estabilidad en operaciones de lectura y escritura. Los resultados indican que GraphQL logra aproximadamente un 15--18\% menor latencia promedio en operaciones de lectura y reduce el tamaño del payload hasta en un 78\% mediante consultas selectivas de campos, mientras que REST mantiene capacidades superiores de caché a través de mecanismos nativos de HTTP. Discutimos los compromisos arquitectónicos, identificamos escenarios donde cada paradigma sobresale y proporcionamos directrices para profesionales que seleccionan entre REST y GraphQL en sistemas distribuidos modernos.
+    El diseño de interfaces de programación de aplicaciones (APIs) es una decisión arquitectónica crítica en sistemas distribuidos, que impacta directamente en el rendimiento, la escalabilidad y la productividad de los desarrolladores. Este trabajo presenta un análisis comparativo de dos paradigmas dominantes de APIs: Representational State Transfer (REST) y GraphQL. Implementamos ambos enfoques para un dominio idéntico de catálogo de libros, incluyendo APIs RESTful con Spring Boot y Flask, y un servidor GraphQL con Bun/GraphQL-Yoga, evaluados bajo carga controlada con k6. Nuestros experimentos miden latencia de respuesta, tamaño de payload, throughput y estabilidad en operaciones de lectura y escritura. Los resultados indican que GraphQL logra aproximadamente un 15--18\% menor latencia promedio en operaciones de lectura y reduce el tamaño del payload hasta en un 78\% mediante consultas selectivas de campos, mientras que REST mantiene capacidades superiores de caché a través de mecanismos nativos de HTTP. Discutimos los compromisos arquitectónicos, identificamos escenarios donde cada paradigma sobresale y proporcionamos directrices para profesionales que seleccionan entre REST y GraphQL en sistemas distribuidos modernos.
   ],
   authors: (
     (
@@ -240,9 +241,9 @@ Las pruebas se realizaron utilizando k6 (Grafana Labs) con el siguiente perfil d
 
 == Tamaño del Payload
 
-Para la consulta de listado completo que retorna 15 registros, el endpoint REST retorna 4.654 bytes (todos los campos), mientras que GraphQL retorna 4.703 bytes para todos los campos pero solo 1.019 bytes cuando se consultan únicamente título y autor, una reducción del 78\%. Este resultado es consistente con los hallazgos de Lawi et al.@lawi2021evaluating y Muzaki y Salam@muzaki2024reducing, quienes reportaron reducciones similares en transferencia de datos. La ventaja fundamental de GraphQL se manifiesta en que los clientes que solicitan subconjuntos mínimos de datos incurriendo en payloads proporcionales al número de campos solicitados @sliwa2021performance.
+Para la consulta de listado completo que retorna 15 registros, el endpoint REST retorna 4.654 bytes (todos los campos), mientras que GraphQL retorna 4.703 bytes para todos los campos pero solo 1.019 bytes cuando se consultan únicamente título y autor, una reducción del 78\%. Este resultado es consistente con los hallazgos de Lawi et al.@lawi2021evaluating y Muzaki y Salam@muzaki2024reducing, quienes reportaron reducciones similares en transferencia de datos.
 
-En operaciones de lectura individual de un libro, GraphQL transferirá 12.7\% menos datos que REST incluso cuando se solicitan todos los campos, debido a la eliminación de metadatos HTTP adicionales. Cuando se realizan consultas selectivas, la reducción alcanza el 76.2\% de datos transferidos, validando la eficiencia del modelo de consultas dirigidas por el cliente @erigha2021optimizing.
+En operaciones de lectura individual, GraphQL transfirió 12.7\% menos datos que REST incluso cuando se solicitan todos los campos, debido a la eliminación de metadatos HTTP adicionales. Con consultas selectivas, la reducción alcanza el 76.2\%, validando la eficiencia del modelo de consultas dirigidas por el cliente @erigha2021optimizing. La ventaja fundamental se manifiesta en que los clientes que solicitan subconjuntos mínimos de datos incurriendo en payloads proporcionales al número de campos solicitados @sliwa2021performance.
 
 == Rendimiento de Lectura
 
@@ -261,9 +262,9 @@ En operaciones de lectura individual de un libro, GraphQL transferirá 12.7\% me
   caption: [Comparación de rendimiento para la operación GET de listado completo de libros a 100 usuarios virtuales.],
 ) <read-all>
 
-Para la recuperación de libros individuales, GraphQL logró 2.08ms de latencia promedio versus 2.46ms de REST (mejora del 15.4\%), con 12.7\% menos datos recibidos. Las consultas selectivas de campos en GraphQL redujeron aún más la latencia a 2.17ms con 76.2\% menos transferencia de datos @lawi2021evaluating.
+La mejora es consistente en todas las métricas de latencia. Para la recuperación de libros individuales, GraphQL logró 2.08ms de latencia promedio versus 2.46ms de REST (mejora del 15.4\%), con 12.7\% menos datos recibidos. Las consultas selectivas de campos en GraphQL redujeron aún más la latencia a 2.17ms con 76.2\% menos transferencia de datos @lawi2021evaluating.
 
-El rendimiento de lectura demuestra que la ventaja de GraphQL se incrementa con la complejidad de las consultas. Para operaciones que involucran múltiples entidades relacionadas, GraphQL permite resolver todas las dependencias en una sola solicitud, mientras que REST requiere múltiples llamadas secuenciales, incrementando la latencia total @kanthed2023rest. Este fenómeno es particularmente relevante en aplicaciones móviles donde la optimización del ancho de banda es crítica @khan2020sustainable.
+La ventaja de GraphQL se incrementa con la complejidad de las consultas. Para operaciones que involucran múltiples entidades relacionadas, GraphQL permite resolver todas las dependencias en una sola solicitud, mientras que REST requiere múltiples llamadas secuenciales, incrementando la latencia total @kanthed2023rest. Este fenómeno es particularmente relevante en aplicaciones móviles donde la optimización del ancho de banda es crítica @khan2020sustainable.
 
 == Recuperación de Libro Individual
 
@@ -284,9 +285,9 @@ La consulta de un libro individual es una de las operaciones más frecuentes en 
   caption: [Comparación de rendimiento para la operación GET de libro individual a 100 usuarios virtuales.],
 ) <read-single>
 
-GraphQL logra una latencia promedio de 2.08ms frente a los 2.46ms de REST, representando una mejora del 15.4\%. Esta ventaja se amplía en la latencia máxima: 18.52ms versus 22.38ms, una reducción del 17.2\%. La diferencia es especialmente significativa en la cantidad de datos recibidos: GraphQL transfirió 12.7\% menos datos que REST incluso cuando se solicitan todos los campos, debido a la eliminación de metadatos HTTP adicionales en el formato de respuesta @lawi2021evaluating.
+GraphQL logra una latencia promedio de 2.08ms frente a los 2.46ms de REST, representando una mejora del 15.4\%. La brecha se amplía en latencia máxima: 18.52ms versus 22.38ms, una reducción del 17.2\%. La diferencia es especialmente significativa en la cantidad de datos recibidos: GraphQL transfirió 12.7\% menos datos que REST incluso cuando se solicitan todos los campos, debido a la eliminación de metadatos HTTP adicionales en el formato de respuesta @lawi2021evaluating.
 
-Cuando se utilizan consultas selectivas de campos, la ventaja de GraphQL se incrementa dramáticamente. Una solicitud que solicita únicamente título y autor reduce la latencia promedio a 2.17ms y la transferencia de datos a 46.7\,MB, una reducción del 76.2\% respecto a REST con todos los campos. Este resultado valida que el modelo de consultas dirigidas por el cliente permite optimizaciones significativas en escenarios reales donde no se necesitan todos los atributos de una entidad @erigha2021optimizing. Los hallazgos son consistentes con los reportados por Mikuła y Dzieńkowski@mikula2020comparison, quienes encontraron ventajas similares de GraphQL en escenarios de lectura con campos selectivos.
+Con consultas selectivas de campos, la ventaja crece dramáticamente. Una solicitud que solicita únicamente título y autor reduce la latencia promedio a 2.17ms y la transferencia de datos a 1,019 bytes, una reducción del 76.2% respecto a REST con todos los campos @erigha2021optimizing. Los hallazgos son consistentes con los reportados por Mikuła y Dzieńkowski@mikula2020comparison, quienes encontraron ventajas similares de GraphQL en escenarios de lectura con campos selectivos.
 
 == Rendimiento de Escritura
 
@@ -304,9 +305,9 @@ Cuando se utilizan consultas selectivas de campos, la ventaja de GraphQL se incr
   caption: [Comparación de rendimiento para la operación POST de creación de libros a 20 usuarios virtuales.],
 ) <write-perf>
 
-REST demuestra menor latencia promedio de escritura, pero GraphQL exhibe un comportamiento más consistente con una latencia máxima significativamente menor (7.35 ms versus 31.22 ms). La relación P95-máxima revela la superior estabilidad de escritura de GraphQL: 1.91x versus 11.6x de REST @sikora2025comparative. Este resultado sugiere que el overhead de serialización de GraphQL en el servidor, aunque introduce latencia promedio mayor, proporciona un manejo más predecible de la carga pico @erigha2021optimizing.
+REST gana en latencia promedio de escritura. Pero GraphQL es más predecible bajo carga pico: su latencia máxima (7.35 ms) es 4.2 veces menor que la de REST (31.22 ms). La relación P95-máxima revela la diferencia: 1.91x en GraphQL versus 11.6x en REST @sikora2025comparative. El overhead de serialización de GraphQL en el servidor introduce latencia promedio mayor, pero proporciona un manejo más estable de la carga pico @erigha2021optimizing.
 
-El mayor volumen de datos enviados por GraphQL en escritura (+54\%) se debe al formato de respuesta más extenso que incluye metadatos del esquema y el objeto creado completo. Sin embargo, este overhead es despreciable en comparación con las ganancias de flexibilidad en consultas de lectura @veeravalli2023next.
+El mayor volumen de datos enviados por GraphQL en escritura (+54\%) se debe al formato de respuesta más extenso que incluye metadatos del esquema y el objeto creado completo. Este overhead es despreciable en comparación con las ganancias de flexibilidad en consultas de lectura @veeravalli2023next.
 
 = Discusión
 
@@ -324,11 +325,11 @@ La extensión GraphQL (E3) demostró que la flexibilidad en las consultas del cl
 
 == Compromisos Arquitectónicos
 
-La comparación revela compromisos fundamentales. REST ofrece simplicidad, herramientas maduras e integración nativa con HTTP a costa de potencial sobre/under-fetching @muzaki2024reducing. GraphQL proporciona consultas flexibles dirigidas por el cliente a costa de mayor complejidad del servidor, caché no trivial y posibles preocupaciones de seguridad @khan2020sustainable. Como demuestran las implementaciones del taller, la elección del framework (Spring Boot versus Flask versus Bun/GraphQL-Yoga) también impacta significativamente en la experiencia de desarrollo y el rendimiento resultante @sikora2025comparative.
+La comparación revela compromisos fundamentales. La brecha entre ambos paradigmas se reduce a una pregunta de prioridades: ¿se optimiza para simplicidad operativa o para flexibilidad del cliente? REST ofrece la primera con herramientas maduras e integración nativa con HTTP, aunque a costa de potencial sobre/under-fetching @muzaki2024reducing. GraphQL ofrece la segunda con consultas dirigidas por el cliente, aunque introduciendo complejidad en el servidor, caché no trivial y preocupaciones de seguridad @khan2020sustainable. Como demuestran las implementaciones del taller, la elección del framework (Spring Boot versus Flask versus Bun/GraphQL-Yoga) también impacta significativamente en la experiencia de desarrollo y el rendimiento resultante @sikora2025comparative.
 
 El análisis de los ejercicios del taller revela que RESTful no es simplemente el uso de HTTP, sino el cumplimiento estricto de las restricciones arquitectónicas de Fielding @fielding2000architectural. El diseño de endpoints orientados a acciones (como /getUsers o /createUser) en lugar de recursos rompe la uniformidad de la interfaz y dificulta la cacheabilidad, limitando la escalabilidad horizontal @haupt2017framework. Esta lección fundamental se refuerza en ambas implementaciones del taller, donde se siguen consistentemente los principios de diseño orientado a recursos.
 
-Desde la perspectiva de la experiencia de desarrollo, REST ofrece una curva de aprendizaje más suave: los desarrolladores familiarizados con HTTP pueden comenzar a construir APIs inmediatamente, y herramientas como OpenAPI generan documentación y clientes automáticamente. GraphQL, en cambio, requiere una inversión inicial mayor para definir el esquema, configurar el servidor de resolvers y aprender el lenguaje de consultas, pero esta inversión se amortiza en proyectos con múltiples consumidores que requieren diferentes vistas de los mismos datos @sikora2025comparative. La disponibilidad de herramientas de desarrollo, como GraphiQL y Apollo Studio, ha mejorado significativamente la experiencia de trabajo con GraphQL, aunque el ecosistema REST sigue siendo más amplio y maduro.
+La experiencia de desarrollo varía según el paradigma. REST ofrece una curva de aprendizaje más suave: los desarrolladores familiarizados con HTTP pueden comenzar a construir APIs inmediatamente, y herramientas como OpenAPI generan documentación y clientes automáticamente. GraphQL requiere una inversión inicial mayor para definir el esquema, configurar el servidor de resolvers y aprender el lenguaje de consultas, pero esta inversión se amortiza en proyectos con múltiples consumidores que requieren diferentes vistas de los mismos datos @sikora2025comparative. Herramientas como GraphiQL y Apollo Studio han mejorado significativamente la experiencia de trabajo con GraphQL, aunque el ecosistema REST sigue siendo más amplio y maduro.
 
 = Conclusiones
 
@@ -337,3 +338,7 @@ Este trabajo presentó un análisis comparativo de los paradigmas de API REST y 
 Para profesionales de sistemas distribuidos, recomendamos: adoptar REST para servicios CRUD simples, microservicios internos y cargas de trabajo sensibles a la caché; adoptar GraphQL para APIs orientadas al cliente con requisitos diversos de datos, aplicaciones móviles primero y frontends en rápida evolución. Los enfoques híbridos, utilizando GraphQL como gateway de API sobre microservicios REST, pueden aprovechar las fortalezas de ambos paradigmas @sikora2025comparative.
 
 El trabajo futuro debe investigar el endurecimiento de la seguridad de GraphQL (análisis de complejidad de consultas, limitación de profundidad), rendimiento bajo cargas de trabajo de bases de datos reales (versus almacenamiento en memoria) y el impacto de las optimizaciones de DataLoader y batching en la prevención de consultas N+1 @erigha2021optimizing.
+
+= Disponibilidad de Datos
+
+El código fuente de las implementaciones REST y GraphQL, los scripts de prueba k6 y los resultados experimentales están disponibles en: https://github.com/christianmz565/sd-2026-lab-c-grupo-3/tree/main/l6
