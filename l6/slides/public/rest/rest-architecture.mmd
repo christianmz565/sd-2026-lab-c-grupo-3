@@ -1,0 +1,49 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#2196F3', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1565C0', 'lineColor': '#666', 'secondaryColor': '#E3F2FD', 'tertiaryColor': '#fff'}}}%%
+graph TB
+    subgraph Client["Capa de Cliente"]
+        C1[Navegador Web]
+        C2[Aplicación Móvil]
+        C3[Cliente API]
+    end
+
+    subgraph REST["API REST - Spring Boot (E1)"]
+        direction TB
+        E1[GET /api/books]
+        E2[GET /api/books/:id]
+        E3[POST /api/books]
+        E4[PUT /api/books/:id]
+        E5[DELETE /api/books/:id]
+    end
+
+    subgraph Server["Capa de Servidor"]
+        S1[Aplicación Spring Boot]
+        S2[Repositorio JPA]
+    end
+
+    subgraph Database["Capa de Datos"]
+        D1[(Base de Datos SQLite)]
+    end
+
+    C1 --> E1
+    C1 --> E2
+    C1 --> E3
+    C1 --> E4
+    C1 --> E5
+    C2 --> E1
+    C2 --> E3
+    C3 --> E1
+    C3 --> E3
+
+    E1 --> S1
+    E2 --> S1
+    E3 --> S1
+    E4 --> S1
+    E5 --> S1
+
+    S1 --> S2
+    S2 --> D1
+
+    style Client fill:#E3F2FD,stroke:#1565C0
+    style REST fill:#BBDEFB,stroke:#1565C0
+    style Server fill:#C8E6C9,stroke:#2E7D32
+    style Database fill:#FFE0B2,stroke:#E65100
