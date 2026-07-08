@@ -2,7 +2,8 @@
   description = "A multi-platform dev shell flake";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-26.05";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
 
     UNSAReport.url = "github:UNSAReport/UNSAReport";
@@ -12,6 +13,7 @@
   outputs =
     {
       nixpkgs,
+      nixpkgs-unstable,
       flake-utils,
       UNSAReport,
       cam,
@@ -21,6 +23,10 @@
       system:
       let
         pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+        unstable = import nixpkgs-unstable {
           inherit system;
           config.allowUnfree = true;
         };
@@ -42,12 +48,8 @@
               mpi
             ];
 
-          packages =
-            with pkgs;
-            [
-              typst
-              tinymist
-              typstyle
+          packages = pkgs.lib.flatten [
+            (with pkgs; [
               # javaPackages.compiler.openjdk11-bootstrap
               jdk21
               jdt-language-server
@@ -62,16 +64,18 @@
               mpi
               pnpm
               nodejs
-              nixd
               ruff
               biome
               openssl
-            ]
-            ++ fonts
-            ++ [
-              UNSAReport.packages.${system}.default
-              cam.packages.${system}.default
-            ];
+            ])
+            fonts
+            (with unstable; [
+              typstyle
+              tinymist
+            ])
+            UNSAReport.packages.${system}.default
+            cam.packages.${system}.default
+          ];
 
           buildInputs = [ pkgs.bashInteractive ];
 
