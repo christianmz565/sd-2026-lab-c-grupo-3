@@ -10,7 +10,11 @@ function Index() {
     <div className="flex min-h-screen flex-col items-center bg-linear-to-br from-slate-900 via-indigo-950 to-slate-900 px-4 py-12 font-sans text-slate-200">
       <header className="mb-12 text-center">
         <h1 className="mb-2 bg-linear-to-r from-indigo-400 to-purple-400 bg-clip-text text-5xl font-extrabold text-transparent">
+<<<<<<< Updated upstream
           Sistemas Distribuidos · Grupo C
+=======
+          SD Lab 06 - REST vs GraphQL
+>>>>>>> Stashed changes
         </h1>
       </header>
 

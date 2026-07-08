@@ -56,7 +56,14 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+<<<<<<< Updated upstream
     '/' | '/presentations' | '/presentations/$topic' | '/presentations/'
+=======
+    | '/'
+    | '/presentations'
+    | '/presentations/$topic'
+    | '/presentations/'
+>>>>>>> Stashed changes
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/presentations/$topic' | '/presentations'
   id:

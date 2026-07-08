@@ -1,0 +1,44 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FF9800', 'primaryTextColor': '#fff', 'primaryBorderColor': '#E65100', 'lineColor': '#666'}}}%%
+graph LR
+    subgraph Request["Solicitud del Cliente"]
+        R1[Necesidad: Listar libros con título y autor únicamente]
+    end
+
+    subgraph REST["Enfoque REST"]
+        direction TB
+        RE1[GET /api/books]
+        RE2[El servidor retorna TODOS los campos]
+        RE3[El cliente recibe el payload completo]
+        RE4[Sobre-fetching: 4,654 bytes]
+    end
+
+    subgraph GraphQL["Enfoque GraphQL"]
+        direction TB
+        GE1["query { books { title author } }"]
+        GE2[El servidor retorna solo los campos solicitados]
+        GE3[El cliente recibe un payload mínimo]
+        GE4[Optimizado: 1,019 bytes]
+    end
+
+    subgraph Result["Comparación"]
+        RES1[78% de reducción de ancho de banda con GraphQL]
+    end
+
+    R1 --> RE1
+    R1 --> GE1
+
+    RE1 --> RE2
+    RE2 --> RE3
+    RE3 --> RE4
+
+    GE1 --> GE2
+    GE2 --> GE3
+    GE3 --> GE4
+
+    RE4 --> RES1
+    GE4 --> RES1
+
+    style Request fill:#FFF3E0,stroke:#E65100
+    style REST fill:#BBDEFB,stroke:#1565C0
+    style GraphQL fill:#F8BBD0,stroke:#AD1457
+    style Result fill:#C8E6C9,stroke:#2E7D32
